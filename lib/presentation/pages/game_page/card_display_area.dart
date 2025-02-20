@@ -26,7 +26,7 @@ class CardDisplayArea extends ConsumerWidget {
                   // 左(其他玩家 1)
                   Expanded(
                     child: Padding(
-                      padding: const EdgeInsets.all(24.0),
+                      padding: const EdgeInsets.all(16.0),
                       child: SizedBox(
                         height: height / 2,
                         child: Center(
@@ -47,7 +47,7 @@ class CardDisplayArea extends ConsumerWidget {
                   // 右 (其他玩家 2)
                   Expanded(
                     child: Padding(
-                      padding: const EdgeInsets.all(24.0),
+                      padding: const EdgeInsets.all(16.0),
                       child: SizedBox(
                         height: height / 2,
                         child: Center(
@@ -70,7 +70,7 @@ class CardDisplayArea extends ConsumerWidget {
               // 下 (当前玩家)
               Expanded(
                 child: Padding(
-                  padding: const EdgeInsets.all(24.0),
+                  padding: const EdgeInsets.all(16.0),
                   child: SizedBox(
                     height: height / 2,
                     child: Center(
