@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:socket_io_client/socket_io_client.dart' as IO;
 
@@ -42,11 +44,21 @@ class SocketClient {
     return _sockets[playerName]!;
   }
 
+  // 添加重连次数限制
   static void connect(String playerName) {
-    final socket = getSocket(playerName);
-    if (!socket.connected) {
-      socket.connect();
-    }
+    if (_sockets[playerName]?.connected ?? false) return;
+    _sockets[playerName]?.connect();
+    _sockets[playerName]?.onDisconnect(
+      (_) => _clearSocketAfterDelay(playerName),
+    );
+  }
+
+  static void _clearSocketAfterDelay(String playerName) {
+    Timer(Duration(seconds: 30), () {
+      if (!(_sockets[playerName]?.connected ?? true)) {
+        _sockets.remove(playerName);
+      }
+    });
   }
 
   static void disconnect(String playerName) {
