@@ -17,6 +17,7 @@ class CardDisplayArea extends StatelessWidget {
         alignment: PokerListAlignment.center,
         onCardTapped: (_) {},
         isTight: false,
+        isSelectable: false, // 设置为不可选择
       ),
     );
   }

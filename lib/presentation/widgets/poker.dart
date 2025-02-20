@@ -1,4 +1,3 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:landlords_3/domain/entities/poker_data.dart';
@@ -8,8 +7,8 @@ class Poker extends StatefulWidget {
   final PokerData card;
   final double width;
   final double height;
-  final VoidCallback? onTapped; // 修改为可空
-  final bool isSelectable; // 新增属性，控制是否可选择
+  final VoidCallback? onTapped;
+  final bool isSelectable;
 
   const Poker({
     Key? key,
@@ -18,7 +17,7 @@ class Poker extends StatefulWidget {
     required this.height,
     this.onTapped,
     required this.isSelected,
-    this.isSelectable = true, // 默认可选择
+    this.isSelectable = true,
   }) : super(key: key);
 
   @override
@@ -42,16 +41,13 @@ class _PokerState extends State<Poker> {
         });
       },
       child: GestureDetector(
-        onTap:
-            widget.isSelectable
-                ? widget.onTapped
-                : null, // 根据 isSelectable 决定是否响应点击
+        onTap: widget.isSelectable ? widget.onTapped : null,
         child: AnimatedContainer(
-          duration: const Duration(milliseconds: 100),
+          duration: const Duration(milliseconds: 150), // 添加过渡动画
           curve: Curves.easeInOut,
           transform: Matrix4.translationValues(
             0,
-            widget.isSelected ? -10 : 0, // 选中时向上悬停
+            widget.isSelected ? -20 : 0,
             0,
           ),
           width: widget.width,
@@ -62,7 +58,7 @@ class _PokerState extends State<Poker> {
                     ? Colors.amberAccent
                     : widget.isSelected
                     ? Colors.amber
-                    : Colors.white, // 悬停时变暗
+                    : Colors.white,
             borderRadius: BorderRadius.circular(8.0),
             border: Border.all(color: Colors.grey.shade300),
             boxShadow: [
