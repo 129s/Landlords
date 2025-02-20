@@ -11,11 +11,13 @@ class BottomArea extends ConsumerWidget {
     final gameState = ref.watch(gameProvider);
 
     return SizedBox(
-      height: MediaQuery.of(context).size.height / 3,
+      height: MediaQuery.of(context).size.height * 0.4,
       child: Column(
-        spacing: 40,
         children: [
-          _buildActionButtons(ref),
+          Padding(
+            padding: const EdgeInsets.all(24),
+            child: Container(child: _buildActionButtons(ref)),
+          ),
           Expanded(
             child: PokerList(
               cards: gameState.playerCards,
@@ -34,38 +36,47 @@ class BottomArea extends ConsumerWidget {
 
   Widget _buildActionButtons(WidgetRef ref) {
     return Row(
-      spacing: 40,
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        ElevatedButton(
+        _buildActionButton(
           onPressed: () => ref.read(gameProvider.notifier).playSelectedCards(),
-          child: const Text('出牌'),
+          text: '出牌',
         ),
-        ElevatedButton(
+        const SizedBox(width: 24), // 增加间距
+        _buildActionButton(
           onPressed: () {
             // TODO: 实现提示功能
           },
-          child: const Text('提示'),
+          text: '提示',
         ),
-        ElevatedButton(
+        const SizedBox(width: 24), // 增加间距
+        _buildActionButton(
           onPressed: () {
             // TODO: 实现跳过功能
           },
-          child: const Text('跳过'),
-        ),
-        ElevatedButton(
-          onPressed: () {
-            // TODO: 实现抢地主/叫分功能
-          },
-          child: const Text('抢地主/叫分'),
-        ),
-        ElevatedButton(
-          onPressed: () {
-            // TODO: 实现表情包、语音功能
-          },
-          child: const Icon(Icons.chat_bubble),
+          text: '跳过',
         ),
       ],
+    );
+  }
+
+  Widget _buildActionButton({
+    required VoidCallback onPressed,
+    required String text,
+  }) {
+    return ElevatedButton(
+      onPressed: onPressed,
+      style: ElevatedButton.styleFrom(
+        padding: const EdgeInsets.symmetric(
+          horizontal: 32,
+          vertical: 16,
+        ), // 增加内边距
+        textStyle: const TextStyle(fontSize: 18), // 增大字体
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8), // 圆角
+        ),
+      ),
+      child: Text(text),
     );
   }
 }

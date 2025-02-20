@@ -48,11 +48,30 @@ class GamePage extends ConsumerWidget {
                   ],
                 ),
               ),
-              BottomArea(),
+
+              Stack(
+                children: [
+                  BottomArea(),
+                  Positioned(right: 24, top: 24, child: _buildChatButton()),
+                ],
+              ),
             ],
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildChatButton() {
+    return ElevatedButton(
+      onPressed: () {
+        // TODO: 实现表情包、语音功能
+      },
+      style: ElevatedButton.styleFrom(
+        shape: const CircleBorder(), // 圆形按钮
+        padding: const EdgeInsets.all(20), // 增加内边距
+      ),
+      child: const Icon(Icons.chat_rounded, size: 32),
     );
   }
 }

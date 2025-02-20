@@ -1,6 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:landlords_3/domain/entities/poker_data.dart';
 import 'dart:math';
+import 'package:landlords_3/core/utils/card_type.dart';
+import 'package:landlords_3/core/utils/card_utils.dart';
 
 enum GamePhase { dealing, bidding, playing, gameOver }
 
@@ -12,6 +14,7 @@ class GameState {
   final GamePhase phase;
   final int? landlordSeat; // 地主座位号
   final List<int> selectedIndices;
+  final List<PokerData> lastPlayedCards; // 上一手出的牌
 
   const GameState({
     required this.playerCards,
@@ -21,6 +24,7 @@ class GameState {
     required this.phase,
     this.landlordSeat,
     this.selectedIndices = const [],
+    this.lastPlayedCards = const [],
   });
 
   GameState copyWith({
@@ -31,6 +35,7 @@ class GameState {
     GamePhase? phase,
     int? landlordSeat,
     List<int>? selectedIndices,
+    List<PokerData>? lastPlayedCards,
   }) {
     return GameState(
       playerCards: playerCards ?? this.playerCards,
@@ -40,6 +45,7 @@ class GameState {
       phase: phase ?? this.phase,
       landlordSeat: landlordSeat ?? this.landlordSeat,
       selectedIndices: selectedIndices ?? this.selectedIndices,
+      lastPlayedCards: lastPlayedCards ?? this.lastPlayedCards,
     );
   }
 }
@@ -53,14 +59,19 @@ class GameNotifier extends StateNotifier<GameState> {
           displayedCardsOther1: [],
           displayedCardsOther2: [],
           phase: GamePhase.dealing,
+          lastPlayedCards: [],
         ),
       );
 
   // 发牌逻辑
   void dealCards() {
     final deck = _createShuffledDeck();
+    final playerCards = deck.sublist(0, 17);
+    // 对玩家手牌进行排序
+    final sortedPlayerCards = CardUtils.sortCards(playerCards);
+
     state = state.copyWith(
-      playerCards: deck.sublist(0, 17),
+      playerCards: sortedPlayerCards,
       phase: GamePhase.bidding,
     );
   }
@@ -76,18 +87,32 @@ class GameNotifier extends StateNotifier<GameState> {
 
   // 出牌逻辑 (需要修改)
   void playSelectedCards() {
-    final playedCards = [
-      for (var index in state.selectedIndices) state.playerCards[index],
-    ];
+    final selectedCards =
+        state.selectedIndices.map((index) => state.playerCards[index]).toList();
+
+    // 验证牌型
+    final cardType = CardType.getType(selectedCards);
+    if (cardType == CardTypeEnum.invalid) {
+      print('Invalid card type!');
+      return; // 牌型不合法，不执行出牌
+    }
+
+    // 验证大小
+    if (state.lastPlayedCards.isNotEmpty &&
+        !CardUtils.isBigger(selectedCards, state.lastPlayedCards)) {
+      print('Cards are not bigger than last played cards!');
+      return; // 牌太小，不执行出牌
+    }
 
     // 假设当前玩家出牌，更新当前玩家的 displayedCards
     state = state.copyWith(
-      displayedCards: playedCards,
-      playerCards: [
-        for (var i = 0; i < state.playerCards.length; i++)
-          if (!state.selectedIndices.contains(i)) state.playerCards[i],
-      ],
+      displayedCards: selectedCards,
+      playerCards:
+          state.playerCards
+              .where((card) => !selectedCards.contains(card))
+              .toList(),
       selectedIndices: [],
+      lastPlayedCards: selectedCards, // 更新上一手牌
     );
 
     // TODO:  需要根据游戏逻辑，判断是哪个玩家出牌，并更新对应的 displayedCardsOther1 或 displayedCardsOther2
@@ -95,14 +120,19 @@ class GameNotifier extends StateNotifier<GameState> {
 
   void initializeGame() {
     final deck = _createShuffledDeck();
+    final playerCards = deck.sublist(0, 17);
+    // 对玩家手牌进行排序
+    final sortedPlayerCards = CardUtils.sortCards(playerCards);
+
     state = state.copyWith(
-      playerCards: deck.sublist(0, 17),
+      playerCards: sortedPlayerCards,
       displayedCards: [],
       displayedCardsOther1: [],
       displayedCardsOther2: [],
       phase: GamePhase.dealing,
       landlordSeat: null,
       selectedIndices: [],
+      lastPlayedCards: [], // 初始化上一手牌
     );
   }
 
