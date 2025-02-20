@@ -8,7 +8,7 @@ class TableArea extends StatelessWidget {
     return Container(
       decoration: const BoxDecoration(
         image: DecorationImage(
-          image: AssetImage('assets/table_background.png'), // 替换为你的牌桌背景图片
+          image: AssetImage('assets/table_background.png'),
           fit: BoxFit.cover,
         ),
       ),

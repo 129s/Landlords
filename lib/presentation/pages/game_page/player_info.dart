@@ -28,14 +28,7 @@ class PlayerInfo extends StatelessWidget {
             child: avatarUrl == null ? const Icon(Icons.person) : null,
           ),
           const SizedBox(height: 4.0), // 修改原硬编码部分
-          Text(
-            isLeft
-                ? const String.fromEnvironment(
-                  'PLAYER_NAME',
-                  defaultValue: 'Oblakes',
-                )
-                : 'null',
-          ),
+          const Text("从api获取"),
           const Text('得分: 0'),
         ],
       ),

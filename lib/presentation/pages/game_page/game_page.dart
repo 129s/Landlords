@@ -24,19 +24,6 @@ class GamePage extends ConsumerWidget {
     return Scaffold(
       body: Stack(
         children: [
-          // 多实例调试信息
-          Positioned(
-            left: 10,
-            top: 100,
-            child: Container(
-              padding: EdgeInsets.all(8),
-              color: Colors.white54,
-              child: Text(
-                '${const String.fromEnvironment('PLAYER_NAME')}',
-                style: TextStyle(fontSize: 20),
-              ),
-            ),
-          ),
           const TableArea(),
           Column(
             children: [
@@ -56,8 +43,15 @@ class GamePage extends ConsumerWidget {
                       top: 20.0,
                       child: const PlayerInfo(isLeft: false),
                     ),
-                    CardDisplayArea(),
                     // 卡牌展示区域
+                    CardDisplayArea(),
+                    // 多实例调试信息
+                    Center(
+                      child: Text(
+                        '${const String.fromEnvironment('PLAYER_NAME')}',
+                        style: TextStyle(color: Colors.white, fontSize: 20),
+                      ),
+                    ),
                   ],
                 ),
               ),
