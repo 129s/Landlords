@@ -31,161 +31,150 @@ class PokerList extends StatefulWidget {
 }
 
 class _PokerListState extends State<PokerList> {
-  Offset? _startPosition;
-  Offset? _currentPosition;
+  Offset? _dragStartGlobal;
+  Offset? _dragCurrentGlobal;
   List<int> _dragSelectedIndices = [];
+
+  // 缓存布局参数
+  late double _cachedCardWidth;
+  late double _cachedCardHeight;
+  late double _cachedSpacing;
+  late double _cachedStartPosition;
+  late double _containerWidth;
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onPanStart:
-          widget.isSelectable
-              ? (details) {
-                _startPosition = details.localPosition;
-                _currentPosition = details.localPosition;
-                _dragSelectedIndices = [];
-              }
-              : null,
-      onPanUpdate:
-          widget.isSelectable
-              ? (details) => _currentPosition = details.localPosition
-              : null,
-      onPanEnd:
-          widget.isSelectable
-              ? (details) {
-                if (_startPosition != null && _currentPosition != null) {
-                  _updateDragSelection(context);
-                  for (int index in _dragSelectedIndices) {
-                    widget.onCardTapped(index);
-                  }
-                }
-                setState(() {
-                  _startPosition = null;
-                  _currentPosition = null;
-                  _dragSelectedIndices = [];
-                });
-              }
-              : null,
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          final containerHeight = constraints.maxHeight;
-          final cardHeight = containerHeight;
-          final cardWidth = cardHeight / 1.4;
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        _calculateLayoutParams(constraints);
+        return GestureDetector(
+          onPanStart: widget.isSelectable ? _handlePanStart : null,
+          onPanUpdate: widget.isSelectable ? _handlePanUpdate : null,
+          onPanEnd: widget.isSelectable ? _handlePanEnd : null,
+          child: Stack(children: [_buildCardsStack()]),
+        );
+      },
+    );
+  }
 
-          double overlapFactor = 1 - widget.minVisibleWidth / cardWidth;
-          overlapFactor = overlapFactor.clamp(0, 1);
+  void _calculateLayoutParams(BoxConstraints constraints) {
+    final containerHeight = constraints.maxHeight;
+    _cachedCardHeight = containerHeight;
+    _cachedCardWidth = _cachedCardHeight / 1.4;
 
-          double spacingFactor = widget.isTight ? 0 : widget.maxSpacingFactor;
-          double spacing = cardWidth * spacingFactor;
+    double overlapFactor = 1 - widget.minVisibleWidth / _cachedCardWidth;
+    overlapFactor = overlapFactor.clamp(0, 1);
 
-          double totalWidth = cardWidth + (widget.cards.length - 1) * spacing;
+    double spacingFactor = widget.isTight ? 0 : widget.maxSpacingFactor;
+    _cachedSpacing = _cachedCardWidth * spacingFactor;
 
-          if (totalWidth > constraints.maxWidth && widget.cards.length > 1) {
-            spacing =
-                (constraints.maxWidth - cardWidth) / (widget.cards.length - 1);
-            spacingFactor = spacing / cardWidth;
-            overlapFactor = 0;
-            totalWidth = constraints.maxWidth;
-          }
+    double totalWidth =
+        _cachedCardWidth + (widget.cards.length - 1) * _cachedSpacing;
+    _containerWidth = constraints.maxWidth;
 
-          double startPosition = 0;
-          switch (widget.alignment) {
-            case PokerListAlignment.center:
-              startPosition = (constraints.maxWidth - totalWidth) / 2;
-              break;
-            case PokerListAlignment.end:
-              startPosition = constraints.maxWidth - totalWidth;
-              break;
-            case PokerListAlignment.start:
-            default:
-              startPosition = 0;
-              break;
-          }
+    if (totalWidth > _containerWidth && widget.cards.length > 1) {
+      _cachedSpacing =
+          (_containerWidth - _cachedCardWidth) / (widget.cards.length - 1);
+      totalWidth = _containerWidth;
+    }
 
-          return SizedBox(
-            height: cardHeight,
-            child: Stack(
-              children: [
-                for (int i = 0; i < widget.cards.length; i++)
-                  Positioned(
-                    left: startPosition + i * spacing,
-                    child: SizedBox(
-                      width: cardWidth,
-                      height: cardHeight,
-                      child: Poker(
-                        card: widget.cards[i],
-                        width: cardWidth,
-                        height: cardHeight,
-                        isSelected: widget.selectedIndices.contains(i),
-                        onTapped:
-                            widget.isSelectable
-                                ? () => widget.onCardTapped(i)
-                                : null,
-                        isSelectable: widget.isSelectable,
-                      ),
-                    ),
-                  ),
-              ],
+    switch (widget.alignment) {
+      case PokerListAlignment.center:
+        _cachedStartPosition = (_containerWidth - totalWidth) / 2;
+        break;
+      case PokerListAlignment.end:
+        _cachedStartPosition = _containerWidth - totalWidth;
+        break;
+      default:
+        _cachedStartPosition = 0;
+        break;
+    }
+  }
+
+  Widget _buildCardsStack() {
+    return SizedBox(
+      height: _cachedCardHeight,
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          for (int i = 0; i < widget.cards.length; i++)
+            Positioned(
+              left: _cachedStartPosition + i * _cachedSpacing,
+              child: SizedBox(
+                width: _cachedCardWidth,
+                height: _cachedCardHeight,
+                child: Poker(
+                  card: widget.cards[i],
+                  width: _cachedCardWidth,
+                  height: _cachedCardHeight,
+                  isSelected: widget.selectedIndices.contains(i),
+                  onTapped:
+                      widget.isSelectable ? () => widget.onCardTapped(i) : null,
+                  isSelectable: widget.isSelectable,
+                ),
+              ),
             ),
-          );
-        },
+        ],
       ),
     );
   }
 
-  void _updateDragSelection(BuildContext context) {
-    if (_startPosition == null || _currentPosition == null) return;
-
-    final RenderBox renderBox = context.findRenderObject() as RenderBox;
-    final Size size = renderBox.size;
-    final cardHeight = size.height;
-    final cardWidth = cardHeight / 1.4;
-
-    double spacingFactor = widget.isTight ? 0 : widget.maxSpacingFactor;
-    double spacing = cardWidth * spacingFactor;
-
-    double totalWidth = cardWidth + (widget.cards.length - 1) * spacing;
-    double startPosition = 0;
-    switch (widget.alignment) {
-      case PokerListAlignment.center:
-        startPosition = (size.width - totalWidth) / 2;
-        break;
-      case PokerListAlignment.end:
-        startPosition = size.width - totalWidth;
-        break;
-      case PokerListAlignment.start:
-      default:
-        startPosition = 0;
-        break;
-    }
-
-    List<int> newSelectedIndices = [];
-    for (int i = 0; i < widget.cards.length; i++) {
-      double cardLeft = startPosition + i * spacing;
-      double cardRight = cardLeft + cardWidth;
-
-      // 检查卡牌是否与选择区域相交
-      if (_isWithinSelectionArea(cardLeft, cardRight)) {
-        newSelectedIndices.add(i);
-      }
-    }
-
-    _dragSelectedIndices = newSelectedIndices;
+  void _handlePanStart(DragStartDetails details) {
+    final renderBox = context.findRenderObject() as RenderBox;
+    _dragStartGlobal = details.globalPosition;
+    _dragCurrentGlobal = details.globalPosition;
+    _dragSelectedIndices = _calculateSelectedIndices(renderBox);
   }
 
-  bool _isWithinSelectionArea(double cardLeft, double cardRight) {
-    if (_startPosition == null || _currentPosition == null) return false;
+  void _handlePanUpdate(DragUpdateDetails details) {
+    _dragCurrentGlobal = details.globalPosition;
+    final renderBox = context.findRenderObject() as RenderBox;
+    _dragSelectedIndices = _calculateSelectedIndices(renderBox);
+    setState(() {});
+  }
 
-    double selectionLeft =
-        _startPosition!.dx < _currentPosition!.dx
-            ? _startPosition!.dx
-            : _currentPosition!.dx;
-    double selectionRight =
-        _startPosition!.dx > _currentPosition!.dx
-            ? _startPosition!.dx
-            : _currentPosition!.dx;
+  void _handlePanEnd(DragEndDetails _) {
+    if (_dragSelectedIndices.isNotEmpty) {
+      for (final index in _dragSelectedIndices) {
+        widget.onCardTapped(index);
+      }
+    }
+    setState(() {
+      _dragStartGlobal = null;
+      _dragCurrentGlobal = null;
+      _dragSelectedIndices = [];
+    });
+  }
 
-    // 检查卡牌是否与选择区域相交
-    return cardLeft <= selectionRight && cardRight >= selectionLeft;
+  List<int> _calculateSelectedIndices(RenderBox renderBox) {
+    if (_dragStartGlobal == null || _dragCurrentGlobal == null) return [];
+
+    final localStart = renderBox.globalToLocal(_dragStartGlobal!);
+    final localEnd = renderBox.globalToLocal(_dragCurrentGlobal!);
+    final selectionRect = Rect.fromPoints(localStart, localEnd);
+
+    return widget.cards.asMap().keys.where((index) {
+      final cardLeft = _cachedStartPosition + index * _cachedSpacing;
+
+      // 计算实际可见宽度（考虑后续卡牌的覆盖）
+      final nextCardLeft =
+          index < widget.cards.length - 1
+              ? _cachedStartPosition + (index + 1) * _cachedSpacing
+              : double.infinity;
+
+      final visibleRight =
+          nextCardLeft < (cardLeft + _cachedCardWidth)
+              ? nextCardLeft
+              : cardLeft + _cachedCardWidth;
+
+      final visibleRect = Rect.fromLTRB(
+        cardLeft,
+        0,
+        visibleRight,
+        _cachedCardHeight,
+      );
+
+      return visibleRect.overlaps(selectionRect);
+    }).toList();
   }
 }
