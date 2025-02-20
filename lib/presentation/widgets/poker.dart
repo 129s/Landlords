@@ -81,7 +81,7 @@ class _PokerState extends State<Poker> {
               Positioned(top: 4.0, left: 4.0, child: _buildHeader()),
 
               // Footer
-              Positioned(bottom: 16.0, right: 4.0, child: _buildFooter()),
+              Positioned(bottom: 8.0, right: 4.0, child: _buildFooter()),
             ],
           ),
         ),
@@ -120,7 +120,7 @@ class _PokerState extends State<Poker> {
                     char,
                     style: TextStyle(
                       color: color,
-                      fontSize: 20.0,
+                      fontSize: widget.height / 8,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -135,13 +135,16 @@ class _PokerState extends State<Poker> {
             widget.card.displayValue,
             style: TextStyle(
               color: widget.card.color,
-              fontSize: 30.0,
+              fontSize: widget.height / 5,
               fontWeight: FontWeight.bold,
             ),
           ),
           Text(
             widget.card.suitSymbol,
-            style: TextStyle(color: widget.card.color, fontSize: 24.0),
+            style: TextStyle(
+              color: widget.card.color,
+              fontSize: widget.height / 5 * 0.8,
+            ),
           ),
         ],
       );
@@ -154,12 +157,15 @@ class _PokerState extends State<Poker> {
       // 大小王
       Color color =
           widget.card.value == CardValue.jokerBig ? Colors.red : Colors.grey;
-      return Icon(Icons.star, color: color, size: 48.0);
+      return Icon(Icons.star, color: color, size: widget.height / 10 * 3);
     } else {
       // 其他牌
       return Text(
         widget.card.suitSymbol,
-        style: TextStyle(color: widget.card.color, fontSize: 48.0),
+        style: TextStyle(
+          color: widget.card.color,
+          fontSize: widget.height / 10 * 3,
+        ),
       );
     }
   }
