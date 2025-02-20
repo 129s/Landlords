@@ -1,0 +1,35 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "玩家1",
+            "request": "launch",
+            "type": "dart",
+            "args": [
+                "-d",
+                "chrome",
+                "--dart-define=PLAYER_NAME=玩家1"
+            ]
+        },
+        {
+            "name": "玩家2",
+            "request": "launch",
+            "type": "dart",
+            "args": [
+                "-d",
+                "chrome",
+                "--dart-define=PLAYER_NAME=玩家2"
+            ]
+        },
+        {
+            "name": "玩家3",
+            "request": "launch",
+            "type": "dart",
+            "args": [
+                "-d",
+                "chrome",
+                "--dart-define=PLAYER_NAME=玩家3"
+            ]
+        }
+    ]
+}
