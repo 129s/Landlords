@@ -9,6 +9,7 @@ class Poker extends StatefulWidget {
   final double height;
   final VoidCallback? onTapped;
   final bool isSelectable;
+  final bool isTempSelected;
 
   const Poker({
     Key? key,
@@ -18,6 +19,7 @@ class Poker extends StatefulWidget {
     this.onTapped,
     required this.isSelected,
     this.isSelectable = true,
+    required this.isTempSelected,
   }) : super(key: key);
 
   @override
@@ -43,7 +45,7 @@ class _PokerState extends State<Poker> {
       child: GestureDetector(
         onTap: widget.isSelectable ? widget.onTapped : null,
         child: AnimatedContainer(
-          duration: const Duration(milliseconds: 150), // 添加过渡动画
+          duration: const Duration(milliseconds: 46), // 添加过渡动画
           curve: Curves.easeInOut,
           transform: Matrix4.translationValues(
             0,
@@ -53,12 +55,7 @@ class _PokerState extends State<Poker> {
           width: widget.width,
           height: widget.height,
           decoration: BoxDecoration(
-            color:
-                _isHovered
-                    ? Colors.amberAccent
-                    : widget.isSelected
-                    ? Colors.amber
-                    : Colors.white,
+            color: _calculateCardColor(),
             borderRadius: BorderRadius.circular(8.0),
             border: Border.all(color: Colors.grey.shade300),
             boxShadow: [
@@ -82,6 +79,19 @@ class _PokerState extends State<Poker> {
         ),
       ),
     );
+  }
+
+  Color _calculateCardColor() {
+    if (widget.isTempSelected) {
+      return Colors.orangeAccent;
+    }
+    if (_isHovered) {
+      return Colors.amberAccent;
+    }
+    if (widget.isSelected) {
+      return Colors.amber;
+    }
+    return Colors.white;
   }
 
   // 构建 Header

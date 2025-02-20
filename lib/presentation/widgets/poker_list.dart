@@ -91,6 +91,8 @@ class _PokerListState extends State<PokerList> {
     }
   }
 
+  // 新增临时选择状态
+  List<int> _tempSelectedIndices = [];
   Widget _buildCardsStack() {
     return SizedBox(
       height: _cachedCardHeight,
@@ -107,6 +109,7 @@ class _PokerListState extends State<PokerList> {
                   card: widget.cards[i],
                   width: _cachedCardWidth,
                   height: _cachedCardHeight,
+                  isTempSelected: _tempSelectedIndices.contains(i),
                   isSelected: widget.selectedIndices.contains(i),
                   onTapped:
                       widget.isSelectable ? () => widget.onCardTapped(i) : null,
@@ -129,17 +132,19 @@ class _PokerListState extends State<PokerList> {
   void _handlePanUpdate(DragUpdateDetails details) {
     _dragCurrentGlobal = details.globalPosition;
     final renderBox = context.findRenderObject() as RenderBox;
-    _dragSelectedIndices = _calculateSelectedIndices(renderBox);
+    _tempSelectedIndices = _calculateSelectedIndices(renderBox); // 更新临时状态
     setState(() {});
   }
 
   void _handlePanEnd(DragEndDetails _) {
-    if (_dragSelectedIndices.isNotEmpty) {
-      for (final index in _dragSelectedIndices) {
+    if (_tempSelectedIndices.isNotEmpty) {
+      // 提交最终选择
+      for (final index in _tempSelectedIndices) {
         widget.onCardTapped(index);
       }
     }
     setState(() {
+      _tempSelectedIndices = [];
       _dragStartGlobal = null;
       _dragCurrentGlobal = null;
       _dragSelectedIndices = [];
