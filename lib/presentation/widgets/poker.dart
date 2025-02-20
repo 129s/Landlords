@@ -2,7 +2,8 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:landlords_3/domain/entities/poker_data.dart';
 
-class Poker extends StatefulWidget {
+class Poker extends StatelessWidget {
+  final bool isSelected;
   final PokerData card;
   final double width;
   final double height;
@@ -14,26 +15,17 @@ class Poker extends StatefulWidget {
     required this.width,
     required this.height,
     required this.onTapped,
+    required this.isSelected,
   }) : super(key: key);
-
-  @override
-  State<Poker> createState() => _PokerState();
-}
-
-class _PokerState extends State<Poker> {
-  bool isSelected = false;
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () {
-        widget.onTapped();
-        isSelected = isSelected ? false : true;
-      },
+      onTap: onTapped,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 50),
-        width: widget.width,
-        height: widget.height,
+        width: width,
+        height: height,
         decoration: BoxDecoration(
           color: isSelected ? Colors.amber : Colors.white,
           borderRadius: BorderRadius.circular(8.0),
@@ -62,7 +54,6 @@ class _PokerState extends State<Poker> {
 
   // 构建 Header
   Widget _buildHeader() {
-    var card = widget.card;
     if (card.suit == Suit.joker) {
       // 大小王
       Color color = card.value == CardValue.jokerBig ? Colors.red : Colors.grey;
@@ -108,7 +99,6 @@ class _PokerState extends State<Poker> {
 
   // 构建 Footer
   Widget _buildFooter() {
-    var card = widget.card;
     if (card.suit == Suit.joker) {
       // 大小王
       Color color = card.value == CardValue.jokerBig ? Colors.red : Colors.grey;

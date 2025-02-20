@@ -80,6 +80,17 @@ class GameNotifier extends StateNotifier<GameState> {
     );
   }
 
+  void initializeGame() {
+    final deck = _createShuffledDeck();
+    state = state.copyWith(
+      playerCards: deck.sublist(0, 17),
+      displayedCards: [],
+      phase: GamePhase.dealing,
+      landlordSeat: null,
+      selectedIndices: [],
+    );
+  }
+
   List<PokerData> _createShuffledDeck() {
     final List<PokerData> deck = [];
 

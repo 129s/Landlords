@@ -1,64 +1,33 @@
-// lib/presentation/pages/game_page.dart
 import 'package:flutter/material.dart';
-import 'package:landlords_3/domain/entities/poker_data.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:landlords_3/presentation/pages/game_page/bottom_area.dart';
 import 'package:landlords_3/presentation/pages/game_page/card_display_area.dart';
-import 'package:landlords_3/presentation/pages/game_page/player_infro.dart';
+import 'package:landlords_3/presentation/pages/game_page/player_info.dart';
 import 'package:landlords_3/presentation/pages/game_page/table_area.dart';
 import 'package:landlords_3/presentation/pages/game_page/top_bar.dart';
+import 'package:landlords_3/presentation/providers/game_provider.dart';
 
-class GamePage extends StatefulWidget {
+class GamePage extends ConsumerWidget {
   const GamePage({Key? key}) : super(key: key);
 
   @override
-  State<GamePage> createState() => _GamePageState();
-}
-
-class _GamePageState extends State<GamePage> {
-  // 示例卡牌列表
-  List<PokerData> playerCards = [
-    PokerData(suit: Suit.joker, value: CardValue.jokerSmall),
-    PokerData(suit: Suit.joker, value: CardValue.jokerBig),
-    PokerData(suit: Suit.hearts, value: CardValue.ace),
-    PokerData(suit: Suit.hearts, value: CardValue.ace),
-    PokerData(suit: Suit.hearts, value: CardValue.ace),
-    PokerData(suit: Suit.diamonds, value: CardValue.king),
-    PokerData(suit: Suit.clubs, value: CardValue.queen),
-    PokerData(suit: Suit.spades, value: CardValue.jack),
-    PokerData(suit: Suit.hearts, value: CardValue.ten),
-    PokerData(suit: Suit.diamonds, value: CardValue.nine),
-    PokerData(suit: Suit.clubs, value: CardValue.eight),
-    PokerData(suit: Suit.spades, value: CardValue.jack),
-    PokerData(suit: Suit.hearts, value: CardValue.ten),
-    PokerData(suit: Suit.diamonds, value: CardValue.nine),
-    PokerData(suit: Suit.clubs, value: CardValue.eight),
-    PokerData(suit: Suit.spades, value: CardValue.jack),
-    PokerData(suit: Suit.hearts, value: CardValue.ten),
-    PokerData(suit: Suit.diamonds, value: CardValue.nine),
-    PokerData(suit: Suit.clubs, value: CardValue.eight),
-    PokerData(suit: Suit.spades, value: CardValue.jack),
-    PokerData(suit: Suit.hearts, value: CardValue.ten),
-  ];
-
-  List<PokerData> displayedCards = []; // 用于存储展示的卡牌
-
-  void _playCards(List<PokerData> cards) {
-    setState(() {
-      displayedCards = cards; // 将选中的卡牌添加到展示区域
+  Widget build(BuildContext context, WidgetRef ref) {
+    // 初始化游戏状态
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final notifier = ref.read(gameProvider.notifier);
+      if (notifier.state.phase == GamePhase.dealing &&
+          notifier.state.playerCards.isEmpty) {
+        notifier.initializeGame();
+      }
     });
-  }
-
-  @override
-  Widget build(BuildContext context) {
+    final gameState = ref.watch(gameProvider);
     return Scaffold(
       body: Stack(
         children: [
           const TableArea(),
           Column(
             children: [
-              // 1. 顶部：记牌器和功能按钮
               const TopBar(),
-
               Expanded(
                 child: Stack(
                   children: [
@@ -75,13 +44,11 @@ class _GamePageState extends State<GamePage> {
                       child: const PlayerInfo(isLeft: false),
                     ),
                     // 卡牌展示区域
-                    CardDisplayArea(displayedCards: displayedCards),
+                    CardDisplayArea(displayedCards: gameState.displayedCards),
                   ],
                 ),
               ),
-
-              // 2. 底部：操作按钮和卡牌列表
-              BottomArea(playerCards: playerCards, onCardsPlayed: _playCards),
+              BottomArea(),
             ],
           ),
         ],
