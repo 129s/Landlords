@@ -13,6 +13,7 @@ class BottomArea extends ConsumerWidget {
     return SizedBox(
       height: MediaQuery.of(context).size.height / 3,
       child: Column(
+        spacing: 40,
         children: [
           _buildActionButtons(ref),
           Expanded(
@@ -33,6 +34,8 @@ class BottomArea extends ConsumerWidget {
 
   Widget _buildActionButtons(WidgetRef ref) {
     return Row(
+      spacing: 40,
+      mainAxisAlignment: MainAxisAlignment.center,
       children: [
         ElevatedButton(
           onPressed: () => ref.read(gameProvider.notifier).playSelectedCards(),

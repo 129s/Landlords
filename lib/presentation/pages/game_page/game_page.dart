@@ -43,8 +43,8 @@ class GamePage extends ConsumerWidget {
                       top: 20.0,
                       child: const PlayerInfo(isLeft: false),
                     ),
+                    CardDisplayArea(),
                     // 卡牌展示区域
-                    CardDisplayArea(displayedCards: gameState.displayedCards),
                   ],
                 ),
               ),

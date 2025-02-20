@@ -6,7 +6,9 @@ enum GamePhase { dealing, bidding, playing, gameOver }
 
 class GameState {
   final List<PokerData> playerCards;
-  final List<PokerData> displayedCards;
+  final List<PokerData> displayedCards; // 当前玩家
+  final List<PokerData> displayedCardsOther1; // 其他玩家1
+  final List<PokerData> displayedCardsOther2; // 其他玩家2
   final GamePhase phase;
   final int? landlordSeat; // 地主座位号
   final List<int> selectedIndices;
@@ -14,6 +16,8 @@ class GameState {
   const GameState({
     required this.playerCards,
     required this.displayedCards,
+    required this.displayedCardsOther1,
+    required this.displayedCardsOther2,
     required this.phase,
     this.landlordSeat,
     this.selectedIndices = const [],
@@ -22,6 +26,8 @@ class GameState {
   GameState copyWith({
     List<PokerData>? playerCards,
     List<PokerData>? displayedCards,
+    List<PokerData>? displayedCardsOther1,
+    List<PokerData>? displayedCardsOther2,
     GamePhase? phase,
     int? landlordSeat,
     List<int>? selectedIndices,
@@ -29,6 +35,8 @@ class GameState {
     return GameState(
       playerCards: playerCards ?? this.playerCards,
       displayedCards: displayedCards ?? this.displayedCards,
+      displayedCardsOther1: displayedCardsOther1 ?? this.displayedCardsOther1,
+      displayedCardsOther2: displayedCardsOther2 ?? this.displayedCardsOther2,
       phase: phase ?? this.phase,
       landlordSeat: landlordSeat ?? this.landlordSeat,
       selectedIndices: selectedIndices ?? this.selectedIndices,
@@ -42,6 +50,8 @@ class GameNotifier extends StateNotifier<GameState> {
         GameState(
           playerCards: [],
           displayedCards: [],
+          displayedCardsOther1: [],
+          displayedCardsOther2: [],
           phase: GamePhase.dealing,
         ),
       );
@@ -64,12 +74,13 @@ class GameNotifier extends StateNotifier<GameState> {
     state = state.copyWith(selectedIndices: newIndices);
   }
 
-  // 出牌逻辑
+  // 出牌逻辑 (需要修改)
   void playSelectedCards() {
     final playedCards = [
       for (var index in state.selectedIndices) state.playerCards[index],
     ];
 
+    // 假设当前玩家出牌，更新当前玩家的 displayedCards
     state = state.copyWith(
       displayedCards: playedCards,
       playerCards: [
@@ -78,6 +89,8 @@ class GameNotifier extends StateNotifier<GameState> {
       ],
       selectedIndices: [],
     );
+
+    // TODO:  需要根据游戏逻辑，判断是哪个玩家出牌，并更新对应的 displayedCardsOther1 或 displayedCardsOther2
   }
 
   void initializeGame() {
@@ -85,6 +98,8 @@ class GameNotifier extends StateNotifier<GameState> {
     state = state.copyWith(
       playerCards: deck.sublist(0, 17),
       displayedCards: [],
+      displayedCardsOther1: [],
+      displayedCardsOther2: [],
       phase: GamePhase.dealing,
       landlordSeat: null,
       selectedIndices: [],
