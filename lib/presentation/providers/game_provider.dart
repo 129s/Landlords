@@ -66,8 +66,12 @@ class GameNotifier extends StateNotifier<GameState> {
   // 发牌逻辑
   void dealCards() {
     final deck = _createShuffledDeck();
+    final playerCards = deck.sublist(0, 17);
+    // 对玩家手牌进行排序
+    final sortedPlayerCards = CardUtils.sortCards(playerCards);
+
     state = state.copyWith(
-      playerCards: deck.sublist(0, 17),
+      playerCards: sortedPlayerCards,
       phase: GamePhase.bidding,
     );
   }
@@ -116,8 +120,12 @@ class GameNotifier extends StateNotifier<GameState> {
 
   void initializeGame() {
     final deck = _createShuffledDeck();
+    final playerCards = deck.sublist(0, 17);
+    // 对玩家手牌进行排序
+    final sortedPlayerCards = CardUtils.sortCards(playerCards);
+
     state = state.copyWith(
-      playerCards: deck.sublist(0, 17),
+      playerCards: sortedPlayerCards,
       displayedCards: [],
       displayedCardsOther1: [],
       displayedCardsOther2: [],
