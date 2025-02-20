@@ -91,6 +91,11 @@ class GameNotifier extends StateNotifier<GameState> {
     );
   }
 
+  // 清空选择
+  void clearSelectedCards() {
+    state = state.copyWith(selectedIndices: []);
+  }
+
   List<PokerData> _createShuffledDeck() {
     final List<PokerData> deck = [];
 

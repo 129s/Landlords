@@ -10,6 +10,7 @@ class Poker extends StatefulWidget {
   final VoidCallback? onTapped;
   final bool isSelectable;
   final bool isTempSelected;
+  final bool disableHoverEffect; // 新增属性
 
   const Poker({
     Key? key,
@@ -20,6 +21,7 @@ class Poker extends StatefulWidget {
     required this.isSelected,
     this.isSelectable = true,
     required this.isTempSelected,
+    this.disableHoverEffect = false, // 默认不禁用悬停效果
   }) : super(key: key);
 
   @override
@@ -32,16 +34,22 @@ class _PokerState extends State<Poker> {
   @override
   Widget build(BuildContext context) {
     return MouseRegion(
-      onEnter: (PointerEnterEvent event) {
-        setState(() {
-          _isHovered = true;
-        });
-      },
-      onExit: (PointerExitEvent event) {
-        setState(() {
-          _isHovered = false;
-        });
-      },
+      onEnter:
+          widget.disableHoverEffect
+              ? null
+              : (PointerEnterEvent event) {
+                setState(() {
+                  _isHovered = true;
+                });
+              },
+      onExit:
+          widget.disableHoverEffect
+              ? null
+              : (PointerExitEvent event) {
+                setState(() {
+                  _isHovered = false;
+                });
+              },
       child: GestureDetector(
         onTap: widget.isSelectable ? widget.onTapped : null,
         child: AnimatedContainer(

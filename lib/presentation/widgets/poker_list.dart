@@ -13,6 +13,7 @@ class PokerList extends StatefulWidget {
   final double maxSpacingFactor;
   final Function(int) onCardTapped;
   final bool isSelectable;
+  final bool disableHoverEffect; // 新增属性
 
   const PokerList({
     Key? key,
@@ -24,6 +25,7 @@ class PokerList extends StatefulWidget {
     this.isTight = false,
     this.maxSpacingFactor = 0.5,
     this.isSelectable = true,
+    this.disableHoverEffect = false, // 默认不禁用悬停效果
   }) : super(key: key);
 
   @override
@@ -114,6 +116,7 @@ class _PokerListState extends State<PokerList> {
                   onTapped:
                       widget.isSelectable ? () => widget.onCardTapped(i) : null,
                   isSelectable: widget.isSelectable,
+                  disableHoverEffect: widget.disableHoverEffect, // 传递属性
                 ),
               ),
             ),
