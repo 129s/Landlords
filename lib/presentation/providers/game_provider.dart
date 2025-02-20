@@ -1,305 +1,346 @@
-import 'package:flutter/foundation.dart';
+import 'dart:async';
+import 'dart:io';
+import 'package:landlords_3/data/datasources/game_remote_data_source_impl.dart';
+import 'package:landlords_3/domain/repositories/game_repository.dart';
+import 'package:socket_io_client/socket_io_client.dart' as IO;
+
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:landlords_3/core/socket/socket_client.dart';
-import 'package:landlords_3/data/datasources/game_remote_data_source.dart';
-import 'package:landlords_3/data/datasources/game_remote_data_source_impl.dart';
-import 'package:landlords_3/data/models/poker_model.dart';
-import 'package:landlords_3/data/repositories/game_repository.dart';
-import 'package:landlords_3/data/repositories/game_repository_impl.dart';
+import 'package:landlords_3/domain/repositories/game_repository_impl.dart';
 import 'package:landlords_3/domain/entities/poker_data.dart';
 import 'package:landlords_3/domain/usecases/create_room.dart';
 import 'package:landlords_3/domain/usecases/get_game_state.dart';
-import 'package:landlords_3/domain/usecases/get_player_order.dart';
 import 'package:landlords_3/domain/usecases/join_room.dart';
 import 'package:landlords_3/domain/usecases/play_cards.dart';
-
-import '../../core/utils/card_utils.dart';
-import '../../domain/entities/poker_data.dart';
-import '../../domain/entities/poker_data.dart';
 
 // 定义 Socket 连接状态
 enum SocketStatus { connecting, connected, disconnected, error }
 
-// 增强GameState定义
-@immutable
-class GameState {
-  const GameState({
-    this.roomId,
-    this.playerOrder,
-    this.isMyTurn = false,
-    this.playerCards = const [],
-    this.displayedCardsOther1 = const [],
-    this.displayedCardsOther2 = const [],
-    this.lastPlayedCards = const [],
-    this.selectedIndices = const [],
-    this.phase = GamePhase.idle,
-    this.version = 0,
-    this.socketStatus = SocketStatus.disconnected, // 添加 Socket 连接状态
-    this.displayedCards = const {0: [], 1: [], 2: []}, // 使用Map存储各玩家出牌
-  });
-
-  final String? roomId;
-  final int? playerOrder;
-  final bool isMyTurn;
-  final List<PokerData> playerCards;
-  final List<PokerData> displayedCardsOther1;
-  final List<PokerData> displayedCardsOther2;
-  final List<PokerData> lastPlayedCards;
-  final List<int> selectedIndices;
-  final GamePhase phase;
-  final int version;
-  final SocketStatus socketStatus; // Socket 连接状态
-  final Map<int, List<PokerData>> displayedCards; // 各玩家的出牌
-
-  GameState copyWith({
-    String? roomId,
-    int? playerOrder,
-    bool? isMyTurn,
-    List<PokerData>? playerCards,
-    List<PokerData>? displayedCardsOther1,
-    List<PokerData>? displayedCardsOther2,
-    List<PokerData>? lastPlayedCards,
-    List<int>? selectedIndices,
-    GamePhase? phase,
-    int? version,
-    SocketStatus? socketStatus,
-    Map<int, List<PokerData>>? displayedCards,
-  }) {
-    return GameState(
-      roomId: roomId ?? this.roomId,
-      playerOrder: playerOrder ?? this.playerOrder,
-      isMyTurn: isMyTurn ?? this.isMyTurn,
-      playerCards: playerCards ?? this.playerCards,
-      displayedCardsOther1: displayedCardsOther1 ?? this.displayedCardsOther1,
-      displayedCardsOther2: displayedCardsOther2 ?? this.displayedCardsOther2,
-      lastPlayedCards: lastPlayedCards ?? this.lastPlayedCards,
-      selectedIndices: selectedIndices ?? this.selectedIndices,
-      phase: phase ?? this.phase,
-      version: version ?? this.version,
-      socketStatus: socketStatus ?? this.socketStatus,
-      displayedCards: displayedCards ?? this.displayedCards,
-    );
+extension SocketStatusExtension on SocketStatus {
+  Color get color {
+    switch (this) {
+      case SocketStatus.connected:
+        return Colors.green.shade400;
+      case SocketStatus.connecting:
+        return Colors.blue.shade400;
+      case SocketStatus.disconnected:
+        return Colors.orange.shade400;
+      case SocketStatus.error:
+        return Colors.red.shade400;
+      default:
+        return Colors.grey.shade400;
+    }
   }
 
-  @override
-  String toString() {
-    return 'GameState{roomId: $roomId, playerOrder: $playerOrder, isMyTurn: $isMyTurn, playerCards: $playerCards, displayedCardsOther1: $displayedCardsOther1, displayedCardsOther2: $displayedCardsOther2, lastPlayedCards: $lastPlayedCards, selectedIndices: $selectedIndices, phase: $phase, version: $version, socketStatus: $socketStatus, displayedCards: $displayedCards}';
+  IconData get icon {
+    switch (this) {
+      case SocketStatus.connected:
+        return Icons.check_circle;
+      case SocketStatus.connecting:
+        return Icons.sync;
+      case SocketStatus.disconnected:
+        return Icons.link_off;
+      case SocketStatus.error:
+        return Icons.error;
+      default:
+        return Icons.question_mark;
+    }
+  }
+
+  String get displayText {
+    switch (this) {
+      case SocketStatus.connected:
+        return '已连接';
+      case SocketStatus.connecting:
+        return '连接中...';
+      case SocketStatus.disconnected:
+        return '已断开连接';
+      case SocketStatus.error:
+        return '连接错误';
+      default:
+        return '未知状态';
+    }
   }
 }
 
-enum GamePhase { idle, bidding, playing, end }
+// 定义 GameState
+class GameState {
+  final String? roomId;
+  final String playerName;
+  final SocketStatus socketStatus;
+  final int playerOrder; // 当前玩家的顺序
+  final Map<int, List<PokerData>> displayedCards; // 每个玩家展示的牌
+  final bool isMyTurn; // 是否轮到我出牌
+  final List<dynamic> players; // 玩家列表
+  final dynamic biddingResult; // 叫地主结果
+  final dynamic gameEnd; // 游戏结束信息
 
-// Providers
-final remoteDataSourceProvider = Provider<GameRemoteDataSource>((ref) {
-  final playerName = const String.fromEnvironment('PLAYER_NAME');
-  return GameRemoteDataSourceImpl(playerName: playerName);
-});
+  GameState({
+    this.roomId,
+    required this.playerName,
+    this.socketStatus = SocketStatus.disconnected,
+    this.playerOrder = 0,
+    this.displayedCards = const {},
+    this.isMyTurn = false,
+    this.players = const [],
+    this.biddingResult,
+    this.gameEnd,
+  });
 
-final repositoryProvider = Provider<GameRepository>((ref) {
-  return GameRepositoryImpl(
-    remoteDataSource: ref.read(remoteDataSourceProvider),
-  );
-});
+  GameState copyWith({
+    String? roomId,
+    String? playerName,
+    SocketStatus? socketStatus,
+    int? playerOrder,
+    Map<int, List<PokerData>>? displayedCards,
+    bool? isMyTurn,
+    List<dynamic>? players,
+    dynamic? biddingResult,
+    dynamic? gameEnd,
+  }) {
+    return GameState(
+      roomId: roomId ?? this.roomId,
+      playerName: playerName ?? this.playerName,
+      socketStatus: socketStatus ?? this.socketStatus,
+      playerOrder: playerOrder ?? this.playerOrder,
+      displayedCards: displayedCards ?? this.displayedCards,
+      isMyTurn: isMyTurn ?? this.isMyTurn,
+      players: players ?? this.players,
+      biddingResult: biddingResult ?? this.biddingResult,
+      gameEnd: gameEnd ?? this.gameEnd,
+    );
+  }
+}
 
-final createRoomProvider = Provider<CreateRoom>((ref) {
-  return CreateRoom(repository: ref.read(repositoryProvider));
-});
-
-final joinRoomProvider = Provider<JoinRoom>((ref) {
-  return JoinRoom(repository: ref.read(repositoryProvider));
-});
-
-final getPlayerOrderProvider = Provider<GetPlayerOrder>((ref) {
-  return GetPlayerOrder(repository: ref.read(repositoryProvider));
-});
-
-final playCardsProvider = Provider<PlayCards>((ref) {
-  return PlayCards(repository: ref.read(repositoryProvider));
-});
-
-final getGameStateProvider = Provider<GetGameState>((ref) {
-  return GetGameState(repository: ref.read(repositoryProvider));
-});
-
+// 定义 GameNotifier
 class GameNotifier extends StateNotifier<GameState> {
-  GameNotifier(this.ref) : super(const GameState());
+  final CreateRoom _createRoom;
+  final JoinRoom _joinRoom;
+  final GetGameState _getGameState;
+  final PlayCards _playCards;
+  final GameRepository _gameRepository;
+  late final IO.Socket _socket;
+  Timer? _reconnectTimer;
+  int _reconnectAttempts = 0;
 
-  final Ref ref;
-
-  // Use Cases (通过 Provider 获取)
-  late final CreateRoom _createRoom = ref.read(createRoomProvider);
-  late final JoinRoom _joinRoom = ref.read(joinRoomProvider);
-  late final GetPlayerOrder _getPlayerOrder = ref.read(getPlayerOrderProvider);
-  late final PlayCards _playCards = ref.read(playCardsProvider);
-  late final GetGameState _getGameState = ref.read(getGameStateProvider);
-
-  @override
-  set state(GameState value) {
-    if (kDebugMode) {
-      print('GameState changed: $value');
-    }
-    super.state = value;
+  GameNotifier({
+    required CreateRoom createRoom,
+    required JoinRoom joinRoom,
+    required GetGameState getGameState,
+    required PlayCards playCards,
+    required GameRepository gameRepository,
+    required String playerName,
+  }) : _createRoom = createRoom,
+       _joinRoom = joinRoom,
+       _getGameState = getGameState,
+       _playCards = playCards,
+       _gameRepository = gameRepository,
+       super(GameState(playerName: playerName)) {
+    _socket = SocketClient.getSocket(state.playerName);
+    _setupSocketListeners();
   }
 
-  // 初始化游戏
-  Future<void> initializeGame() async {
-    final playerName = const String.fromEnvironment('PLAYER_NAME');
+  @override
+  void dispose() {
+    _socket.disconnect();
+    _reconnectTimer?.cancel();
+    super.dispose();
+  }
 
-    // 1. 连接 Socket
-    await _connectSocket(playerName);
-
-    // 2. 创建或加入房间
-    await _createOrJoinRoom(playerName);
-
-    // 3. 监听游戏事件
-    _listenToGameActions();
-    _listenToGameUpdates();
+  // 初始化连接
+  void initialize() {
+    connectSocket();
   }
 
   // 连接 Socket
-  Future<void> _connectSocket(String playerName) async {
+  void connectSocket() {
     state = state.copyWith(socketStatus: SocketStatus.connecting);
-    try {
-      SocketClient.connect(playerName);
+    SocketClient.connect(state.playerName);
+  }
 
-      // 监听连接状态
-      SocketClient.addConnectionListener(playerName, (isConnected) {
-        if (isConnected) {
-          state = state.copyWith(socketStatus: SocketStatus.connected);
-        } else {
-          state = state.copyWith(socketStatus: SocketStatus.disconnected);
-        }
-      });
+  // 设置 Socket 监听器
+  void _setupSocketListeners() {
+    _socket.onConnect((_) {
+      print('Socket connected!');
+      state = state.copyWith(socketStatus: SocketStatus.connected);
+      _reconnectAttempts = 0; // 重置重连尝试次数
+      _reconnectTimer?.cancel(); // 取消重连定时器
+    });
 
-      // 监听连接错误
-      SocketClient.addErrorListener(playerName, (error) {
-        print('Socket connection error: $error');
-        state = state.copyWith(socketStatus: SocketStatus.error);
-      });
-    } catch (e) {
-      print('Failed to connect socket: $e');
+    _socket.onDisconnect((_) {
+      print('Socket disconnected!');
+      state = state.copyWith(socketStatus: SocketStatus.disconnected);
+      _scheduleReconnect(); // 安排重连
+    });
+
+    _socket.onError((error) {
+      print('Socket error: $error');
       state = state.copyWith(socketStatus: SocketStatus.error);
-    }
+      _scheduleReconnect(); // 安排重连
+    });
+
+    _socket.on('roomCreated', (roomId) {
+      state = state.copyWith(roomId: roomId as String);
+    });
+
+    _socket.on('playerJoined', (players) {
+      state = state.copyWith(players: players as List<dynamic>);
+    });
+
+    // 增强事件监听
+    _enhancedEventHandling();
   }
 
-  // 创建或加入房间
-  Future<void> _createOrJoinRoom(String playerName) async {
+  // 增强事件处理
+  void _enhancedEventHandling() {
+    _socket.on('playerJoined', (players) => _updatePlayers(players));
+    // _socket.on('biddingResult', (data) => _handleBidding(data)); // 示例
+    // _socket.on('gameEnd', (data) => _handleGameEnd(data)); // 示例
+  }
+
+  // 更新玩家列表
+  void _updatePlayers(dynamic players) {
+    state = state.copyWith(players: players as List<dynamic>);
+  }
+
+  // 安排重连
+  void _scheduleReconnect() {
+    if (_reconnectTimer?.isActive ?? false) return; // 如果已经在重连，则不重复安排
+
+    _reconnectTimer = Timer(Duration(seconds: _calculateReconnectDelay()), () {
+      if (_reconnectAttempts < 5) {
+        print('Attempting to reconnect... (Attempt ${_reconnectAttempts + 1})');
+        connectSocket();
+        _reconnectAttempts++;
+      } else {
+        print('Max reconnect attempts reached. Please check your connection.');
+        state = state.copyWith(socketStatus: SocketStatus.error);
+        _reconnectTimer?.cancel();
+      }
+    });
+  }
+
+  // 计算重连延迟
+  int _calculateReconnectDelay() {
+    return _reconnectAttempts < 3 ? 3 : 10; // 初始快速重连，之后放缓
+  }
+
+  // 创建房间
+  Future<void> createRoom() async {
     try {
-      if (state.roomId == null) {
-        // 创建房间
-        final roomId = await _createRoom.execute(playerName);
-        print('Room created: $roomId');
-        state = state.copyWith(roomId: roomId);
-        await _joinRoom.execute(roomId, playerName); // 加入房间
-      } else {
-        // 加入房间
-        await _joinRoom.execute(state.roomId!, playerName); // 直接加入房间
-      }
+      final roomId = await _createRoom.execute(state.playerName);
+      state = state.copyWith(roomId: roomId);
     } catch (e) {
-      print('Failed to create or join room: $e');
-      // TODO: 处理创建/加入房间失败的情况，例如显示错误信息
+      print('Error creating room: $e');
+      // TODO: 错误处理
     }
   }
 
-  void _listenToGameActions() {
-    final playerName = const String.fromEnvironment('PLAYER_NAME');
-    final socket = SocketClient.getSocket(playerName);
+  // 加入房间
+  Future<void> joinRoom(String roomId) async {
+    try {
+      await _joinRoom.execute(
+        JoinRoomParams(roomId: roomId, playerName: state.playerName),
+      );
+      state = state.copyWith(roomId: roomId);
+    } catch (e) {
+      print('Error joining room: $e');
+    }
+  }
 
-    socket.on('dealCards', (data) {
-      if (data is List) {
-        _handleDealCards(data);
-      } else {
-        print('Unexpected data type for dealCards: ${data.runtimeType}');
-      }
+  // 出牌
+  void playCards(List<PokerData> cards) {
+    _safeNetworkCall(() async {
+      await _playCards.execute(
+        PlayCardsParams(
+          cards: cards,
+          roomId: state.roomId!,
+          playerOrder: state.playerOrder,
+        ),
+      );
     });
   }
 
-  void _listenToGameUpdates() {
-    final playerName = const String.fromEnvironment('PLAYER_NAME');
-    final socket = SocketClient.getSocket(playerName);
-
-    socket.on('gameUpdate', (data) {
-      if (data is Map<String, dynamic>) {
-        _handleOpponentPlay(data);
-      } else {
-        print('Unexpected data type for gameUpdate: ${data.runtimeType}');
-      }
-    });
+  // 发送游戏操作
+  void sendGameAction(dynamic action) {
+    _socket.emit('gameAction', action);
   }
 
-  void _handleDealCards(List<dynamic> serverCards) async {
-    final playerOrder = await _getPlayerOrder.execute();
-    state = state.copyWith(playerOrder: playerOrder);
-
-    final myCards =
-        serverCards
-            .where((c) => c['owner'] == state.playerOrder)
-            .map((c) => _convertToPoker(c as Map<String, dynamic>))
-            .toList();
-
-    state = state.copyWith(
-      playerCards: CardUtils.sortCards(myCards),
-      phase: GamePhase.bidding,
-    );
-  }
-
-  void _handleOpponentPlay(Map<String, dynamic> action) {
-    final cards =
-        (action['cards'] as List)
-            .map((c) => _convertToPoker(c as Map<String, dynamic>))
-            .toList();
-    final playerOrder = action['playerOrder'] as int;
-
-    if (playerOrder == 1) {
-      state = state.copyWith(displayedCardsOther1: cards);
-    } else if (playerOrder == 2) {
-      state = state.copyWith(displayedCardsOther2: cards);
+  // 安全网络调用
+  void _safeNetworkCall(Future<void> Function() operation) async {
+    try {
+      await operation();
+    } on SocketException catch (e) {
+      print('SocketException: $e');
+      state = state.copyWith(socketStatus: SocketStatus.error);
+      _scheduleReconnect();
+    } on TimeoutException {
+      print('TimeoutException');
+      // TODO: 显示超时警告
+    } catch (e) {
+      print('Unexpected error: $e');
+      // TODO: 统一错误处理
     }
-
-    state = state.copyWith(lastPlayedCards: cards);
-    _handleTurnUpdate(action['nextPlayer']);
   }
 
-  void _handleTurnUpdate(dynamic nextPlayer) async {
-    final playerOrder = await _getPlayerOrder.execute();
-    state = state.copyWith(isMyTurn: nextPlayer == playerOrder);
+  // 示例：处理叫地主结果
+  void _handleBidding(dynamic data) {
+    state = state.copyWith(biddingResult: data);
   }
 
-  void playSelectedCards() async {
-    final cards =
-        state.selectedIndices.map((i) => state.playerCards[i]).toList();
-    await _playCards.execute(cards, state.roomId!, state.playerOrder!);
+  // 示例：处理游戏结束
+  void _handleGameEnd(dynamic data) {
+    state = state.copyWith(gameEnd: data);
   }
 
-  PokerData _convertToPoker(Map<String, dynamic> data) {
-    return PokerModel(
-      suit: Suit.values[data['suit']],
-      value: CardValue.values[data['value']],
-    );
-  }
-
-  Map<String, dynamic> _pokerToMap(PokerData card) {
-    return {'suit': card.suit.index, 'value': card.value.index};
-  }
-
-  void selectCard(int index) {
-    List<int> newSelection = List.from(state.selectedIndices);
-    if (newSelection.contains(index)) {
-      newSelection.remove(index);
-    } else {
-      newSelection.add(index);
-    }
-    state = state.copyWith(selectedIndices: newSelection);
-  }
-
-  // 添加重连方法
+  // 重新连接
   void reconnect() {
-    final playerName = const String.fromEnvironment('PLAYER_NAME');
-    SocketClient.disconnect(playerName);
-    initializeGame();
+    _reconnectAttempts = 0;
+    connectSocket();
   }
 }
 
 final gameProvider = StateNotifierProvider<GameNotifier, GameState>((ref) {
-  return GameNotifier(ref);
+  final playerName = 'Player1';
+  final repository = ref.read(gameRepositoryProvider);
+
+  return GameNotifier(
+    createRoom: CreateRoom(repository), // 直接传入repository实例
+    joinRoom: JoinRoom(repository),
+    getGameState: GetGameState(repository),
+    playCards: PlayCards(repository),
+    gameRepository: repository,
+    playerName: playerName,
+  );
+});
+
+final gameRepositoryProvider = Provider<GameRepository>((ref) {
+  return GameRepositoryImpl(
+    remoteDataSource: GameRemoteDataSourceImpl(
+      playerName: 'Player1', // 应与实际玩家名同步
+    ),
+  );
+});
+
+// 状态选择器
+final displayedCardsProvider = Provider<List<PokerData>>((ref) {
+  final state = ref.watch(gameProvider);
+  return state.displayedCards[state.playerOrder] ?? [];
+});
+
+final opponentsCardsProvider = Provider.family<List<PokerData>, int>((
+  ref,
+  order,
+) {
+  return ref.watch(gameProvider).displayedCards[order] ?? [];
+});
+
+// 玩家信息Provider
+final playerProvider = Provider.family<dynamic, int>((ref, playerOrder) {
+  final gameState = ref.watch(gameProvider);
+  if (gameState.players.isNotEmpty && playerOrder < gameState.players.length) {
+    return gameState.players[playerOrder];
+  }
+  return null; // 或者返回一个默认的玩家信息
 });

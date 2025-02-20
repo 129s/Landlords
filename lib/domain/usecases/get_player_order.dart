@@ -1,4 +1,4 @@
-import 'package:landlords_3/data/repositories/game_repository.dart';
+import 'package:landlords_3/domain/repositories/game_repository.dart';
 
 class GetPlayerOrder {
   final GameRepository repository;

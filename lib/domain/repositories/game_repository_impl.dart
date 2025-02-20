@@ -1,6 +1,6 @@
 import 'package:landlords_3/data/datasources/game_remote_data_source.dart';
 import 'package:landlords_3/data/models/poker_model.dart';
-import 'package:landlords_3/data/repositories/game_repository.dart';
+import 'package:landlords_3/domain/repositories/game_repository.dart';
 import 'package:landlords_3/domain/entities/poker_data.dart';
 
 class GameRepositoryImpl implements GameRepository {

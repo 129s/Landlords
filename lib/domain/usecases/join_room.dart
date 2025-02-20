@@ -1,11 +1,18 @@
-import 'package:landlords_3/data/repositories/game_repository.dart';
+import 'package:landlords_3/domain/repositories/game_repository.dart';
+
+class JoinRoomParams {
+  final String roomId;
+  final String playerName;
+
+  JoinRoomParams({required this.roomId, required this.playerName});
+}
 
 class JoinRoom {
-  final GameRepository repository;
+  final GameRepository _repository;
 
-  JoinRoom({required this.repository});
+  JoinRoom(this._repository);
 
-  Future<void> execute(String roomId, String playerName) async {
-    return await repository.joinRoom(roomId, playerName);
+  Future<void> execute(JoinRoomParams params) async {
+    return _repository.joinRoom(params.roomId, params.playerName);
   }
 }

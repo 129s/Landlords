@@ -1,11 +1,11 @@
-import 'package:landlords_3/data/repositories/game_repository.dart';
+import 'package:landlords_3/domain/repositories/game_repository.dart';
 
 class GetGameState {
-  final GameRepository repository;
+  final GameRepository _repository;
 
-  GetGameState({required this.repository});
+  GetGameState(this._repository);
 
   Stream<dynamic> execute() {
-    return repository.getGameUpdates();
+    return _repository.getGameUpdates();
   }
 }
