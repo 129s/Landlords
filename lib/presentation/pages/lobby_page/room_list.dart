@@ -62,7 +62,6 @@ class _RoomListItem extends StatelessWidget {
                 Text('创建时间: ${room.createdAt.toString()}'),
                 const SizedBox(height: 8),
                 Text('玩家人数: ${room.players.length}/3'),
-                if (room.hasPassword) const Text('需要密码'),
               ],
             ),
           ),

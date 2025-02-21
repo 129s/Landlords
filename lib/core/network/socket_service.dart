@@ -1,3 +1,6 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:landlords_3/domain/entities/room_model.dart';
+import 'package:landlords_3/presentation/providers/lobby_provider.dart';
 import 'package:socket_io_client/socket_io_client.dart' as io;
 
 class SocketService {
@@ -25,4 +28,6 @@ class SocketService {
   void listen(String event, Function(dynamic) callback) {
     socket.on(event, callback);
   }
+
+  void requestRooms() => socket.emit('requestRooms');
 }

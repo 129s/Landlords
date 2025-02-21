@@ -22,13 +22,6 @@ class CreateRoomDialog extends ConsumerWidget {
               border: OutlineInputBorder(),
             ),
           ),
-          const SizedBox(height: 16),
-          const Text('高级选项'),
-          SwitchListTile(
-            title: const Text('需要密码'),
-            value: false,
-            onChanged: (_) {},
-          ),
         ],
       ),
       actions: [
