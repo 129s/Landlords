@@ -10,7 +10,7 @@ class PokerWidget extends StatefulWidget {
   final VoidCallback? onTapped;
   final bool isSelectable;
   final bool isTempSelected;
-  final bool disableHoverEffect; // 新增属性
+  final bool disableHoverEffect;
 
   const PokerWidget({
     Key? key,
@@ -21,7 +21,7 @@ class PokerWidget extends StatefulWidget {
     required this.isSelected,
     this.isSelectable = true,
     required this.isTempSelected,
-    this.disableHoverEffect = false, // 默认不禁用悬停效果
+    this.disableHoverEffect = false,
   }) : super(key: key);
 
   @override

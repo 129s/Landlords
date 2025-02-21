@@ -1,14 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:landlords_3/core/network/socket_service.dart';
 import 'package:landlords_3/presentation/pages/game_page/game_page.dart';
+import 'package:landlords_3/presentation/pages/lobby_page/lobby_page.dart';
 
 void main() {
-  runApp(
-    const ProviderScope(
-      // 使用 ProviderScope 包裹 MyApp
-      child: MyApp(),
-    ),
-  );
+  SocketService();
+  runApp(const ProviderScope(child: MyApp()));
 }
 
 class MyApp extends StatelessWidget {
@@ -19,7 +17,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: '斗地主',
       theme: ThemeData(primarySwatch: Colors.blue),
-      home: const GamePage(), // 设置 GamePage 为主页
+      home: const LobbyPage(),
       debugShowCheckedModeBanner: false,
     );
   }
