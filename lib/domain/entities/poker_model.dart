@@ -20,11 +20,11 @@ enum CardValue {
   jokerBig, // 大王
 }
 
-class PokerData {
+class PokerModel {
   final Suit suit;
   final CardValue value;
 
-  PokerData({required this.suit, required this.value});
+  PokerModel({required this.suit, required this.value});
 
   // 用于显示的文字
   String get displayValue {

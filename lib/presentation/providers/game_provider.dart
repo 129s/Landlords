@@ -1,5 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:landlords_3/domain/entities/poker_data.dart';
+import 'package:landlords_3/domain/entities/poker_model.dart';
 import 'dart:math';
 import 'package:landlords_3/core/utils/card_type.dart';
 import 'package:landlords_3/core/utils/card_utils.dart';
@@ -7,14 +7,14 @@ import 'package:landlords_3/core/utils/card_utils.dart';
 enum GamePhase { dealing, bidding, playing, gameOver }
 
 class GameState {
-  final List<PokerData> playerCards;
-  final List<PokerData> displayedCards; // 当前玩家
-  final List<PokerData> displayedCardsOther1; // 其他玩家1
-  final List<PokerData> displayedCardsOther2; // 其他玩家2
+  final List<PokerModel> playerCards;
+  final List<PokerModel> displayedCards; // 当前玩家
+  final List<PokerModel> displayedCardsOther1; // 其他玩家1
+  final List<PokerModel> displayedCardsOther2; // 其他玩家2
   final GamePhase phase;
   final int? landlordSeat; // 地主座位号
   final List<int> selectedIndices;
-  final List<PokerData> lastPlayedCards; // 上一手出的牌
+  final List<PokerModel> lastPlayedCards; // 上一手出的牌
 
   const GameState({
     required this.playerCards,
@@ -28,14 +28,14 @@ class GameState {
   });
 
   GameState copyWith({
-    List<PokerData>? playerCards,
-    List<PokerData>? displayedCards,
-    List<PokerData>? displayedCardsOther1,
-    List<PokerData>? displayedCardsOther2,
+    List<PokerModel>? playerCards,
+    List<PokerModel>? displayedCards,
+    List<PokerModel>? displayedCardsOther1,
+    List<PokerModel>? displayedCardsOther2,
     GamePhase? phase,
     int? landlordSeat,
     List<int>? selectedIndices,
-    List<PokerData>? lastPlayedCards,
+    List<PokerModel>? lastPlayedCards,
   }) {
     return GameState(
       playerCards: playerCards ?? this.playerCards,
@@ -141,23 +141,23 @@ class GameNotifier extends StateNotifier<GameState> {
     state = state.copyWith(selectedIndices: []);
   }
 
-  List<PokerData> _createShuffledDeck() {
-    final List<PokerData> deck = [];
+  List<PokerModel> _createShuffledDeck() {
+    final List<PokerModel> deck = [];
 
     // 添加普通牌
     for (var suit in Suit.values) {
       if (suit != Suit.joker) {
         for (var value in CardValue.values) {
           if (value != CardValue.jokerBig && value != CardValue.jokerSmall) {
-            deck.add(PokerData(suit: suit, value: value));
+            deck.add(PokerModel(suit: suit, value: value));
           }
         }
       }
     }
 
     // 添加大小王
-    deck.add(PokerData(suit: Suit.joker, value: CardValue.jokerSmall));
-    deck.add(PokerData(suit: Suit.joker, value: CardValue.jokerBig));
+    deck.add(PokerModel(suit: Suit.joker, value: CardValue.jokerSmall));
+    deck.add(PokerModel(suit: Suit.joker, value: CardValue.jokerBig));
 
     // 洗牌
     deck.shuffle(Random());

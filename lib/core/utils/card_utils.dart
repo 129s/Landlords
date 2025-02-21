@@ -1,9 +1,9 @@
 import 'package:landlords_3/core/utils/card_type.dart';
-import 'package:landlords_3/domain/entities/poker_data.dart';
+import 'package:landlords_3/domain/entities/poker_model.dart';
 
 class CardUtils {
   // 获取卡牌的权重值，用于比较大小
-  static int getCardWeight(PokerData card) {
+  static int getCardWeight(PokerModel card) {
     switch (card.value) {
       case CardValue.jokerBig:
         return 16;
@@ -41,14 +41,14 @@ class CardUtils {
   }
 
   // 按照权重值排序卡牌
-  static List<PokerData> sortCards(List<PokerData> cards) {
-    final sortedCards = List<PokerData>.from(cards);
+  static List<PokerModel> sortCards(List<PokerModel> cards) {
+    final sortedCards = List<PokerModel>.from(cards);
     sortedCards.sort((a, b) => getCardWeight(b).compareTo(getCardWeight(a)));
     return sortedCards;
   }
 
   // 判断两手牌的大小，hand1 是否大于 hand2
-  static bool isBigger(List<PokerData> hand1, List<PokerData> hand2) {
+  static bool isBigger(List<PokerModel> hand1, List<PokerModel> hand2) {
     if (hand1.isEmpty) return false;
     if (hand2.isEmpty) return true;
 
@@ -114,7 +114,7 @@ class CardUtils {
   }
 
   // 辅助函数：查找三张相同的牌
-  static List<PokerData> findThreeCards(List<PokerData> cards) {
+  static List<PokerModel> findThreeCards(List<PokerModel> cards) {
     if (cards.length < 3) return [];
     final counts = <CardValue, int>{};
     for (final card in cards) {
@@ -129,7 +129,7 @@ class CardUtils {
   }
 
   // 辅助函数：查找飞机牌的主体部分
-  static List<PokerData> findPlaneCards(List<PokerData> cards) {
+  static List<PokerModel> findPlaneCards(List<PokerModel> cards) {
     if (cards.length < 6) return [];
     final counts = <CardValue, int>{};
     for (final card in cards) {
@@ -156,7 +156,7 @@ class CardUtils {
     }
 
     // 返回飞机牌的主体部分
-    List<PokerData> planeCards = [];
+    List<PokerModel> planeCards = [];
     for (final value in threeCardValues) {
       planeCards.addAll(cards.where((card) => card.value == value));
     }
@@ -164,7 +164,7 @@ class CardUtils {
   }
 
   // 辅助函数：查找四张相同的牌
-  static List<PokerData> findFourCards(List<PokerData> cards) {
+  static List<PokerModel> findFourCards(List<PokerModel> cards) {
     if (cards.length < 4) return [];
     final counts = <CardValue, int>{};
     for (final card in cards) {

@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:landlords_3/domain/entities/poker_data.dart';
+import 'package:landlords_3/domain/entities/poker_model.dart';
 import 'package:landlords_3/presentation/widgets/poker.dart';
 
 enum PokerListAlignment { start, center, end }
 
 class PokerList extends StatefulWidget {
-  final List<PokerData> cards;
+  final List<PokerModel> cards;
   final List<int> selectedIndices;
   final double minVisibleWidth;
   final PokerListAlignment alignment;

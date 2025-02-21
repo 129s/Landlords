@@ -1,10 +1,10 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:landlords_3/domain/entities/poker_data.dart';
+import 'package:landlords_3/domain/entities/poker_model.dart';
 
 class Poker extends StatefulWidget {
   final bool isSelected;
-  final PokerData card;
+  final PokerModel card;
   final double width;
   final double height;
   final VoidCallback? onTapped;
