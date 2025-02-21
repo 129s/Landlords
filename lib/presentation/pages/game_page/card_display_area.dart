@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:landlords_3/presentation/providers/game_provider.dart';
-import 'package:landlords_3/presentation/widgets/poker_list.dart';
+import 'package:landlords_3/presentation/widgets/poker_list_widget.dart';
 
 class CardDisplayArea extends ConsumerWidget {
   const CardDisplayArea({Key? key}) : super(key: key);
@@ -30,7 +30,7 @@ class CardDisplayArea extends ConsumerWidget {
                       child: SizedBox(
                         height: height / 2,
                         child: Center(
-                          child: PokerList(
+                          child: PokerListWidget(
                             cards: gameState.displayedCardsOther1,
                             minVisibleWidth: 25.0,
                             alignment: PokerListAlignment.center,
@@ -51,7 +51,7 @@ class CardDisplayArea extends ConsumerWidget {
                       child: SizedBox(
                         height: height / 2,
                         child: Center(
-                          child: PokerList(
+                          child: PokerListWidget(
                             cards: gameState.displayedCardsOther2,
                             minVisibleWidth: 25.0,
                             alignment: PokerListAlignment.center,
@@ -74,7 +74,7 @@ class CardDisplayArea extends ConsumerWidget {
                   child: SizedBox(
                     height: height / 2,
                     child: Center(
-                      child: PokerList(
+                      child: PokerListWidget(
                         cards: gameState.displayedCards,
                         minVisibleWidth: 25.0,
                         alignment: PokerListAlignment.center,

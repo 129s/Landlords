@@ -1,8 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:landlords_3/domain/entities/poker_model.dart';
 import 'dart:math';
-import 'package:landlords_3/core/utils/card_type.dart';
-import 'package:landlords_3/core/utils/card_utils.dart';
+import 'package:landlords_3/core/game/card_type.dart';
+import 'package:landlords_3/core/game/card_utils.dart';
 
 enum GamePhase { dealing, bidding, playing, gameOver }
 

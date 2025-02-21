@@ -1,4 +1,4 @@
-import 'package:landlords_3/core/utils/card_type.dart';
+import 'package:landlords_3/core/game/card_type.dart';
 import 'package:landlords_3/domain/entities/poker_model.dart';
 
 class CardUtils {

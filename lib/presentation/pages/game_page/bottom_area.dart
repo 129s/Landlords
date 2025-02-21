@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:landlords_3/presentation/providers/game_provider.dart';
-import 'package:landlords_3/presentation/widgets/poker_list.dart';
+import 'package:landlords_3/presentation/widgets/poker_list_widget.dart';
 
 class BottomArea extends ConsumerWidget {
   const BottomArea({Key? key}) : super(key: key);
@@ -19,7 +19,7 @@ class BottomArea extends ConsumerWidget {
             child: Container(child: _buildActionButtons(ref)),
           ),
           Expanded(
-            child: PokerList(
+            child: PokerListWidget(
               cards: gameState.playerCards,
               minVisibleWidth: 25.0,
               selectedIndices: gameState.selectedIndices,

@@ -2,7 +2,7 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:landlords_3/domain/entities/poker_model.dart';
 
-class Poker extends StatefulWidget {
+class PokerWidget extends StatefulWidget {
   final bool isSelected;
   final PokerModel card;
   final double width;
@@ -12,7 +12,7 @@ class Poker extends StatefulWidget {
   final bool isTempSelected;
   final bool disableHoverEffect; // 新增属性
 
-  const Poker({
+  const PokerWidget({
     Key? key,
     required this.card,
     required this.width,
@@ -25,10 +25,10 @@ class Poker extends StatefulWidget {
   }) : super(key: key);
 
   @override
-  State<Poker> createState() => _PokerState();
+  State<PokerWidget> createState() => _PokerWidgetState();
 }
 
-class _PokerState extends State<Poker> {
+class _PokerWidgetState extends State<PokerWidget> {
   bool _isHovered = false;
 
   @override

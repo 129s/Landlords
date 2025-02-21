@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:landlords_3/domain/entities/poker_model.dart';
-import 'package:landlords_3/presentation/widgets/poker.dart';
+import 'package:landlords_3/presentation/widgets/poker_widget.dart';
 
 enum PokerListAlignment { start, center, end }
 
-class PokerList extends StatefulWidget {
+class PokerListWidget extends StatefulWidget {
   final List<PokerModel> cards;
   final List<int> selectedIndices;
   final double minVisibleWidth;
@@ -15,7 +15,7 @@ class PokerList extends StatefulWidget {
   final bool isSelectable;
   final bool disableHoverEffect; // 新增属性
 
-  const PokerList({
+  const PokerListWidget({
     Key? key,
     required this.cards,
     required this.onCardTapped,
@@ -29,10 +29,10 @@ class PokerList extends StatefulWidget {
   }) : super(key: key);
 
   @override
-  State<PokerList> createState() => _PokerListState();
+  State<PokerListWidget> createState() => _PokerListWidgetState();
 }
 
-class _PokerListState extends State<PokerList> {
+class _PokerListWidgetState extends State<PokerListWidget> {
   Offset? _dragStartGlobal;
   Offset? _dragCurrentGlobal;
   List<int> _dragSelectedIndices = [];
@@ -107,7 +107,7 @@ class _PokerListState extends State<PokerList> {
               child: SizedBox(
                 width: _cachedCardWidth,
                 height: _cachedCardHeight,
-                child: Poker(
+                child: PokerWidget(
                   card: widget.cards[i],
                   width: _cachedCardWidth,
                   height: _cachedCardHeight,
