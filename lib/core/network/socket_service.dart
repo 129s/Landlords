@@ -1,6 +1,5 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:landlords_3/domain/entities/room_model.dart';
-import 'package:landlords_3/presentation/providers/lobby_provider.dart';
+import 'dart:async';
+
 import 'package:socket_io_client/socket_io_client.dart' as io;
 
 class SocketService {
@@ -9,11 +8,36 @@ class SocketService {
 
   factory SocketService() => _instance;
 
+  final StreamController<List<dynamic>> _roomsStreamController =
+      StreamController<List<dynamic>>.broadcast();
+
+  Stream<List<dynamic>> get roomsStream => _roomsStreamController.stream;
+
   SocketService._internal() {
     socket = io.io('http://localhost:3000', {
       'transports': ['websocket'],
       'autoConnect': false,
     });
+
+    socket.onConnect((_) {
+      print('Connected to Socket.IO server');
+      requestRooms();
+    });
+
+    socket.onDisconnect((_) {
+      print('Disconnected from Socket.IO server');
+    });
+
+    socket.onError((data) {
+      print('Socket.IO Error: $data');
+    });
+
+    // 监听 roomUpdate 事件，并将数据添加到 StreamController
+    socket.on('roomUpdate', (data) {
+      print('Received roomUpdate event: $data');
+      _roomsStreamController.add(data as List<dynamic>);
+    });
+
     socket.connect();
   }
 
@@ -25,9 +49,10 @@ class SocketService {
     socket.emit('createRoom', playerName);
   }
 
-  void listen(String event, Function(dynamic) callback) {
-    socket.on(event, callback);
-  }
-
   void requestRooms() => socket.emit('requestRooms');
+
+  void dispose() {
+    _roomsStreamController.close();
+    socket.disconnect();
+  }
 }

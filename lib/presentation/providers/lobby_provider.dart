@@ -1,5 +1,10 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:landlords_3/core/network/socket_service.dart';
+import 'package:landlords_3/data/providers/repo_providers.dart';
 import 'package:landlords_3/domain/entities/room_model.dart';
+import 'package:landlords_3/domain/repositories/room_repo.dart';
 
 class LobbyState {
   final List<RoomModel> rooms;
@@ -26,24 +31,55 @@ class LobbyState {
 }
 
 class LobbyNotifier extends StateNotifier<LobbyState> {
-  LobbyNotifier() : super(const LobbyState());
+  final RoomRepository _repository;
+  final SocketService _socketService = SocketService(); // 获取 SocketService 实例
+  StreamSubscription? _roomSubscription;
 
-  // 更新房间列表
-  void updateRooms(List<RoomModel> rooms) {
-    state = state.copyWith(rooms: rooms);
+  LobbyNotifier(this._repository) : super(const LobbyState()) {
+    _init();
   }
 
-  // 设置玩家名称
+  void _init() {
+    // 实时监听房间更新
+    _roomSubscription = _repository.watchRooms().listen((rooms) {
+      print('Received rooms from stream: $rooms');
+      state = state.copyWith(rooms: rooms);
+    });
+  }
+
+  // 修改创建房间方法
+  Future<void> createRoom() async {
+    if (state.playerName == null) return;
+    await _repository.createRoom(state.playerName!);
+  }
+
+  // 修改加入房间方法
+  Future<void> joinRoom(String roomId) async {
+    if (state.playerName == null) return;
+    _repository.joinRoom(roomId, state.playerName!);
+  }
+
   void setPlayerName(String name) {
     state = state.copyWith(playerName: name);
   }
 
-  // 切换加载状态
   void toggleLoading() {
     state = state.copyWith(isLoading: !state.isLoading);
+  }
+
+  void updateRooms(List<RoomModel> rooms) {
+    state = state.copyWith(rooms: rooms);
+  }
+
+  @override
+  void dispose() {
+    _roomSubscription?.cancel();
+    _socketService.dispose(); // 释放 SocketService 资源
+    super.dispose();
   }
 }
 
 final lobbyProvider = StateNotifierProvider<LobbyNotifier, LobbyState>((ref) {
-  return LobbyNotifier();
+  final repository = ref.watch(roomRepoProvider); // 注入依赖
+  return LobbyNotifier(repository);
 });

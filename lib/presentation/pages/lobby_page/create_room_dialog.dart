@@ -31,8 +31,9 @@ class CreateRoomDialog extends ConsumerWidget {
         ),
         ElevatedButton(
           onPressed: () {
-            ref.read(lobbyProvider.notifier).setPlayerName(controller.text);
-            // TODO: 调用创建房间接口
+            final name = controller.text;
+            ref.read(lobbyProvider.notifier).setPlayerName(name);
+            ref.read(lobbyProvider.notifier).createRoom();
             Navigator.pop(context);
           },
           child: const Text('创建'),

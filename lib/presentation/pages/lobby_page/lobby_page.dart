@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:landlords_3/core/network/socket_service.dart';
 import 'package:landlords_3/presentation/pages/lobby_page/create_room_dialog.dart';
 import 'package:landlords_3/presentation/pages/lobby_page/room_list.dart';
 import 'package:landlords_3/presentation/providers/lobby_provider.dart';
@@ -63,7 +64,7 @@ class LobbyPage extends ConsumerWidget {
           Expanded(
             child: TextField(
               decoration: const InputDecoration(
-                hintText: '输入房间ID快速加入',
+                hintText: '输入房间ID加入游戏',
                 prefixIcon: Icon(Icons.search),
                 border: OutlineInputBorder(),
               ),
@@ -77,10 +78,8 @@ class LobbyPage extends ConsumerWidget {
 
   void _refreshRooms(WidgetRef ref) {
     ref.read(lobbyProvider.notifier).toggleLoading();
-    // TODO: 调用获取房间列表的接口
-    Future.delayed(const Duration(seconds: 1), () {
-      ref.read(lobbyProvider.notifier).toggleLoading();
-    });
+    SocketService().requestRooms();
+    ref.read(lobbyProvider.notifier).toggleLoading();
   }
 
   void _showCreateRoomDialog(BuildContext context, WidgetRef ref) {

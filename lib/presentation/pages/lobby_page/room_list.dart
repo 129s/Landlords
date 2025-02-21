@@ -40,7 +40,26 @@ class _RoomListItem extends StatelessWidget {
       style: ElevatedButton.styleFrom(
         backgroundColor: room.players.length == 3 ? Colors.grey : Colors.blue,
       ),
-      onPressed: room.players.length == 3 ? null : () => _joinRoom(context),
+      // 修改加入按钮的逻辑
+      onPressed:
+          room.players.length == 3
+              ? null
+              : () {
+                final playerName = ProviderScope.containerOf(
+                  context,
+                ).read(lobbyProvider.select((s) => s.playerName));
+
+                if (playerName == null) {
+                  ScaffoldMessenger.of(
+                    context,
+                  ).showSnackBar(const SnackBar(content: Text('请先设置玩家名称')));
+                  return;
+                }
+
+                ProviderScope.containerOf(
+                  context,
+                ).read(lobbyProvider.notifier).joinRoom(room.id);
+              },
       child: const Text('加入'),
     );
   }
