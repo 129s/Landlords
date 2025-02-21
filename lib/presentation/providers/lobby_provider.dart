@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:landlords_3/core/network/socket_service.dart';
-import 'package:landlords_3/data/providers/repo_providers.dart';
+import 'package:landlords_3/data/providers/room_repo_providers.dart';
 import 'package:landlords_3/domain/entities/room_model.dart';
 import 'package:landlords_3/domain/repositories/room_repo.dart';
 

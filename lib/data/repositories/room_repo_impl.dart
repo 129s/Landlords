@@ -16,11 +16,10 @@ class RoomRepoImpl implements RoomRepository {
     _socket.joinRoom(roomId, playerName);
   }
 
-  @override
   Stream<List<RoomModel>> watchRooms() {
     return _socket.roomsStream.map(
       (data) =>
-          (data as List)
+          (data)
               .map((e) => RoomDTO.fromJson(e as Map<String, dynamic>))
               .cast<RoomModel>()
               .toList(),

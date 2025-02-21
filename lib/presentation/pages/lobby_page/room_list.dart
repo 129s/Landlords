@@ -8,7 +8,12 @@ class RoomList extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final rooms = ref.watch(lobbyProvider).rooms;
+    final lobbyState = ref.watch(lobbyProvider);
+    final rooms = lobbyState.rooms;
+
+    if (rooms.isEmpty && !lobbyState.isLoading) {
+      return const Center(child: Text('暂无房间，请稍后刷新或创建房间'));
+    }
 
     return ListView.builder(
       itemCount: rooms.length,

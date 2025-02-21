@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:landlords_3/core/network/socket_service.dart';
+import 'package:landlords_3/data/providers/socket_provider.dart';
 import 'package:landlords_3/presentation/pages/lobby_page/create_room_dialog.dart';
 import 'package:landlords_3/presentation/pages/lobby_page/room_list.dart';
 import 'package:landlords_3/presentation/providers/lobby_provider.dart';
+import 'package:landlords_3/presentation/widgets/connection_status_indicator.dart'; // 导入
 
 class LobbyPage extends ConsumerWidget {
   const LobbyPage({super.key});
@@ -19,21 +21,27 @@ class LobbyPage extends ConsumerWidget {
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
-            onPressed: () => _refreshRooms(ref),
+            onPressed: () => _refreshRooms(ref, context), // 传递 context
           ),
           _buildPlayerInfo(playerName),
         ],
       ),
-      body: Column(
+      body: Stack(
+        // 使用 Stack
         children: [
-          _buildQuickActionBar(ref),
-          const Divider(height: 1),
-          Expanded(
-            child:
-                lobbyState.isLoading
-                    ? const Center(child: CircularProgressIndicator())
-                    : const RoomList(),
+          Column(
+            children: [
+              _buildQuickActionBar(ref),
+              const Divider(height: 1),
+              Expanded(
+                child:
+                    lobbyState.isLoading
+                        ? const Center(child: CircularProgressIndicator())
+                        : const RoomList(),
+              ),
+            ],
           ),
+          const ConnectionStatusIndicator(), // 添加指示器
         ],
       ),
       floatingActionButton: FloatingActionButton(
@@ -76,10 +84,19 @@ class LobbyPage extends ConsumerWidget {
     );
   }
 
-  void _refreshRooms(WidgetRef ref) {
+  void _refreshRooms(WidgetRef ref, BuildContext context) async {
+    // 添加 context 参数
     ref.read(lobbyProvider.notifier).toggleLoading();
-    SocketService().requestRooms();
-    ref.read(lobbyProvider.notifier).toggleLoading();
+    try {
+      SocketService().requestRooms();
+    } catch (e) {
+      // 获取房间列表失败
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('获取房间列表失败，请稍后重试')));
+    } finally {
+      ref.read(lobbyProvider.notifier).toggleLoading();
+    }
   }
 
   void _showCreateRoomDialog(BuildContext context, WidgetRef ref) {
