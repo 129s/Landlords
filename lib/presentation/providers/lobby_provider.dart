@@ -10,22 +10,26 @@ class LobbyState {
   final List<RoomModel> rooms;
   final String? playerName;
   final bool isLoading;
+  final bool isGaming;
 
   const LobbyState({
     this.rooms = const [],
     this.playerName,
     this.isLoading = false,
+    this.isGaming = false,
   });
 
   LobbyState copyWith({
     List<RoomModel>? rooms,
     String? playerName,
     bool? isLoading,
+    bool? isGaming,
   }) {
     return LobbyState(
       rooms: rooms ?? this.rooms,
       playerName: playerName ?? this.playerName,
       isLoading: isLoading ?? this.isLoading,
+      isGaming: isGaming ?? this.isGaming,
     );
   }
 }
@@ -52,7 +56,12 @@ class LobbyNotifier extends StateNotifier<LobbyState> {
     if (!hasPlayerName()) {
       return false;
     }
+    if (state.isGaming) {
+      // 如果正在游戏中，则阻止创建房间
+      return false;
+    }
     await _repository.createRoom(state.playerName!);
+    state = state.copyWith(isGaming: true); // 创建房间后设置为 true
     return true;
   }
 
@@ -61,7 +70,12 @@ class LobbyNotifier extends StateNotifier<LobbyState> {
     if (!hasPlayerName()) {
       return false;
     }
+    if (state.isGaming) {
+      // 如果正在游戏中，则阻止加入房间
+      return false;
+    }
     _repository.joinRoom(roomId, state.playerName!);
+    state = state.copyWith(isGaming: true); // 加入房间后设置为 true
     return true;
   }
 
@@ -79,6 +93,11 @@ class LobbyNotifier extends StateNotifier<LobbyState> {
 
   void updateRooms(List<RoomModel> rooms) {
     state = state.copyWith(rooms: rooms);
+  }
+
+  // 添加退出游戏的方法
+  void exitGame() {
+    state = state.copyWith(isGaming: false); // 退出游戏后设置为 false
   }
 
   @override

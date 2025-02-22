@@ -42,14 +42,25 @@ class _RoomListItem extends StatelessWidget {
   }
 
   Widget _buildJoinButton(BuildContext context) {
+    final isGaming =
+        ProviderScope.containerOf(context).read(lobbyProvider).isGaming;
+
     return ElevatedButton(
       style: ElevatedButton.styleFrom(
-        backgroundColor: room.players.length == 3 ? Colors.grey : Colors.blue,
+        backgroundColor:
+            room.players.length == 3 || isGaming ? Colors.grey : Colors.blue,
       ),
       onPressed:
-          room.players.length == 3
+          room.players.length == 3 || isGaming
               ? null
               : () async {
+                if (isGaming) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('您已经在游戏中，请先退出游戏')),
+                  );
+                  return;
+                }
+
                 final hasPlayerName =
                     ProviderScope.containerOf(
                       context,

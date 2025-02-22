@@ -98,6 +98,13 @@ class LobbyPage extends ConsumerWidget {
   }
 
   void _showCreateRoomDialog(BuildContext context, WidgetRef ref) {
+    if (ref.read(lobbyProvider).isGaming) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('您已经在游戏中，请先退出游戏')));
+      return;
+    }
+
     if (!ref.read(lobbyProvider.notifier).hasPlayerName()) {
       showDialog(
         context: context,
@@ -109,6 +116,13 @@ class LobbyPage extends ConsumerWidget {
   }
 
   void _joinRoom(String roomId, WidgetRef ref, BuildContext context) async {
+    if (ref.read(lobbyProvider).isGaming) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('您已经在游戏中，请先退出游戏')));
+      return;
+    }
+
     if (!ref.read(lobbyProvider.notifier).hasPlayerName()) {
       await showDialog(
         context: context,
