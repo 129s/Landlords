@@ -46,7 +46,6 @@ class _RoomListItem extends StatelessWidget {
       style: ElevatedButton.styleFrom(
         backgroundColor: room.players.length == 3 ? Colors.grey : Colors.blue,
       ),
-      // 修改加入按钮的逻辑
       onPressed:
           room.players.length == 3
               ? null

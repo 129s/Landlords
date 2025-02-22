@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:landlords_3/core/network/socket_service.dart';
-import 'package:landlords_3/presentation/pages/lobby_page/room_list.dart';
+import 'package:landlords_3/presentation/pages/lobby/room_list.dart';
 import 'package:landlords_3/presentation/providers/lobby_provider.dart';
 import 'package:landlords_3/presentation/widgets/connection_status_indicator.dart';
 import 'package:landlords_3/presentation/widgets/player_name_dialog.dart';
@@ -102,9 +102,10 @@ class LobbyPage extends ConsumerWidget {
       showDialog(
         context: context,
         builder: (context) => const PlayerNameDialog(title: '创建房间'),
-      );
+      ).then((_) => ref.read(lobbyProvider.notifier).createRoom());
+    } else {
+      ref.read(lobbyProvider.notifier).createRoom();
     }
-    ref.read(lobbyProvider.notifier).createRoom();
   }
 
   void _joinRoom(String roomId, WidgetRef ref, BuildContext context) async {
@@ -112,8 +113,9 @@ class LobbyPage extends ConsumerWidget {
       await showDialog(
         context: context,
         builder: (context) => const PlayerNameDialog(title: '加入房间'),
-      );
+      ).then((_) => ref.read(lobbyProvider.notifier).joinRoom(roomId));
+    } else {
+      ref.read(lobbyProvider.notifier).joinRoom(roomId);
     }
-    ref.read(lobbyProvider.notifier).joinRoom(roomId);
   }
 }

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:landlords_3/core/network/socket_service.dart';
-import 'package:landlords_3/presentation/pages/lobby_page/lobby_page.dart';
+import 'package:landlords_3/presentation/pages/lobby/lobby_page.dart';
 
 void main() {
   SocketService();
