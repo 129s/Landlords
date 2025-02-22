@@ -52,21 +52,21 @@ module.exports = {
 
       socket.on('leaveRoom', (roomId) => {
         try {
-          const room = global.roomService.rooms.get(roomId);
+          const room = roomService.getRoom(roomId);
           if (!room) return;
 
           // 移除当前玩家
           room.players = room.players.filter(p => p.socketId !== socket.id);
-          global.roomService.playerConnections.delete(socket.id);
+          roomService.playerConnections.delete(socket.id);
 
           // 广播更新
           io.to(roomId).emit('playerLeft', socket.id);
-          io.emit('roomUpdate', global.roomService.getRooms());
+          io.emit('roomUpdate', roomService.getAllRooms());
 
           // 房间为空时清理
           if (room.players.length === 0) {
-            global.roomService.rooms.delete(roomId);
-            global.messageService.purgeRoomMessages(roomId);
+            roomService.roomStore.delete(roomId);
+            messageService.purgeRoomMessages(roomId);
           }
         } catch (error) {
           logger.error('退出房间失败:', error);
