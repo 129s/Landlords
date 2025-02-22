@@ -3,28 +3,26 @@ const http = require('http');
 const { Server } = require("socket.io");
 const cors = require('cors');
 
-const socketController = require('./controllers/socket.controller');
-const roomService = require('./services/room.service');
-
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
-    cors: {
-        origin: "http://localhost:5173", // 允许前端访问的地址
-        methods: ["GET", "POST"]
-    }
+    cors: { origin: "http://localhost:5173", methods: ["GET", "POST"] }
 });
 
-app.use(cors());
-app.use(express.json());
+// 初始化服务
+const RoomService = require('./services/room.service');
+const MessageService = require('./services/message.service');
+global.roomService = new RoomService();
+global.messageService = new MessageService();
 
-// 初始化 RoomService
-global.roomService = new roomService();
+// 初始化控制器
+const { handleSocketEvents } = require('./controllers/socket.controller');
+const MessageController = require('./controllers/message.controller');
+const messageController = new MessageController(io, global.messageService, global.roomService);
 
-// 注册 Socket 事件
-socketController.handleSocketEvents(io);
+// 设置事件处理
+handleSocketEvents(io, global.roomService, global.messageService);
+io.on('connection', socket => messageController.initHandlers(socket));
 
-const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => {
-    console.log(`Server listening on port ${PORT}`);
-});
+// 启动服务器
+server.listen(3000, () => console.log('Server running on port 3000'));

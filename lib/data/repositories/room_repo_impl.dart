@@ -37,19 +37,12 @@ class RoomRepoImpl implements RoomRepository {
   }
 
   @override
-  Future<void> loadMessageHistory(String roomId) async {
-    _socket.requestMessageHistory(roomId);
-  }
-
-  @override
   Stream<List<MessageModel>> watchMessages(String roomId) {
-    return _socket.messageStream.map(
-      (data) =>
-          (data)
-              .map((e) => MessageDTO.fromJson(e as Map<String, dynamic>))
-              .where((msg) => msg.roomId == roomId)
-              .cast<MessageModel>()
-              .toList(),
-    );
+    return _socket.messageStream.map((data) {
+      return (data)
+          .map((e) => MessageDTO.fromJson(e as Map<String, dynamic>))
+          .cast<MessageModel>()
+          .toList();
+    });
   }
 }

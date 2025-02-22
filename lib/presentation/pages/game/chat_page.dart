@@ -11,8 +11,7 @@ class ChatPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, ref) {
-    final messages = ref.watch(chatMessagesProvider(roomId));
-    print("messages:$context{messages}");
+    final messages = ref.watch(chatProvider(roomId));
 
     return Scaffold(
       appBar: AppBar(title: Text('房间 $roomId')),
@@ -21,7 +20,6 @@ class ChatPage extends ConsumerWidget {
           Expanded(
             child: messages.when(
               data: (list) {
-                print("list:${list.length}");
                 return ListView.builder(
                   reverse: true,
                   itemCount: list.length,

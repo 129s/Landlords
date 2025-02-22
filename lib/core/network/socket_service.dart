@@ -73,16 +73,12 @@ class SocketService {
       _roomCreatedController.add(roomId as String);
     });
 
-    socket.on('messageReceived', (data) {
-      _messageController.add([data]);
+    socket.on('messageUpdate', (data) {
+      print('Received message: $data');
+      _messageController.add(data as List<dynamic>);
     });
 
     socket.connect();
-  }
-
-  // 获取消息历史
-  void requestMessageHistory(String roomId) {
-    socket.emit('requestMessages', roomId);
   }
 
   void joinRoom(String roomId, String playerName) {
@@ -109,10 +105,6 @@ class SocketService {
   }
 
   void sendChatMessage(String roomId, String message) {
-    socket.emit('sendMessage', {
-      'roomId': roomId,
-      'content': message,
-      'timestamp': DateTime.now().toIso8601String(),
-    });
+    socket.emit('sendMessage', {'roomId': roomId, 'content': message});
   }
 }
