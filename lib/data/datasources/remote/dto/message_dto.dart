@@ -13,24 +13,24 @@ class MessageDTO extends MessageModel {
 
   factory MessageDTO.fromJson(Map<String, dynamic> json) {
     return MessageDTO(
-      id: json['id'],
-      roomId: json['roomId'],
-      senderId: json['senderId'],
-      senderName: json['senderName'],
-      content: json['content'],
-      timestamp: DateTime.parse(json['timestamp']),
-      type: _parseType(json['type']),
+      id: json['id'] as String,
+      roomId: json['roomId'] as String,
+      senderId: json['senderId'] as String,
+      senderName: json['senderName'] as String,
+      content: json['content'] as String,
+      timestamp: DateTime.tryParse(json['timestamp'] ?? '') ?? DateTime.now(),
+      type: _parseType(json['type'] as String? ?? ''),
     );
   }
 
-  static MessageType _parseType(String type) {
-    switch (type) {
-      case 'system':
-        return MessageType.system;
+  static MessageType _parseType(String typeString) {
+    switch (typeString.toLowerCase()) {
+      case 'text':
+        return MessageType.text;
       case 'image':
         return MessageType.image;
       default:
-        return MessageType.text;
+        return MessageType.text; // Default to text if unknown
     }
   }
 }

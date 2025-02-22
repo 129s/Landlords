@@ -21,20 +21,19 @@ class RoomRepoImpl implements RoomRepository {
   }
 
   @override
+  Future<void> sendMessage(String roomId, String content) async {
+    _socket.sendChatMessage(roomId, content);
+  }
+
+  @override
   Stream<List<RoomModel>> watchRooms() {
     return _socket.roomsStream.map(
       (data) =>
           (data)
-              .map(
-                (e) => RoomDTO.fromJson(e as Map<String, dynamic>) as RoomModel,
-              )
+              .map((e) => RoomDTO.fromJson(e as Map<String, dynamic>))
+              .cast<RoomModel>()
               .toList(),
     );
-  }
-
-  @override
-  Future<void> sendMessage(String roomId, String content) async {
-    _socket.sendChatMessage(roomId, content);
   }
 
   @override
@@ -42,11 +41,8 @@ class RoomRepoImpl implements RoomRepository {
     return _socket.messageStream.map(
       (data) =>
           (data)
-              .map(
-                (e) =>
-                    MessageDTO.fromJson(e as Map<String, dynamic>)
-                        as MessageModel,
-              )
+              .map((e) => MessageDTO.fromJson(e as Map<String, dynamic>))
+              .cast<MessageModel>()
               .toList(),
     );
   }

@@ -51,11 +51,10 @@ class LobbyNotifier extends StateNotifier<LobbyState> {
     });
   }
 
-  // 修改创建房间方法
+  // 创建房间
   Future<bool> createRoom() async {
-    if (!hasPlayerName()) {
-      return false;
-    }
+    if (!hasPlayerName()) return false;
+
     if (state.isGaming) {
       // 如果正在游戏中，则阻止创建房间
       return false;
@@ -65,11 +64,10 @@ class LobbyNotifier extends StateNotifier<LobbyState> {
     return true;
   }
 
-  // 修改加入房间方法
+  // 加入房间
   Future<bool> joinRoom(String roomId) async {
-    if (!hasPlayerName()) {
-      return false;
-    }
+    if (!hasPlayerName()) return false;
+
     if (state.isGaming) {
       // 如果正在游戏中，则阻止加入房间
       return false;
@@ -95,7 +93,7 @@ class LobbyNotifier extends StateNotifier<LobbyState> {
     state = state.copyWith(rooms: rooms);
   }
 
-  // 添加退出游戏的方法
+  // 退出游戏
   void exitGame() {
     state = state.copyWith(isGaming: false); // 退出游戏后设置为 false
   }

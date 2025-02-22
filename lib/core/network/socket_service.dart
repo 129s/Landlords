@@ -11,18 +11,22 @@ class SocketService {
 
   factory SocketService() => _instance;
 
-  final StreamController<List<RoomModel>> _roomsStreamController =
-      StreamController<List<RoomModel>>.broadcast();
-  Stream<List<RoomModel>> get roomsStream => _roomsStreamController.stream;
+  final StreamController<List<dynamic>> _roomsStreamController =
+      StreamController<List<dynamic>>.broadcast();
+  Stream<List<dynamic>> get roomsStream => _roomsStreamController.stream;
 
   final StreamController<GameConnectionState> _connectionController =
       StreamController<GameConnectionState>.broadcast();
   Stream<GameConnectionState> get connectionStream =>
       _connectionController.stream;
 
-  final StreamController<List<MessageModel>> _messageController =
+  final StreamController<List<dynamic>> _messageController =
       StreamController.broadcast();
-  Stream<List<MessageModel>> get messageStream => _messageController.stream;
+  Stream<List<dynamic>> get messageStream => _messageController.stream;
+
+  final StreamController<String> _roomCreatedController =
+      StreamController<String>.broadcast();
+  Stream<String> get roomCreatedStream => _roomCreatedController.stream;
 
   SocketService._internal() {
     _connect();
@@ -61,7 +65,12 @@ class SocketService {
     // 监听 roomUpdate 事件，并将数据添加到 StreamController
     socket.on('roomUpdate', (data) {
       print('Received roomUpdate event: $data');
-      _roomsStreamController.add(data as List<RoomModel>);
+      _roomsStreamController.add(data as List<dynamic>);
+    });
+
+    socket.on('roomCreated', (roomId) {
+      print('Room created with ID: $roomId');
+      _roomCreatedController.add(roomId as String);
     });
 
     socket.connect();

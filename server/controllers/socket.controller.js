@@ -8,7 +8,7 @@ function handleSocketEvents(io) {
     socket.on('createRoom', (playerName) => {
       try {
         const room = global.roomService.createRoom(playerName, socket.id);
-
+        socket.emit('roomCreated', room.id); // 新增此行
         socket.join(room.id);
         io.emit('roomUpdate', global.roomService.getRooms());
         logger.info('Room created by %s with ID: %s', playerName, room.id);
@@ -72,13 +72,22 @@ function handleSocketEvents(io) {
           ...message,
           id: uuidv4(),
           senderId: socket.id,
-          senderName: getPlayerName(socket.id) // 需要实现获取玩家名称的方法
+          senderName: getPlayerName(socket.id)
         });
       } catch (error) {
         logger.error('发送消息失败:', error);
       }
     });
   });
+}
+
+function getPlayerName(socketId) {
+  const roomService = global.roomService;
+  const connection = roomService.playerConnections.get(socketId);
+  if (!connection) return '未知用户';
+
+  const room = roomService.rooms.get(connection.roomId);
+  return room.players.find(p => p.socketId === socketId)?.name || '匿名用户';
 }
 
 module.exports = { handleSocketEvents };

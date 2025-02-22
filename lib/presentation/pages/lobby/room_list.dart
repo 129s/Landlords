@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:landlords_3/domain/entities/room_model.dart';
+import 'package:landlords_3/presentation/pages/game/chat_page.dart';
 import 'package:landlords_3/presentation/providers/lobby_provider.dart';
 import 'package:landlords_3/presentation/widgets/player_name_dialog.dart';
 
@@ -54,6 +55,7 @@ class _RoomListItem extends StatelessWidget {
           room.players.length == 3 || isGaming
               ? null
               : () async {
+                print('Attempting to join room: ${room.id}');
                 if (isGaming) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(content: Text('您已经在游戏中，请先退出游戏')),
@@ -80,6 +82,10 @@ class _RoomListItem extends StatelessWidget {
                     context,
                   ).read(lobbyProvider.notifier).joinRoom(room.id);
                 }
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => ChatPage(roomId: room.id)),
+                );
               },
       child: const Text('加入'),
     );
