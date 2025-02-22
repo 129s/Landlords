@@ -48,15 +48,25 @@ class LobbyNotifier extends StateNotifier<LobbyState> {
   }
 
   // 修改创建房间方法
-  Future<void> createRoom() async {
-    if (state.playerName == null) return;
+  Future<bool> createRoom() async {
+    if (!hasPlayerName()) {
+      return false;
+    }
     await _repository.createRoom(state.playerName!);
+    return true;
   }
 
   // 修改加入房间方法
-  Future<void> joinRoom(String roomId) async {
-    if (state.playerName == null) return;
+  Future<bool> joinRoom(String roomId) async {
+    if (!hasPlayerName()) {
+      return false;
+    }
     _repository.joinRoom(roomId, state.playerName!);
+    return true;
+  }
+
+  bool hasPlayerName() {
+    return state.playerName != null && state.playerName!.isNotEmpty;
   }
 
   void setPlayerName(String name) {

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:landlords_3/domain/entities/room_model.dart';
 import 'package:landlords_3/presentation/providers/lobby_provider.dart';
+import 'package:landlords_3/presentation/widgets/player_name_dialog.dart';
 
 class RoomList extends ConsumerWidget {
   const RoomList({super.key});
@@ -49,28 +50,29 @@ class _RoomListItem extends StatelessWidget {
       onPressed:
           room.players.length == 3
               ? null
-              : () {
-                final playerName = ProviderScope.containerOf(
-                  context,
-                ).read(lobbyProvider.select((s) => s.playerName));
+              : () async {
+                final hasPlayerName =
+                    ProviderScope.containerOf(
+                      context,
+                    ).read(lobbyProvider.notifier).hasPlayerName();
 
-                if (playerName == null) {
-                  ScaffoldMessenger.of(
-                    context,
-                  ).showSnackBar(const SnackBar(content: Text('请先设置玩家名称')));
-                  return;
+                if (!hasPlayerName) {
+                  await showDialog(
+                    context: context,
+                    builder: (context) => const PlayerNameDialog(title: '加入房间'),
+                  );
                 }
 
-                ProviderScope.containerOf(
+                if (ProviderScope.containerOf(
                   context,
-                ).read(lobbyProvider.notifier).joinRoom(room.id);
+                ).read(lobbyProvider.notifier).hasPlayerName()) {
+                  ProviderScope.containerOf(
+                    context,
+                  ).read(lobbyProvider.notifier).joinRoom(room.id);
+                }
               },
       child: const Text('加入'),
     );
-  }
-
-  void _joinRoom(BuildContext context) {
-    // TODO: 实现加入房间逻辑
   }
 
   void _showRoomDetail(BuildContext context) {
