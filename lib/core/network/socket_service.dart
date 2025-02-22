@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'package:landlords_3/domain/entities/message_model.dart';
+import 'package:landlords_3/domain/entities/room_model.dart';
 import 'package:socket_io_client/socket_io_client.dart' as io;
 
 enum GameConnectionState { connecting, connected, disconnected, error }
@@ -11,14 +13,20 @@ class SocketService {
 
   final StreamController<List<dynamic>> _roomsStreamController =
       StreamController<List<dynamic>>.broadcast();
-
   Stream<List<dynamic>> get roomsStream => _roomsStreamController.stream;
 
   final StreamController<GameConnectionState> _connectionController =
       StreamController<GameConnectionState>.broadcast();
-
   Stream<GameConnectionState> get connectionStream =>
       _connectionController.stream;
+
+  final StreamController<List<dynamic>> _messageController =
+      StreamController.broadcast();
+  Stream<List<dynamic>> get messageStream => _messageController.stream;
+
+  final StreamController<String> _roomCreatedController =
+      StreamController<String>.broadcast();
+  Stream<String> get roomCreatedStream => _roomCreatedController.stream;
 
   SocketService._internal() {
     _connect();
@@ -60,6 +68,16 @@ class SocketService {
       _roomsStreamController.add(data as List<dynamic>);
     });
 
+    socket.on('roomCreated', (roomId) {
+      print('Room created with ID: $roomId');
+      _roomCreatedController.add(roomId as String);
+    });
+
+    socket.on('messageUpdate', (data) {
+      print('Received message: $data');
+      _messageController.add(data as List<dynamic>);
+    });
+
     socket.connect();
   }
 
@@ -71,11 +89,15 @@ class SocketService {
     socket.emit('createRoom', playerName);
   }
 
+  void leaveRoom(String roomId) {
+    socket.emit('leaveRoom', roomId);
+  }
+
   void requestRooms() => socket.emit('requestRooms');
 
   void dispose() {
     _roomsStreamController.close();
-    //  socket.disconnect(); // 注释掉，保持连接尝试
+    //  socket.disconnect(); // 保持连接尝试
   }
 
   // 添加重连方法
@@ -84,5 +106,9 @@ class SocketService {
     socket.disconnect();
     // 重新连接
     _connect();
+  }
+
+  void sendChatMessage(String roomId, String message) {
+    socket.emit('sendMessage', {'roomId': roomId, 'content': message});
   }
 }

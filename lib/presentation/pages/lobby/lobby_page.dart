@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:landlords_3/core/network/socket_service.dart';
+import 'package:landlords_3/presentation/pages/game/chat_page.dart';
 import 'package:landlords_3/presentation/pages/lobby/room_list.dart';
 import 'package:landlords_3/presentation/providers/lobby_provider.dart';
 import 'package:landlords_3/presentation/widgets/connection_status_indicator.dart';
@@ -13,7 +14,6 @@ class LobbyPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final lobbyState = ref.watch(lobbyProvider);
     final playerName = lobbyState.playerName ?? '未命名玩家';
-
     return Scaffold(
       appBar: AppBar(
         title: const Text('游戏大厅'),
@@ -97,7 +97,7 @@ class LobbyPage extends ConsumerWidget {
     }
   }
 
-  void _showCreateRoomDialog(BuildContext context, WidgetRef ref) {
+  void _showCreateRoomDialog(BuildContext context, WidgetRef ref) async {
     if (ref.read(lobbyProvider).isGaming) {
       ScaffoldMessenger.of(
         context,
@@ -110,12 +110,20 @@ class LobbyPage extends ConsumerWidget {
         context: context,
         builder: (context) => const PlayerNameDialog(title: '创建房间'),
       ).then((_) => ref.read(lobbyProvider.notifier).createRoom());
-    } else {
-      ref.read(lobbyProvider.notifier).createRoom();
     }
+    ref.read(lobbyProvider.notifier).createRoom();
+    await SocketService().roomCreatedStream.first.then(
+      (roomId) => {
+        print("房间" + roomId),
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => ChatPage(roomId: roomId)),
+        ),
+      },
+    );
   }
 
-  void _joinRoom(String roomId, WidgetRef ref, BuildContext context) async {
+  void _joinRoom(String roomId, WidgetRef ref, BuildContext context) {
     if (ref.read(lobbyProvider).isGaming) {
       ScaffoldMessenger.of(
         context,
@@ -124,12 +132,15 @@ class LobbyPage extends ConsumerWidget {
     }
 
     if (!ref.read(lobbyProvider.notifier).hasPlayerName()) {
-      await showDialog(
+      showDialog(
         context: context,
         builder: (context) => const PlayerNameDialog(title: '加入房间'),
       ).then((_) => ref.read(lobbyProvider.notifier).joinRoom(roomId));
-    } else {
-      ref.read(lobbyProvider.notifier).joinRoom(roomId);
     }
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => ChatPage(roomId: roomId)),
+    );
+    ref.read(lobbyProvider.notifier).joinRoom(roomId);
   }
 }
