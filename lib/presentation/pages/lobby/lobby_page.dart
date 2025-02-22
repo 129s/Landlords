@@ -7,14 +7,24 @@ import 'package:landlords_3/presentation/providers/lobby_provider.dart';
 import 'package:landlords_3/presentation/widgets/connection_status_indicator.dart';
 import 'package:landlords_3/presentation/widgets/player_name_dialog.dart';
 
-class LobbyPage extends ConsumerWidget {
+class LobbyPage extends ConsumerStatefulWidget {
   const LobbyPage({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<LobbyPage> createState() => _LobbyPageState();
+}
+
+class _LobbyPageState extends ConsumerState<LobbyPage> {
+  @override
+  void initState() {
+    super.initState();
+    _refreshRooms(context, ref);
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final lobbyState = ref.watch(lobbyProvider);
     final playerName = lobbyState.playerName ?? '未命名玩家';
-
     return Scaffold(
       appBar: AppBar(
         title: const Text('游戏大厅'),

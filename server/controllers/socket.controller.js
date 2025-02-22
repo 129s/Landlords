@@ -19,15 +19,15 @@ module.exports = {
 
       socket.on('joinRoom', ({ roomId, playerName }) => {
         try {
-          const room = global.roomService.joinRoom(roomId, playerName, socket.id);
+          const room = roomService.joinRoom(roomId, playerName, socket.id);
           socket.join(roomId);
 
           // 加入时推送当前消息
-          const messages = global.messageService.getMessages(roomId);
+          const messages = messageService.getMessages(roomId);
           socket.emit('messageUpdate', messages.map(m => m.toJSON()));
 
           io.to(roomId).emit('playerJoined', room);
-          io.emit('roomUpdate', global.roomService.getRooms());
+          io.emit('roomUpdate', roomService.getRooms());
         } catch (error) {
           logger.error("加入房间失败:", error);
           socket.emit("roomError", error.message);
