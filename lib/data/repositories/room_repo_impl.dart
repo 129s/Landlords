@@ -47,6 +47,7 @@ class RoomRepoImpl implements RoomRepository {
       (data) =>
           (data)
               .map((e) => MessageDTO.fromJson(e as Map<String, dynamic>))
+              .where((msg) => msg.roomId == roomId)
               .cast<MessageModel>()
               .toList(),
     );
