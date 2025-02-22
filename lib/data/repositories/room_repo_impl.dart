@@ -21,6 +21,12 @@ class RoomRepoImpl implements RoomRepository {
   }
 
   @override
+  Future<void> leaveRoom(String roomId) async {
+    _socket.leaveRoom(roomId);
+    _socket.messageStream.drain();
+  }
+
+  @override
   Future<void> sendMessage(String roomId, String content) async {
     _socket.sendChatMessage(roomId, content);
   }

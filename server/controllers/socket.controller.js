@@ -50,6 +50,29 @@ module.exports = {
         logger.info('用户断开连接: %s', socket.id);
       });
 
+      socket.on('leaveRoom', (roomId) => {
+        try {
+          const room = global.roomService.rooms.get(roomId);
+          if (!room) return;
+
+          // 移除当前玩家
+          room.players = room.players.filter(p => p.socketId !== socket.id);
+          global.roomService.playerConnections.delete(socket.id);
+
+          // 广播更新
+          io.to(roomId).emit('playerLeft', socket.id);
+          io.emit('roomUpdate', global.roomService.getRooms());
+
+          // 房间为空时清理
+          if (room.players.length === 0) {
+            global.roomService.rooms.delete(roomId);
+            global.messageService.purgeRoomMessages(roomId);
+          }
+        } catch (error) {
+          logger.error('退出房间失败:', error);
+        }
+      });
+
       socket.on('requestRooms', () => {
         socket.emit('roomUpdate', roomService.getAllRooms());
       });

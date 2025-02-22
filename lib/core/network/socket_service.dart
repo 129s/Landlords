@@ -89,6 +89,10 @@ class SocketService {
     socket.emit('createRoom', playerName);
   }
 
+  void leaveRoom(String roomId) {
+    socket.emit('leaveRoom', roomId);
+  }
+
   void requestRooms() => socket.emit('requestRooms');
 
   void dispose() {

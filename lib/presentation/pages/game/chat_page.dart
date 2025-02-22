@@ -23,11 +23,22 @@ class ChatPage extends ConsumerWidget {
                 return ListView.builder(
                   reverse: true,
                   itemCount: list.length,
-                  itemBuilder: (ctx, i) => _ChatBubble(message: list[i]),
+                  itemBuilder:
+                      (ctx, i) =>
+                          _ChatBubble(message: list[list.length - 1 - i]),
                 );
               },
               loading: () => Center(child: CircularProgressIndicator()),
-              error: (e, _) => Center(child: Text('加载失败')),
+              error:
+                  (e, _) => Column(
+                    children: [
+                      Text('消息加载失败'),
+                      ElevatedButton(
+                        onPressed: () => ref.refresh(chatProvider(roomId)),
+                        child: Text('重试'),
+                      ),
+                    ],
+                  ),
             ),
           ),
           _ChatInput(roomId: roomId),
