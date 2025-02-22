@@ -1,23 +1,32 @@
 const { v4: uuidv4 } = require('uuid');
 const PlayerModel = require('../models/PlayerModel');
 const RoomModel = require('../models/RoomModel');
-const logger = require('../utils/logger'); // 引入 logger
+const logger = require('../utils/logger');
 
 class RoomService {
     constructor() {
-        this.rooms = new Map(); // 使用内存存储活跃房间
+        this.rooms = new Map();
+        this.playerConnections = new Map(); // 跟踪玩家连接
     }
 
-    createRoom(playerName) {
+    // 修改 room.service.js 的 createRoom 方法
+    createRoom(playerName, socketId) { // 添加socketId参数
         const roomId = uuidv4();
-        const player = new PlayerModel(playerName);
+        const player = new PlayerModel(playerName, socketId); // 传入socketId
         const room = new RoomModel(roomId, [player]);
+
+        // 建立双向关联
+        this.playerConnections.set(socketId, {
+            roomId,
+            playerId: player.id
+        });
+
         this.rooms.set(roomId, room);
-        logger.debug('Created room with ID: %s', roomId);
         return room;
     }
 
-    joinRoom(roomId, playerName) {
+
+    joinRoom(roomId, playerName, socketId) {
         const room = this.rooms.get(roomId);
         if (!room) {
             logger.warn('Attempted to join non-existent room: %s', roomId);
@@ -27,9 +36,9 @@ class RoomService {
             logger.warn('Attempted to join full room: %s', roomId);
             throw new Error('房间已满');
         }
-        const player = new PlayerModel(playerName);
+        const player = new PlayerModel(playerName, socketId);
+        this.playerConnections.set(socketId, { roomId, player });
         room.players.push(player);
-        logger.debug('Player %s joined room %s', playerName, roomId);
         return room;
     }
 
