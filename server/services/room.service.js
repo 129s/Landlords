@@ -50,14 +50,24 @@ class RoomService {
         const room = this.rooms.get(roomId);
         if (!room) throw new Error('房间不存在');
 
-        room.messages = room.messages || [];
-        room.messages.push({
-            ...message,
+        const newMessage = {
             id: uuidv4(),
-            timestamp: new Date()
-        });
+            content: message.content,
+            senderId: message.senderId,
+            senderName: this._getPlayerName(message.senderId),
+            timestamp: new Date().toISOString(),
+            type: 'text'
+        };
 
-        return room;
+        room.messages = [...room.messages, newMessage].slice(-50); // 保留最近50条
+        return newMessage;
+    }
+
+    _getPlayerName(socketId) {
+        const connection = this.playerConnections.get(socketId);
+        if (!connection) return '未知用户';
+        const room = this.rooms.get(connection.roomId);
+        return room.players.find(p => p.socketId === socketId)?.name;
     }
 }
 

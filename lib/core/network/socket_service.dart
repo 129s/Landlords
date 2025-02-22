@@ -73,7 +73,16 @@ class SocketService {
       _roomCreatedController.add(roomId as String);
     });
 
+    socket.on('messageReceived', (data) {
+      _messageController.add([data]);
+    });
+
     socket.connect();
+  }
+
+  // 获取消息历史
+  void requestMessageHistory(String roomId) {
+    socket.emit('requestMessages', roomId);
   }
 
   void joinRoom(String roomId, String playerName) {

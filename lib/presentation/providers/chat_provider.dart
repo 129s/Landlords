@@ -8,3 +8,11 @@ final chatMessagesProvider = StreamProvider.family<List<MessageModel>, String>((
 ) {
   return ref.watch(roomRepoProvider).watchMessages(roomId);
 });
+
+final chatHistoryProvider = FutureProvider.autoDispose.family<void, String>((
+  ref,
+  roomId,
+) async {
+  final repo = ref.read(roomRepoProvider);
+  await repo.loadMessageHistory(roomId);
+});

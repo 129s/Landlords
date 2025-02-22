@@ -1,5 +1,6 @@
 const roomService = require('../services/room.service');
 const logger = require('../utils/logger'); // 引入 logger
+const { v4: uuidv4 } = require('uuid');
 
 function handleSocketEvents(io) {
   io.on('connection', (socket) => {
@@ -76,6 +77,15 @@ function handleSocketEvents(io) {
         });
       } catch (error) {
         logger.error('发送消息失败:', error);
+      }
+    });
+    // 消息历史请求处理
+    socket.on('requestMessages', (roomId) => {
+      try {
+        const room = global.roomService.rooms.get(roomId);
+        socket.emit('messageHistory', room?.messages.slice(-50) || []);
+      } catch (error) {
+        logger.error('获取消息历史失败:', error);
       }
     });
   });

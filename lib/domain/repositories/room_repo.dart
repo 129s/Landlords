@@ -6,5 +6,6 @@ abstract class RoomRepository {
   Future<void> joinRoom(String roomId, String playerName);
   Future<void> sendMessage(String roomId, String content);
   Stream<List<RoomModel>> watchRooms();
+  Future<void> loadMessageHistory(String roomId);
   Stream<List<MessageModel>> watchMessages(String roomId);
 }
