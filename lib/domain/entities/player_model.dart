@@ -1,28 +1,26 @@
+import 'package:landlords_3/domain/entities/user_model.dart';
+
 class PlayerModel {
-  final String id;
-  final String name;
+  final UserModel user; // 替换原有id和name
   final int seat;
   final int cardCount;
   final bool isLandlord;
 
   PlayerModel({
-    required this.id,
-    required this.name,
+    required this.user,
     required this.seat,
     required this.cardCount,
     this.isLandlord = false,
   });
 
   PlayerModel copyWith({
-    String? id,
-    String? name,
+    UserModel? user,
     int? seat,
     int? cardCount,
     bool? isLandlord,
   }) {
     return PlayerModel(
-      id: id ?? this.id,
-      name: name ?? this.name,
+      user: user ?? this.user,
       seat: seat ?? this.seat,
       cardCount: cardCount ?? this.cardCount,
       isLandlord: isLandlord ?? this.isLandlord,
@@ -31,25 +29,6 @@ class PlayerModel {
 
   @override
   String toString() {
-    return 'PlayerData{id: $id, name: $name, seat: $seat, cardCount: $cardCount, isLandlord: $isLandlord}';
+    return 'PlayerModel{user: $user, seat: $seat, cardCount: $cardCount, isLandlord: $isLandlord}';
   }
-
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is PlayerModel &&
-          runtimeType == other.runtimeType &&
-          id == other.id &&
-          name == other.name &&
-          seat == other.seat &&
-          cardCount == other.cardCount &&
-          isLandlord == other.isLandlord;
-
-  @override
-  int get hashCode =>
-      id.hashCode ^
-      name.hashCode ^
-      seat.hashCode ^
-      cardCount.hashCode ^
-      isLandlord.hashCode;
 }

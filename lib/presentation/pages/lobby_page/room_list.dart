@@ -1,7 +1,9 @@
+// presentation\pages\lobby_page\room_list.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:landlords_3/domain/entities/room_model.dart';
 import 'package:landlords_3/presentation/providers/lobby_provider.dart';
+import 'package:landlords_3/presentation/providers/user_provider.dart'; // Import user provider
 
 class RoomList extends ConsumerWidget {
   const RoomList({super.key});
@@ -22,25 +24,25 @@ class RoomList extends ConsumerWidget {
   }
 }
 
-class _RoomListItem extends StatelessWidget {
+class _RoomListItem extends ConsumerWidget {
   final RoomModel room;
 
   const _RoomListItem({required this.room});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Card(
       child: ListTile(
         leading: const Icon(Icons.people_alt),
-        title: Text('房间ID: ${room.id}'),
+        title: Text('房间ID: ${room.id} - ${room.roomName}'), // Display roomName
         subtitle: Text('状态: ${room.displayStatus}'),
-        trailing: _buildJoinButton(context),
+        trailing: _buildJoinButton(context, ref),
         onTap: () => _showRoomDetail(context),
       ),
     );
   }
 
-  Widget _buildJoinButton(BuildContext context) {
+  Widget _buildJoinButton(BuildContext context, WidgetRef ref) {
     return ElevatedButton(
       style: ElevatedButton.styleFrom(
         backgroundColor: room.players.length == 3 ? Colors.grey : Colors.blue,
@@ -50,27 +52,19 @@ class _RoomListItem extends StatelessWidget {
           room.players.length == 3
               ? null
               : () {
-                final playerName = ProviderScope.containerOf(
-                  context,
-                ).read(lobbyProvider.select((s) => s.playerName));
+                final user = ref.read(userProvider);
 
-                if (playerName == null) {
+                if (user == null) {
                   ScaffoldMessenger.of(
                     context,
-                  ).showSnackBar(const SnackBar(content: Text('请先设置玩家名称')));
+                  ).showSnackBar(const SnackBar(content: Text('请先登录')));
                   return;
                 }
 
-                ProviderScope.containerOf(
-                  context,
-                ).read(lobbyProvider.notifier).joinRoom(room.id);
+                ref.read(lobbyProvider.notifier).joinRoom(room.id);
               },
       child: const Text('加入'),
     );
-  }
-
-  void _joinRoom(BuildContext context) {
-    // TODO: 实现加入房间逻辑
   }
 
   void _showRoomDetail(BuildContext context) {
@@ -83,6 +77,7 @@ class _RoomListItem extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                Text('房间名称: ${room.roomName}'), // Display roomName
                 Text('创建时间: ${room.createdAt.toString()}'),
                 const SizedBox(height: 8),
                 Text('玩家人数: ${room.players.length}/3'),

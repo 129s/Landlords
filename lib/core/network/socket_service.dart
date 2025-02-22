@@ -1,11 +1,14 @@
 import 'dart:async';
 import 'package:socket_io_client/socket_io_client.dart' as io;
+import 'package:landlords_3/presentation/providers/user_provider.dart'; // Import user provider
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 enum GameConnectionState { connecting, connected, disconnected, error }
 
 class SocketService {
   static final SocketService _instance = SocketService._internal();
   late io.Socket socket;
+  String? _userId; // Store userId
 
   factory SocketService() => _instance;
 
@@ -31,6 +34,7 @@ class SocketService {
     socket = io.io('http://localhost:3000', {
       'transports': ['websocket'],
       'autoConnect': false,
+      'query': {'userId': _userId}, // Send userId on connect
     });
 
     // 添加连接超时机制
@@ -63,12 +67,12 @@ class SocketService {
     socket.connect();
   }
 
-  void joinRoom(String roomId, String playerName) {
-    socket.emit('joinRoom', {'roomId': roomId, 'playerName': playerName});
+  void joinRoom({required String roomId, required String userId}) {
+    socket.emit('joinRoom', {'roomId': roomId, 'userId': userId});
   }
 
-  void createRoom(String playerName) {
-    socket.emit('createRoom', playerName);
+  void createRoom({required String roomName, required String userId}) {
+    socket.emit('createRoom', {'roomName': roomName, 'userId': userId});
   }
 
   void requestRooms() => socket.emit('requestRooms');
@@ -84,5 +88,10 @@ class SocketService {
     socket.disconnect();
     // 重新连接
     _connect();
+  }
+
+  // Set userId
+  void setUserId(String userId) {
+    _userId = userId;
   }
 }

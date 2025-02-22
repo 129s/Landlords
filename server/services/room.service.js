@@ -1,3 +1,4 @@
+// server/services/room.service.js
 const { v4: uuidv4 } = require('uuid');
 const PlayerModel = require('../models/PlayerModel');
 const RoomModel = require('../models/RoomModel');
@@ -8,16 +9,16 @@ class RoomService {
         this.rooms = new Map(); // 使用内存存储活跃房间
     }
 
-    createRoom(playerName) {
+    createRoom(roomName, creator) {
         const roomId = uuidv4();
-        const player = new PlayerModel(playerName);
-        const room = new RoomModel(roomId, [player]);
+        const player = new PlayerModel(creator); // creator is UserModel now
+        const room = new RoomModel(roomId, [player], roomName);
         this.rooms.set(roomId, room);
         logger.debug('Created room with ID: %s', roomId);
         return room;
     }
 
-    joinRoom(roomId, playerName) {
+    joinRoom(roomId, user) { // user is UserModel now
         const room = this.rooms.get(roomId);
         if (!room) {
             logger.warn('Attempted to join non-existent room: %s', roomId);
@@ -27,9 +28,9 @@ class RoomService {
             logger.warn('Attempted to join full room: %s', roomId);
             throw new Error('房间已满');
         }
-        const player = new PlayerModel(playerName);
+        const player = new PlayerModel(user);
         room.players.push(player);
-        logger.debug('Player %s joined room %s', playerName, roomId);
+        logger.debug('Player %s joined room %s', user.username, roomId);
         return room;
     }
 

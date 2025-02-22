@@ -1,3 +1,4 @@
+// presentation/pages/lobby_page/create_room_dialog.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:landlords_3/presentation/providers/lobby_provider.dart';
@@ -7,8 +8,7 @@ class CreateRoomDialog extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final playerName = ref.watch(lobbyProvider).playerName ?? '';
-    final controller = TextEditingController(text: playerName);
+    final _roomNameController = TextEditingController();
 
     return AlertDialog(
       title: const Text('创建房间'),
@@ -16,9 +16,9 @@ class CreateRoomDialog extends ConsumerWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           TextField(
-            controller: controller,
+            controller: _roomNameController,
             decoration: const InputDecoration(
-              labelText: '玩家名称',
+              labelText: '房间名称',
               border: OutlineInputBorder(),
             ),
           ),
@@ -31,9 +31,14 @@ class CreateRoomDialog extends ConsumerWidget {
         ),
         ElevatedButton(
           onPressed: () {
-            final name = controller.text;
-            ref.read(lobbyProvider.notifier).setPlayerName(name);
-            ref.read(lobbyProvider.notifier).createRoom();
+            final roomName = _roomNameController.text;
+            if (roomName.isEmpty) {
+              ScaffoldMessenger.of(
+                context,
+              ).showSnackBar(const SnackBar(content: Text('房间名称不能为空')));
+              return;
+            }
+            ref.read(lobbyProvider.notifier).createRoom(roomName);
             Navigator.pop(context);
           },
           child: const Text('创建'),

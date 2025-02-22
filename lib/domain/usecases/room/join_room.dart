@@ -6,6 +6,6 @@ class JoinRoom {
   JoinRoom(this.repository);
 
   Future<void> call(String roomId, String playerName) async {
-    return repository.joinRoom(roomId, playerName);
+    return repository.joinRoom(roomId);
   }
 }

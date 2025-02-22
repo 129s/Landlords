@@ -4,11 +4,13 @@ class RoomModel {
   final String id;
   final List<PlayerModel> players;
   final DateTime createdAt;
+  final String roomName; // Add roomName
 
   const RoomModel({
     required this.id,
     required this.players,
     required this.createdAt,
+    required this.roomName, // Add roomName
   });
 
   // 简化版房间信息用于列表展示
@@ -21,12 +23,13 @@ class RoomModel {
     String? id,
     List<PlayerModel>? players,
     DateTime? createdAt,
-    bool? hasPassword,
+    String? roomName, // Add roomName
   }) {
     return RoomModel(
       id: id ?? this.id,
       players: players ?? this.players,
       createdAt: createdAt ?? this.createdAt,
+      roomName: roomName ?? this.roomName, // Add roomName
     );
   }
 }

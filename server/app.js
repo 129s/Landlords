@@ -5,6 +5,8 @@ const cors = require('cors');
 
 const socketController = require('./controllers/socket.controller');
 const roomService = require('./services/room.service');
+const authService = require('./services/auth.service');
+const authRoutes = require('./routes/auth.routes');
 
 const app = express();
 const server = http.createServer(app);
@@ -15,9 +17,12 @@ const io = new Server(server, {
     }
 });
 
+app.use('/api/auth', authRoutes);
 app.use(cors());
 app.use(express.json());
 
+// 初始化 AuthService
+global.authService = new authService();
 // 初始化 RoomService
 global.roomService = new roomService();
 

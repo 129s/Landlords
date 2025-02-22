@@ -1,3 +1,4 @@
+// presentation\providers\lobby_provider.dart
 import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -5,26 +6,17 @@ import 'package:landlords_3/core/network/socket_service.dart';
 import 'package:landlords_3/data/providers/room_repo_providers.dart';
 import 'package:landlords_3/domain/entities/room_model.dart';
 import 'package:landlords_3/domain/repositories/room_repo.dart';
+import 'package:landlords_3/presentation/providers/user_provider.dart'; // Import user provider
 
 class LobbyState {
   final List<RoomModel> rooms;
-  final String? playerName;
   final bool isLoading;
 
-  const LobbyState({
-    this.rooms = const [],
-    this.playerName,
-    this.isLoading = false,
-  });
+  const LobbyState({this.rooms = const [], this.isLoading = false});
 
-  LobbyState copyWith({
-    List<RoomModel>? rooms,
-    String? playerName,
-    bool? isLoading,
-  }) {
+  LobbyState copyWith({List<RoomModel>? rooms, bool? isLoading}) {
     return LobbyState(
       rooms: rooms ?? this.rooms,
-      playerName: playerName ?? this.playerName,
       isLoading: isLoading ?? this.isLoading,
     );
   }
@@ -33,9 +25,10 @@ class LobbyState {
 class LobbyNotifier extends StateNotifier<LobbyState> {
   final RoomRepository _repository;
   final SocketService _socketService = SocketService(); // 获取 SocketService 实例
+  final Ref ref; // Inject Ref
   StreamSubscription? _roomSubscription;
 
-  LobbyNotifier(this._repository) : super(const LobbyState()) {
+  LobbyNotifier(this._repository, this.ref) : super(const LobbyState()) {
     _init();
   }
 
@@ -48,19 +41,13 @@ class LobbyNotifier extends StateNotifier<LobbyState> {
   }
 
   // 修改创建房间方法
-  Future<void> createRoom() async {
-    if (state.playerName == null) return;
-    await _repository.createRoom(state.playerName!);
+  Future<void> createRoom(String roomName) async {
+    await _repository.createRoom(roomName);
   }
 
   // 修改加入房间方法
   Future<void> joinRoom(String roomId) async {
-    if (state.playerName == null) return;
-    _repository.joinRoom(roomId, state.playerName!);
-  }
-
-  void setPlayerName(String name) {
-    state = state.copyWith(playerName: name);
+    _repository.joinRoom(roomId);
   }
 
   void toggleLoading() {
@@ -80,6 +67,6 @@ class LobbyNotifier extends StateNotifier<LobbyState> {
 }
 
 final lobbyProvider = StateNotifierProvider<LobbyNotifier, LobbyState>((ref) {
-  final repository = ref.watch(roomRepoProvider); // 注入依赖
-  return LobbyNotifier(repository);
+  final repository = ref.watch(roomRepoProvider(ref)); // 注入依赖
+  return LobbyNotifier(repository, ref);
 });

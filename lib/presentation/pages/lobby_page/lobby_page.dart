@@ -1,3 +1,4 @@
+// presentation\pages\lobby_page\lobby_page.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:landlords_3/core/network/socket_service.dart';
@@ -6,6 +7,7 @@ import 'package:landlords_3/presentation/pages/lobby_page/create_room_dialog.dar
 import 'package:landlords_3/presentation/pages/lobby_page/room_list.dart';
 import 'package:landlords_3/presentation/providers/lobby_provider.dart';
 import 'package:landlords_3/presentation/widgets/connection_status_indicator.dart'; // 导入
+import 'package:landlords_3/presentation/providers/user_provider.dart'; // Import user provider
 
 class LobbyPage extends ConsumerWidget {
   const LobbyPage({super.key});
@@ -13,7 +15,8 @@ class LobbyPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final lobbyState = ref.watch(lobbyProvider);
-    final playerName = lobbyState.playerName ?? '未命名玩家';
+    final user = ref.watch(userProvider); // Get user from provider
+    final playerName = user?.username ?? '未命名玩家'; // Use user's username
 
     return Scaffold(
       appBar: AppBar(
@@ -107,6 +110,6 @@ class LobbyPage extends ConsumerWidget {
   }
 
   void _joinRoom(String roomId, WidgetRef ref) {
-    // TODO: 实现快速加入逻辑
+    ref.read(lobbyProvider.notifier).joinRoom(roomId);
   }
 }
