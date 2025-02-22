@@ -1,5 +1,9 @@
+import 'dart:async';
+
 import 'package:landlords_3/core/network/socket_service.dart';
+import 'package:landlords_3/data/datasources/remote/dto/message_dto.dart';
 import 'package:landlords_3/data/datasources/remote/dto/room_dto.dart';
+import 'package:landlords_3/domain/entities/message_model.dart';
 import 'package:landlords_3/domain/entities/room_model.dart';
 import 'package:landlords_3/domain/repositories/room_repo.dart';
 
@@ -16,12 +20,38 @@ class RoomRepoImpl implements RoomRepository {
     _socket.joinRoom(roomId, playerName);
   }
 
+  @override
   Stream<List<RoomModel>> watchRooms() {
     return _socket.roomsStream.map(
       (data) =>
           (data)
-              .map((e) => RoomDTO.fromJson(e as Map<String, dynamic>))
-              .cast<RoomModel>()
+              .map(
+                (e) => RoomDTO.fromJson(e as Map<String, dynamic>) as RoomModel,
+              )
+              .toList(),
+    );
+  }
+
+  @override
+  Future<void> sendMessage(String roomId, String content) async {
+    final payload = {
+      'roomId': roomId,
+      'content': content,
+      'timestamp': DateTime.now().toIso8601String(),
+    };
+    _socket.socket.emit('sendMessage', payload);
+  }
+
+  @override
+  Stream<List<MessageModel>> watchMessages(String roomId) {
+    return _socket.messageStream.map(
+      (data) =>
+          (data)
+              .map(
+                (e) =>
+                    MessageDTO.fromJson(e as Map<String, dynamic>)
+                        as MessageModel,
+              )
               .toList(),
     );
   }
