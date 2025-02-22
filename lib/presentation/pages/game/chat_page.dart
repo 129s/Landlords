@@ -76,6 +76,7 @@ class ChatPage extends ConsumerWidget {
   );
 
   void _exitRoom(BuildContext context, WidgetRef ref) {
+    ref.read(lobbyProvider.notifier).exitGame();
     ref.read(roomRepoProvider).leaveRoom(roomId);
     Navigator.popUntil(context, (route) => route.isFirst);
   }

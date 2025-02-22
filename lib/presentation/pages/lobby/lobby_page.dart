@@ -7,22 +7,11 @@ import 'package:landlords_3/presentation/providers/lobby_provider.dart';
 import 'package:landlords_3/presentation/widgets/connection_status_indicator.dart';
 import 'package:landlords_3/presentation/widgets/player_name_dialog.dart';
 
-class LobbyPage extends ConsumerStatefulWidget {
+class LobbyPage extends ConsumerWidget {
   const LobbyPage({super.key});
 
   @override
-  ConsumerState<LobbyPage> createState() => _LobbyPageState();
-}
-
-class _LobbyPageState extends ConsumerState<LobbyPage> {
-  @override
-  void initState() {
-    super.initState();
-    _refreshRooms(context, ref);
-  }
-
-  @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final lobbyState = ref.watch(lobbyProvider);
     final playerName = lobbyState.playerName ?? '未命名玩家';
     return Scaffold(
