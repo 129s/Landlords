@@ -45,6 +45,20 @@ class RoomService {
     getRooms() {
         return Array.from(this.rooms.values());
     }
+
+    addMessage(roomId, message) {
+        const room = this.rooms.get(roomId);
+        if (!room) throw new Error('房间不存在');
+
+        room.messages = room.messages || [];
+        room.messages.push({
+            ...message,
+            id: uuidv4(),
+            timestamp: new Date()
+        });
+
+        return room;
+    }
 }
 
 module.exports = RoomService;

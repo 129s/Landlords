@@ -64,6 +64,20 @@ function handleSocketEvents(io) {
         logger.info('User disconnected: %s', socket.id);
       }
     });
+
+    socket.on('sendMessage', (message) => {
+      try {
+        const room = global.roomService.addMessage(message.roomId, message);
+        io.to(message.roomId).emit('messageReceived', {
+          ...message,
+          id: uuidv4(),
+          senderId: socket.id,
+          senderName: getPlayerName(socket.id) // 需要实现获取玩家名称的方法
+        });
+      } catch (error) {
+        logger.error('发送消息失败:', error);
+      }
+    });
   });
 }
 

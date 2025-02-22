@@ -34,12 +34,7 @@ class RoomRepoImpl implements RoomRepository {
 
   @override
   Future<void> sendMessage(String roomId, String content) async {
-    final payload = {
-      'roomId': roomId,
-      'content': content,
-      'timestamp': DateTime.now().toIso8601String(),
-    };
-    _socket.socket.emit('sendMessage', payload);
+    _socket.sendChatMessage(roomId, content);
   }
 
   @override
