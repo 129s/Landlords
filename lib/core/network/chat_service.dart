@@ -1,6 +1,5 @@
+//=== 文件路径：core/network/chat_service.dart ===
 import 'dart:async';
-
-import 'package:landlords_3/core/network/event_handler.dart';
 import 'package:landlords_3/core/network/socket_manager.dart';
 import 'package:landlords_3/data/datasources/remote/dto/message_dto.dart';
 
@@ -9,24 +8,19 @@ class ChatService {
   final _messageStream = StreamController<List<MessageDTO>>.broadcast();
 
   ChatService() {
-    _socket.on('messageUpdate', _MessageEventHandler(_messageStream));
+    _socket.on<List<dynamic>>('messageUpdate', (data) {
+      _messageStream.add((data).map((e) => MessageDTO.fromJson(e)).toList());
+    });
   }
 
   Stream<List<MessageDTO>> get messages => _messageStream.stream;
 
-  void sendMessage(String roomId, String content) =>
-      _socket.emit('sendMessage', {'roomId': roomId, 'content': content});
-}
-
-class _MessageEventHandler implements EventHandler<List<MessageDTO>> {
-  final StreamController<List<MessageDTO>> _controller;
-
-  _MessageEventHandler(this._controller);
-
-  @override
-  List<MessageDTO> convert(dynamic data) =>
-      (data as List).map((e) => MessageDTO.fromJson(e)).toList();
-
-  @override
-  void handle(dynamic data) => _controller.add(convert(data));
+  void sendMessage(String roomId, String content) {
+    final payload = {
+      'roomId': roomId,
+      'content': content,
+      'socketId': _socket.id, // 添加 socketId 参数
+    };
+    _socket.emit('sendMessage', payload);
+  }
 }

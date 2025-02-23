@@ -1,63 +1,37 @@
 import 'dart:async';
-
-import 'package:landlords_3/core/network/event_handler.dart';
 import 'package:landlords_3/core/network/socket_manager.dart';
 import 'package:landlords_3/data/datasources/remote/dto/room_dto.dart';
 
 class RoomService {
-  final SocketManager _socket = SocketManager();
+  final _socket = SocketManager();
   final _roomStream = StreamController<List<RoomDTO>>.broadcast();
-  final _createRoomCompleter = Completer<String>();
+  final _createController = StreamController<String>();
 
   RoomService() {
-    _socket.on('roomUpdate', _RoomEventHandler(_roomStream));
-    _socket.on('roomCreated', _RoomCreatedHandler(_createRoomCompleter));
+    _socket.on<List<dynamic>>('roomUpdate', (data) {
+      _roomStream.add(data.map((e) => RoomDTO.fromJson(e)).toList());
+    });
+
+    _socket.on<String>(
+      'roomCreated',
+      (roomId) => _createController.add(roomId),
+    );
   }
 
   Stream<List<RoomDTO>> get roomUpdates => _roomStream.stream;
 
-  Future<String> createRoom(String playerName) {
-    _socket.emit('createRoom', playerName);
-    return _createRoomCompleter.future;
+  Future<String> createRoom(String name) {
+    _socket.emit('createRoom', {'playerName': name, 'socketId': _socket.id});
+    return _createController.stream.first;
   }
 
-  void joinRoom(String roomId, String playerName) =>
-      _socket.emit('joinRoom', {'roomId': roomId, 'playerName': playerName});
+  void joinRoom(String roomId, String name) =>
+      _socket.emit('joinRoom', {'roomId': roomId, 'playerName': name});
 
   void leaveRoom(String roomId) {
     _socket.emit('leaveRoom', roomId);
-    // 离开房间后自动请求最新房间列表
-    requestRooms();
+    requestRooms(); // 离开房间后自动请求最新房间列表
   }
 
   void requestRooms() => _socket.emit('requestRooms');
-}
-
-class _RoomEventHandler implements EventHandler<List<RoomDTO>> {
-  final StreamController<List<RoomDTO>> _controller;
-
-  _RoomEventHandler(this._controller);
-
-  @override
-  List<RoomDTO> convert(dynamic data) =>
-      (data as List).map((e) => RoomDTO.fromJson(e)).toList();
-
-  @override
-  void handle(dynamic data) => _controller.add(convert(data));
-}
-
-class _RoomCreatedHandler implements EventHandler<String> {
-  final Completer<String> _completer;
-
-  _RoomCreatedHandler(this._completer);
-
-  @override
-  String convert(dynamic data) => data as String;
-
-  @override
-  void handle(dynamic data) {
-    final roomId = convert(data);
-    _completer.complete(roomId);
-    SocketManager().emit('room:join', roomId);
-  }
 }
