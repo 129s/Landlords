@@ -74,14 +74,6 @@ class LobbyNotifier extends StateNotifier<LobbyState> {
     }
   }
 
-  bool hasPlayerName() {
-    return state.playerName != null && state.playerName!.isNotEmpty;
-  }
-
-  void setPlayerName(String name) {
-    state = state.copyWith(playerName: name);
-  }
-
   void toggleLoading() {
     state = state.copyWith(isLoading: !state.isLoading);
   }
