@@ -94,9 +94,7 @@ class LobbyPage extends ConsumerWidget {
   void _refreshRooms(BuildContext context, WidgetRef ref) async {
     ref.read(lobbyProvider.notifier).toggleLoading();
     try {
-      ref.read(roomRepoProvider).watchRooms().listen((rooms) {
-        ref.read(lobbyProvider.notifier).updateRooms(rooms);
-      });
+      ref.read(roomRepoProvider).requestRooms();
     } catch (e) {
       // 获取房间列表失败
       ScaffoldMessenger.of(
@@ -123,6 +121,7 @@ class LobbyPage extends ConsumerWidget {
         );
       }
     } catch (e) {
+      print(e.toString());
       if (context.mounted) {
         ScaffoldMessenger.of(
           context,

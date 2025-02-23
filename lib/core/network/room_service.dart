@@ -5,7 +5,7 @@ import 'package:landlords_3/data/datasources/remote/dto/room_dto.dart';
 class RoomService {
   final _socket = SocketManager();
   final _roomStream = StreamController<List<RoomDTO>>.broadcast();
-  final _createController = StreamController<String>();
+  final _createController = StreamController<String>.broadcast();
 
   RoomService() {
     _socket.on<List<dynamic>>('roomUpdate', (data) {
