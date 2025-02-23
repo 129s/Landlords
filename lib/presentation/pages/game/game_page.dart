@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:landlords_3/presentation/pages/game_page/bottom_area.dart';
-import 'package:landlords_3/presentation/pages/game_page/card_display_area.dart';
-import 'package:landlords_3/presentation/pages/game_page/player_info.dart';
-import 'package:landlords_3/presentation/pages/game_page/table_area.dart';
-import 'package:landlords_3/presentation/pages/game_page/top_bar.dart';
+import 'package:landlords_3/presentation/pages/game/bottom_area.dart';
+import 'package:landlords_3/presentation/pages/game/card_display_area.dart';
+import 'package:landlords_3/presentation/pages/game/player_info.dart';
+import 'package:landlords_3/presentation/pages/game/table_area.dart';
+import 'package:landlords_3/presentation/pages/game/top_bar.dart';
 import 'package:landlords_3/presentation/providers/game_provider.dart';
 
 class GamePage extends ConsumerWidget {
