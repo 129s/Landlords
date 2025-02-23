@@ -48,7 +48,10 @@ class _ChatPageState extends ConsumerState<ChatPage> {
     }
 
     try {
-      await ref.read(roomRepoProvider).sendMessage(widget.roomId, text);
+      await ref
+          .read(roomRepoProvider)
+          .sendMessage(widget.roomId, text)
+          .then((_) => _roll());
       _isUserScrolling = false;
       _controller.clear();
       _focusNode.requestFocus();
@@ -67,6 +70,17 @@ class _ChatPageState extends ConsumerState<ChatPage> {
     super.dispose();
   }
 
+  void _roll() {
+    if (_scrollController.hasClients) {
+      _scrollController.animateTo(
+        _scrollController.position.maxScrollExtent,
+        duration: const Duration(milliseconds: 150),
+        curve: Curves.easeOut,
+      );
+    }
+    _isMyLastMessage = false;
+  }
+
   @override
   Widget build(BuildContext context) {
     final messages = ref.watch(chatProvider(widget.roomId)).value ?? [];
@@ -76,15 +90,7 @@ class _ChatPageState extends ConsumerState<ChatPage> {
       data: (messages) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (_isUserScrolling && !_isMyLastMessage) return;
-
-          if (_scrollController.hasClients) {
-            _scrollController.animateTo(
-              _scrollController.position.maxScrollExtent,
-              duration: const Duration(milliseconds: 150),
-              curve: Curves.easeOut,
-            );
-          }
-          _isMyLastMessage = false; // 重置标志
+          _roll();
         });
       },
       loading: () {},
