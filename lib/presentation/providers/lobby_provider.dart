@@ -1,8 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:landlords_3/core/network/socket_service.dart';
-import 'package:landlords_3/data/providers/room_repo_providers.dart';
+import 'package:landlords_3/data/providers/repo_providers.dart';
 import 'package:landlords_3/domain/entities/room_model.dart';
 import 'package:landlords_3/domain/repositories/room_repo.dart';
 
@@ -36,7 +35,6 @@ class LobbyState {
 
 class LobbyNotifier extends StateNotifier<LobbyState> {
   final RoomRepository _repository;
-  final SocketService _socketService = SocketService(); // 获取 SocketService 实例
   StreamSubscription? _roomSubscription;
 
   LobbyNotifier(this._repository) : super(const LobbyState()) {
@@ -67,13 +65,12 @@ class LobbyNotifier extends StateNotifier<LobbyState> {
   // 加入房间
   Future<bool> joinRoom(String roomId) async {
     if (!hasPlayerName()) return false;
-
-    if (state.isGaming) {
-      // 如果正在游戏中，则阻止加入房间
-      return false;
-    }
-    _repository.joinRoom(roomId, state.playerName!);
-    state = state.copyWith(isGaming: true); // 加入房间后设置为 true
+    await _repository.joinRoom(roomId, state.playerName!);
+    // 新增房间列表刷新
+    _repository.watchRooms().listen((rooms) {
+      state = state.copyWith(rooms: rooms);
+    });
+    state = state.copyWith(isGaming: true);
     return true;
   }
 
@@ -95,18 +92,20 @@ class LobbyNotifier extends StateNotifier<LobbyState> {
 
   // 退出游戏
   void exitGame() {
-    state = state.copyWith(isGaming: false); // 退出游戏后设置为 false
+    // 房间列表刷新
+    _repository.watchRooms().listen((rooms) {
+      state = state.copyWith(rooms: rooms, isGaming: false);
+    });
   }
 
   @override
   void dispose() {
     _roomSubscription?.cancel();
-    _socketService.dispose(); // 释放 SocketService 资源
     super.dispose();
   }
 }
 
 final lobbyProvider = StateNotifierProvider<LobbyNotifier, LobbyState>((ref) {
-  final repository = ref.watch(roomRepoProvider); // 注入依赖
+  final repository = ref.watch(roomRepoProvider);
   return LobbyNotifier(repository);
 });

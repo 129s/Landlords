@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:landlords_3/core/network/socket_service.dart';
+import 'package:landlords_3/core/network/socket_manager.dart';
 import 'package:landlords_3/data/providers/socket_provider.dart';
 
 class ConnectionStatusIndicator extends ConsumerWidget {
@@ -8,64 +8,95 @@ class ConnectionStatusIndicator extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final connectionState = ref.watch(socketConnectionProvider);
+    final connectionState = ref.watch(connectionStateProvider).value;
 
-    return connectionState.when(
-      data: (state) {
-        switch (state) {
-          case GameConnectionState.connected:
-            return const SizedBox.shrink(); // 连接成功，不显示任何内容
-          case GameConnectionState.connecting:
-            return _buildConnectingIndicator();
-          case GameConnectionState.disconnected:
-          case GameConnectionState.error:
-            return _buildErrorIndicator(ref);
-        }
-      },
-      loading: () => _buildConnectingIndicator(),
-      error: (error, stackTrace) => _buildErrorIndicator(ref),
-    );
-  }
-
-  Widget _buildConnectingIndicator() {
-    return Container(
-      color: Colors.black.withOpacity(0.5), // 半透明背景
-      child: const Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+    return Tooltip(
+      message: _getStatusMessage(connectionState),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        decoration: BoxDecoration(
+          color: _getStatusColor(connectionState),
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            CircularProgressIndicator(),
-            SizedBox(height: 16),
-            Text('正在连接到服务器...', style: TextStyle(color: Colors.white)),
+            _getStatusIcon(connectionState),
+            const SizedBox(width: 4),
+            Text(
+              _getStatusText(connectionState),
+              style: Theme.of(
+                context,
+              ).textTheme.labelSmall?.copyWith(color: Colors.white),
+            ),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildErrorIndicator(WidgetRef ref) {
-    return Container(
-      color: Colors.black.withOpacity(0.5), // 半透明背景
-      child: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Text(
-              '无法连接到服务器，请检查网络连接',
-              style: TextStyle(color: Colors.white),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: () {
-                // 重新连接
-                SocketService().reconnect();
-              },
-              child: const Text('重试'),
-            ),
-          ],
-        ),
-      ),
-    );
+  Color _getStatusColor(GameConnectionState? state) {
+    switch (state) {
+      case GameConnectionState.connected:
+        return Colors.green.shade600;
+      case GameConnectionState.connecting:
+        return Colors.orange.shade600;
+      case GameConnectionState.error:
+        return Colors.red.shade600;
+      case GameConnectionState.disconnected:
+      default:
+        return Colors.grey.shade600;
+    }
+  }
+
+  Widget _getStatusIcon(GameConnectionState? state) {
+    const iconSize = 12.0;
+    switch (state) {
+      case GameConnectionState.connected:
+        return const Icon(Icons.wifi, size: iconSize, color: Colors.white);
+      case GameConnectionState.connecting:
+        return SizedBox(
+          width: iconSize,
+          height: iconSize,
+          child: const CircularProgressIndicator(
+            strokeWidth: 2,
+            valueColor: AlwaysStoppedAnimation(Colors.white),
+          ),
+        );
+      case GameConnectionState.error:
+        return const Icon(
+          Icons.error_outline,
+          size: iconSize,
+          color: Colors.white,
+        );
+      case GameConnectionState.disconnected:
+      default:
+        return const Icon(Icons.wifi_off, size: iconSize, color: Colors.white);
+    }
+  }
+
+  String _getStatusText(GameConnectionState? state) {
+    switch (state) {
+      case GameConnectionState.connected:
+        return '已连接';
+      case GameConnectionState.connecting:
+        return '连接中';
+      case GameConnectionState.error:
+        return '连接错误';
+      case GameConnectionState.disconnected:
+      default:
+        return '未连接';
+    }
+  }
+
+  String _getStatusMessage(GameConnectionState? state) {
+    switch (state) {
+      case GameConnectionState.error:
+        return '无法连接到服务器，请检查网络设置';
+      case GameConnectionState.disconnected:
+        return '点击尝试重新连接';
+      default:
+        return _getStatusText(state);
+    }
   }
 }

@@ -20,6 +20,12 @@ class RoomService {
   void joinRoom(String roomId, String playerName) =>
       _socket.emit('joinRoom', {'roomId': roomId, 'playerName': playerName});
 
+  void leaveRoom(String roomId) {
+    _socket.emit('leaveRoom', roomId);
+    // 离开房间后自动请求最新房间列表
+    requestRooms();
+  }
+
   void requestRooms() => _socket.emit('requestRooms');
 }
 

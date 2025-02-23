@@ -1,6 +1,8 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:landlords_3/core/network/socket_service.dart';
+import 'package:landlords_3/data/providers/repo_providers.dart';
 import 'package:landlords_3/presentation/pages/chat/chat_page.dart';
 import 'package:landlords_3/presentation/pages/lobby/room_list.dart';
 import 'package:landlords_3/presentation/providers/lobby_provider.dart';
@@ -86,7 +88,9 @@ class LobbyPage extends ConsumerWidget {
   void _refreshRooms(BuildContext context, WidgetRef ref) async {
     ref.read(lobbyProvider.notifier).toggleLoading();
     try {
-      SocketService().requestRooms();
+      ref.read(roomRepoProvider).watchRooms().listen((rooms) {
+        ref.read(lobbyProvider.notifier).updateRooms(rooms);
+      });
     } catch (e) {
       // 获取房间列表失败
       ScaffoldMessenger.of(
@@ -105,22 +109,31 @@ class LobbyPage extends ConsumerWidget {
       return;
     }
 
-    if (!ref.read(lobbyProvider.notifier).hasPlayerName()) {
-      showDialog(
-        context: context,
-        builder: (context) => const PlayerNameDialog(title: '创建房间'),
-      ).then((_) => ref.read(lobbyProvider.notifier).createRoom());
-    }
-    ref.read(lobbyProvider.notifier).createRoom();
-    await SocketService().roomCreatedStream.first.then(
-      (roomId) => {
-        print("房间" + roomId),
+    try {
+      final roomId = await ref
+          .read(roomRepoProvider)
+          .createRoom()
+          .timeout(const Duration(seconds: 10));
+
+      if (context.mounted) {
         Navigator.push(
           context,
           MaterialPageRoute(builder: (_) => ChatPage(roomId: roomId)),
-        ),
-      },
-    );
+        );
+      }
+    } on TimeoutException {
+      if (context.mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('房间创建超时')));
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('创建失败: ${e.toString()}')));
+      }
+    }
   }
 
   void _joinRoom(String roomId, WidgetRef ref, BuildContext context) {

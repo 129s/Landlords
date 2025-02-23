@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:landlords_3/data/providers/room_repo_providers.dart';
+import 'package:landlords_3/data/providers/repo_providers.dart';
 import 'package:landlords_3/domain/entities/message_model.dart';
 import 'package:landlords_3/presentation/providers/chat_provider.dart';
 import 'package:intl/intl.dart';
@@ -76,9 +76,10 @@ class ChatPage extends ConsumerWidget {
   );
 
   void _exitRoom(BuildContext context, WidgetRef ref) {
-    ref.read(lobbyProvider.notifier).exitGame();
-    ref.read(roomRepoProvider).leaveRoom(roomId);
-    Navigator.popUntil(context, (route) => route.isFirst);
+    ref.read(roomRepoProvider).leaveRoom(roomId).then((_) {
+      ref.read(lobbyProvider.notifier).exitGame();
+      Navigator.popUntil(context, (route) => route.isFirst);
+    });
   }
 }
 
