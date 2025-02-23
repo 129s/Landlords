@@ -89,6 +89,8 @@ class SocketService {
 
   void leaveRoom(String roomId) {
     socket.emit('leaveRoom', roomId);
+    socket.emit('room:request'); // 主动请求最新房间列表
+    _roomsStreamController.add([]); // 清空旧数据
   }
 
   void requestRooms() => socket.emit('requestRooms');

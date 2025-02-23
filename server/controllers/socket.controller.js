@@ -40,8 +40,9 @@ module.exports = {
           const room = roomService.getRoom(conn.roomId);
           if (room) {
             room.players = room.players.filter(p => p.socketId !== socket.id);
-            if (roomService.deleteRoomIfEmpty(conn.roomId)) {
-              messageService.purgeRoomMessages(conn.roomId);
+            if (roomService.deleteRoomIfEmpty(room)) {
+              roomService.roomStore.delete(room);
+              messageService.purgeRoomMessages(roomId);
             }
           }
           roomService.playerConnections.delete(socket.id);
@@ -61,13 +62,13 @@ module.exports = {
 
           // 广播更新
           io.to(roomId).emit('playerLeft', socket.id);
-          io.emit('roomUpdate', roomService.getAllRooms());
 
           // 房间为空时清理
           if (room.players.length === 0) {
             roomService.roomStore.delete(roomId);
             messageService.purgeRoomMessages(roomId);
           }
+          io.emit('roomUpdate', roomService.getAllRooms());
         } catch (error) {
           logger.error('退出房间失败:', error);
         }

@@ -1,6 +1,6 @@
 const logger = require('../utils/logger');
 const { validateRoomState } = require('../utils/room.utils');
-const CardUtils = require('./card.utils');
+const CardUtils = require('../utils/card.utils');
 
 class GameService {
     constructor() {
