@@ -26,11 +26,7 @@ io.on("connection", (socket) => {
         const room = roomService.playerConnections.get(socket.id)?.roomId;
         if (room) {
             // 移除玩家
-            roomService.leaveRoom(room, socket.id);
-            // 如果房间为空，则删除房间
-            roomService.deleteRoomIfEmpty(room);
-            // 通知房间更新
-            io.emit('roomUpdate', roomService.getRooms());
+            roomService.leaveRoom(socket.id);
         }
     });
 
@@ -63,7 +59,6 @@ io.on("connection", (socket) => {
 
             const room = roomService.joinRoom(roomId, socket.id);
             io.emit('roomUpdate', roomService.getRooms());
-            logger.info(`玩家 %s 加入房间 %s 成功`, socket.id, roomId);
         } catch (e) {
             logger.error(`玩家 %s 加入房间 %s 失败: %s`, socket.id, roomId, e.message);
             socket.emit('roomJoinFailed', { message: e.message });
@@ -72,13 +67,11 @@ io.on("connection", (socket) => {
 
     socket.on('leaveRoom', (roomId) => {
         try {
-            roomService.leaveRoom(roomId, socket.id);
-            roomService.deleteRoomIfEmpty(roomId);
+            roomService.leaveRoom(socket.id);
+            // 通知房间更新
             io.emit('roomUpdate', roomService.getRooms());
-            logger.info(`玩家 %s 离开房间 %s 成功`, socket.id, roomId);
         } catch (e) {
             logger.error(`玩家 %s 离开房间 %s 失败: %s`, socket.id, roomId, e.message);
-            socket.emit('roomLeaveFailed', { message: e.message });
         }
     });
 
@@ -115,7 +108,6 @@ io.on("connection", (socket) => {
             }
             const msg = messageService.addMessage(roomId, socket.id, player.name, content);
             io.emit('messageUpdate', messageService.getMessages(roomId));
-            logger.info(`房间 %s 收到消息: %s 来自 %s`, roomId, content, socket.id);
         } catch (e) {
             logger.error(`房间 %s 发送消息失败: %s`, roomId, e.message);
             socket.emit('messageSendFailed', { message: e.message });
@@ -127,7 +119,6 @@ io.on("connection", (socket) => {
         try {
             const messages = messageService.getMessages(roomId);
             socket.emit('messageUpdate', messages);
-            logger.debug(`房间 %s 请求消息列表`, roomId);
         } catch (e) {
             logger.error(`房间 %s 请求消息列表失败: %s`, roomId, e.message);
             socket.emit('messageRequestFailed', { message: e.message });

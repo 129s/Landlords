@@ -5,7 +5,7 @@ abstract class RoomRepository {
   Future<String> createRoom();
   Future<void> joinRoom(String roomId);
   Future<void> requestRooms();
-  Future<void> leaveRoom(String roomId);
+  Future<void> leaveRoom();
   Future<void> sendMessage(String roomId, String content);
   Stream<List<RoomModel>> watchRooms();
   Stream<List<MessageModel>> watchMessages(String roomId);

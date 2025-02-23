@@ -7,20 +7,20 @@ const { v4: uuidv4 } = require('uuid');
 class RoomService {
     constructor() {
         this.roomStore = new Map();
-        this.playerConnections = new Map(); // socketId -> { roomId }
+        this.playerConnections = new Map(); // socketId -> roomId
     }
 
     createRoom(socketId) {
         // 检查玩家是否已经在房间中
         if (this.playerConnections.has(socketId)) {
-            logger.warn(`玩家 %s 尝试创建房间，但已在房间 %s 中`, socketId, this.playerConnections.get(socketId).roomId);
+            logger.warn(`玩家 %s 尝试创建房间，但已在房间 %s 中`, socketId, this.playerConnections.get(socketId));
             throw new Error('Player already in a room');
         }
 
         const roomId = uuidv4();
         const player = new PlayerModel(socketId);
 
-        this.playerConnections.set(socketId, { roomId });
+        this.playerConnections.set(socketId, roomId);
         const room = new RoomModel(roomId, [player]);
 
         this.roomStore.set(roomId, room);
@@ -41,7 +41,7 @@ class RoomService {
 
         // 检查玩家是否已经在房间中
         if (this.playerConnections.has(socketId)) {
-            logger.warn(`玩家 %s 尝试加入房间 %s，但已在房间 %s 中`, socketId, roomId, this.playerConnections.get(socketId).roomId);
+            logger.warn(`玩家 %s 尝试加入房间 %s，但已在房间 %s 中`, socketId, roomId, this.playerConnections.get(socketId));
             throw new Error('Player already in a room');
         }
 
@@ -52,24 +52,27 @@ class RoomService {
         }
 
         const player = new PlayerModel(socketId);
-        this.playerConnections.set(socketId, { roomId });
+        this.playerConnections.set(socketId, roomId);
         room.players.push(player);
 
         logger.info(`玩家加入: %s 进入房间: %s`, socketId, roomId);
         return room;
     }
 
-    leaveRoom(roomId, socketId) {
-        const room = this.getRoom(roomId);
-        if (!room) {
-            logger.error(`房间 %s 不存在`, roomId);
-            throw new Error('Room not found');
+    leaveRoom(socketId) {
+        const roomId = this.playerConnections.get(socketId);
+        if (!roomId) {
+            logger.warn(`玩家 %s 没有加入任何房间`, socketId);
+            return;
         }
-
+        const room = this.getRoom(roomId);
         room.players = room.players.filter(p => p.id !== socketId);
         this.playerConnections.delete(socketId);
 
         logger.info(`玩家 %s 离开房间 %s`, socketId, roomId);
+
+        // 如果房间为空，则删除房间
+        this.deleteRoomIfEmpty(roomId);
     }
 
     // 玩家名验证
@@ -94,7 +97,7 @@ class RoomService {
             logger.warn(`找不到玩家 %s 的连接信息`, socketId);
             return null;
         }
-        const room = this.getRoom(conn.roomId);
+        const room = this.getRoom(conn);
         return room?.players.find(p => p.id === socketId);
     }
 

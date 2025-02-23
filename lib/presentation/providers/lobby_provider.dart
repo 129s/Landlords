@@ -23,7 +23,6 @@ class LobbyState {
     List<RoomModel>? rooms,
     String? playerName,
     bool? isLoading,
-    bool? isGaming,
   }) {
     return LobbyState(
       rooms: rooms ?? this.rooms,
@@ -82,10 +81,10 @@ class LobbyNotifier extends StateNotifier<LobbyState> {
     state = state.copyWith(rooms: rooms);
   }
 
-  void exitGame() {
-    // _roomSubscription?.cancel(); // 取消现有订阅
+  void leaveRoom() {
+    _repository.leaveRoom();
     _roomSubscription = _repository.watchRooms().listen((rooms) {
-      state = state.copyWith(rooms: rooms, isGaming: false);
+      state = state.copyWith(rooms: rooms);
     });
   }
 

@@ -31,8 +31,8 @@ class RoomRepoImpl implements RoomRepository {
   }
 
   @override
-  Future<void> leaveRoom(String roomId) async {
-    _roomService.leaveRoom(roomId);
+  Future<void> leaveRoom() async {
+    _roomService.leaveRoom();
   }
 
   @override
