@@ -1,6 +1,5 @@
 const chalk = require('chalk');
 
-// 时间格式化函数保持不变
 function formatTime(date = new Date()) {
     const padZero = n => n.toString().padStart(2, '0');
     return `${padZero(date.getHours())}:${padZero(date.getMinutes())}:${padZero(date.getSeconds())}`;

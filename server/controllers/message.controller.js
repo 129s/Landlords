@@ -30,7 +30,7 @@ class MessageController {
             const messages = this.messageService.getMessages(roomId);
             this.io.to(roomId).emit('messageUpdate', messages.map(m => m.toJSON()));
         } catch (error) {
-            logger.error('消息发送失败:', error);
+            logger.error('消息发送失败: %s', error);
             socket.emit('messageError', error.message);
         }
     }
