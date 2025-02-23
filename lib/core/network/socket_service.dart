@@ -1,6 +1,4 @@
 import 'dart:async';
-import 'package:landlords_3/domain/entities/message_model.dart';
-import 'package:landlords_3/domain/entities/room_model.dart';
 import 'package:socket_io_client/socket_io_client.dart' as io;
 
 enum GameConnectionState { connecting, connected, disconnected, error }

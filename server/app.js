@@ -14,6 +14,11 @@ const RoomService = require('./services/room.service');
 const MessageService = require('./services/message.service');
 global.roomService = new RoomService();
 global.messageService = new MessageService();
+const GameService = require('./services/game.service');
+const GameController = require('./controllers/game.controller');
+global.gameService = new GameService();
+const gameController = new GameController(io, global.gameService, global.roomService);
+io.on('connection', socket => gameController.initHandlers(socket));
 
 // 初始化控制器
 const { handleSocketEvents } = require('./controllers/socket.controller');
