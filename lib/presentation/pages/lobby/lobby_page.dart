@@ -25,6 +25,7 @@ class LobbyPage extends ConsumerWidget {
             onPressed: () => _refreshRooms(context, ref),
           ),
           _buildPlayerInfo(playerName),
+          _buildConnectionStatus(),
         ],
       ),
       body: Stack(
@@ -42,7 +43,6 @@ class LobbyPage extends ConsumerWidget {
               ),
             ],
           ),
-          const ConnectionStatusIndicator(), // 添加指示器
         ],
       ),
       floatingActionButton: FloatingActionButton(
@@ -62,6 +62,13 @@ class LobbyPage extends ConsumerWidget {
           Text(name),
         ],
       ),
+    );
+  }
+
+  Widget _buildConnectionStatus() {
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: const ConnectionStatusIndicator(),
     );
   }
 
@@ -112,7 +119,7 @@ class LobbyPage extends ConsumerWidget {
     try {
       final roomId = await ref
           .read(roomRepoProvider)
-          .createRoom()
+          .createRoom(ref.read(lobbyProvider).playerName!)
           .timeout(const Duration(seconds: 10));
 
       if (context.mounted) {

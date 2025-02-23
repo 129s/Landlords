@@ -7,15 +7,19 @@ import 'package:landlords_3/data/datasources/remote/dto/room_dto.dart';
 class RoomService {
   final SocketManager _socket = SocketManager();
   final _roomStream = StreamController<List<RoomDTO>>.broadcast();
+  final _createRoomCompleter = Completer<String>();
 
   RoomService() {
     _socket.on('roomUpdate', _RoomEventHandler(_roomStream));
-    _socket.on('roomCreated', _RoomCreatedHandler());
+    _socket.on('roomCreated', _RoomCreatedHandler(_createRoomCompleter));
   }
 
   Stream<List<RoomDTO>> get roomUpdates => _roomStream.stream;
 
-  void createRoom(String playerName) => _socket.emit('createRoom', playerName);
+  Future<String> createRoom(String playerName) {
+    _socket.emit('createRoom', playerName);
+    return _createRoomCompleter.future;
+  }
 
   void joinRoom(String roomId, String playerName) =>
       _socket.emit('joinRoom', {'roomId': roomId, 'playerName': playerName});
@@ -43,9 +47,17 @@ class _RoomEventHandler implements EventHandler<List<RoomDTO>> {
 }
 
 class _RoomCreatedHandler implements EventHandler<String> {
+  final Completer<String> _completer;
+
+  _RoomCreatedHandler(this._completer);
+
   @override
   String convert(dynamic data) => data as String;
 
   @override
-  void handle(dynamic data) => SocketManager().emit('room:join', convert(data));
+  void handle(dynamic data) {
+    final roomId = convert(data);
+    _completer.complete(roomId);
+    SocketManager().emit('room:join', roomId);
+  }
 }

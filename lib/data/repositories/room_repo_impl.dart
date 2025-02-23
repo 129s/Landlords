@@ -16,8 +16,8 @@ class RoomRepoImpl implements RoomRepository {
        _chatService = chatService;
 
   @override
-  Future<void> createRoom(String playerName) async {
-    _roomService.createRoom(playerName);
+  Future<String> createRoom(String playerName) async {
+    return _roomService.createRoom(playerName);
   }
 
   @override

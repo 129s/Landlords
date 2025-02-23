@@ -13,24 +13,12 @@ class ConnectionStatusIndicator extends ConsumerWidget {
     return Tooltip(
       message: _getStatusMessage(connectionState),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
         decoration: BoxDecoration(
           color: _getStatusColor(connectionState),
           borderRadius: BorderRadius.circular(16),
         ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            _getStatusIcon(connectionState),
-            const SizedBox(width: 4),
-            Text(
-              _getStatusText(connectionState),
-              style: Theme.of(
-                context,
-              ).textTheme.labelSmall?.copyWith(color: Colors.white),
-            ),
-          ],
-        ),
+        child: _getStatusIcon(connectionState),
       ),
     );
   }
