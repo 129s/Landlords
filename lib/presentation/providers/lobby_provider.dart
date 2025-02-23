@@ -59,7 +59,7 @@ class LobbyNotifier extends StateNotifier<LobbyState> {
       // 如果正在游戏中，则阻止创建房间
       return false;
     }
-    await _repository.createRoom(state.playerName!);
+    await _repository.createRoom();
     state = state.copyWith(isGaming: true); // 创建房间后设置为 true
     return true;
   }
@@ -67,7 +67,7 @@ class LobbyNotifier extends StateNotifier<LobbyState> {
   // 加入房间
   Future<bool> joinRoom(String roomId) async {
     if (!hasPlayerName()) return false;
-    await _repository.joinRoom(roomId, state.playerName!);
+    await _repository.joinRoom(roomId);
     // 新增房间列表刷新
     _repository.watchRooms().listen((rooms) {
       state = state.copyWith(rooms: rooms);
@@ -113,10 +113,9 @@ class LobbyNotifier extends StateNotifier<LobbyState> {
     state = state.copyWith(rooms: rooms);
   }
 
-  // 退出游戏
   void exitGame() {
-    // 房间列表刷新
-    _repository.watchRooms().listen((rooms) {
+    _roomSubscription?.cancel(); // 取消现有订阅
+    _roomSubscription = _repository.watchRooms().listen((rooms) {
       state = state.copyWith(rooms: rooms, isGaming: false);
     });
   }

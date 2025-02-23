@@ -11,9 +11,9 @@ class SocketManager {
 
   String? get id => _socketId;
 
-  final _connectionStream = StreamController<GameConnectionState>.broadcast();
   final _connectionController =
       StreamController<GameConnectionState>.broadcast();
+
   factory SocketManager() => _instance;
 
   SocketManager._internal() {
@@ -21,22 +21,31 @@ class SocketManager {
       'transports': ['websocket'],
       'autoConnect': false,
     });
-    _socket
-      ..onConnect((_) {
-        _socketId = _socket.id; // Get the socket ID on connect
-        _connectionController.add(GameConnectionState.connected);
-      })
-      ..onDisconnect(
-        (_) => _connectionController.add(GameConnectionState.disconnected),
-      )
-      ..onError((err) => _connectionController.addError(err));
+
+    _socket.onConnect((_) {
+      _socketId = _socket.id;
+      _connectionController.add(GameConnectionState.connected);
+      print('Socket connected with ID: $_socketId'); // Log connection
+    });
+
+    _socket.onDisconnect((_) {
+      _connectionController.add(GameConnectionState.disconnected);
+      print('Socket disconnected'); // Log disconnection
+    });
+
+    _socket.onError((err) {
+      print('Socket error: $err'); // Log error
+      _connectionController.addError(err);
+    });
   }
 
-  Stream<GameConnectionState> get connectionStream => _connectionStream.stream;
+  Stream<GameConnectionState> get connectionStream =>
+      _connectionController.stream;
 
   void connect() {
     _connectionController.add(GameConnectionState.connecting);
     _socket.connect();
+    print('Socket connecting...'); // Log connection attempt
   }
 
   void emit(String event, [dynamic data]) => _socket.emit(event, data);

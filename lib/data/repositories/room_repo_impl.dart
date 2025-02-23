@@ -16,12 +16,12 @@ class RoomRepoImpl implements RoomRepository {
        _chatService = chatService;
 
   @override
-  Future<String> createRoom(String playerName) async {
+  Future<String> createRoom() async {
     return _roomService.createRoom();
   }
 
   @override
-  Future<void> joinRoom(String roomId, String playerName) async {
+  Future<void> joinRoom(String roomId) async {
     _roomService.joinRoom(roomId);
   }
 

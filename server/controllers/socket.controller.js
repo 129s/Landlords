@@ -5,9 +5,9 @@ module.exports = {
     io.on('connection', (socket) => {
       logger.info('用户连接: %s', socket.id);
 
-      socket.on('createRoom', (playerName) => {
+      socket.on('createRoom', () => {
         try {
-          const room = roomService.createRoom(playerName, socket.id);
+          const room = roomService.createRoom(socket.id);
           socket.join(room.id);
           io.emit('roomUpdate', roomService.getRooms());
           socket.emit('roomCreated', room.id);
@@ -17,9 +17,9 @@ module.exports = {
         }
       });
 
-      socket.on('joinRoom', ({ roomId, playerName }) => {
+      socket.on('joinRoom', ({ roomId }) => {
         try {
-          const room = roomService.joinRoom(roomId, playerName, socket.id);
+          const room = roomService.joinRoom(roomId, socket.id);
           socket.join(roomId);
 
           // 加入时推送当前消息
@@ -80,3 +80,5 @@ module.exports = {
     });
   }
 };
+
+

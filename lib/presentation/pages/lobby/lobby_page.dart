@@ -7,7 +7,6 @@ import 'package:landlords_3/presentation/pages/chat/chat_page.dart';
 import 'package:landlords_3/presentation/pages/lobby/room_list.dart';
 import 'package:landlords_3/presentation/providers/lobby_provider.dart';
 import 'package:landlords_3/presentation/widgets/connection_status_indicator.dart';
-import 'package:landlords_3/presentation/widgets/player_name_dialog.dart';
 
 class LobbyPage extends ConsumerWidget {
   const LobbyPage({super.key});
@@ -115,9 +114,7 @@ class LobbyPage extends ConsumerWidget {
           .validatePlayerName(context);
       if (!isValid || !context.mounted) return;
 
-      final roomId = await ref
-          .read(roomRepoProvider)
-          .createRoom(ref.read(lobbyProvider).playerName!);
+      final roomId = await ref.read(roomRepoProvider).createRoom();
 
       if (context.mounted) {
         Navigator.push(
