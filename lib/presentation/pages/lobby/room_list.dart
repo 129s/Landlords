@@ -47,36 +47,11 @@ class _RoomListItem extends StatelessWidget {
       style: ElevatedButton.styleFrom(
         backgroundColor: room.players.length == 3 ? Colors.grey : Colors.blue,
       ),
-      onPressed:
-          room.players.length == 3
-              ? null
-              : () async {
-                print('Attempting to join room: ${room.id}');
-
-                final hasPlayerName =
-                    ProviderScope.containerOf(
-                      context,
-                    ).read(lobbyProvider.notifier).hasPlayerName();
-
-                if (!hasPlayerName) {
-                  await showDialog(
-                    context: context,
-                    builder: (context) => const PlayerNameDialog(title: '加入房间'),
-                  );
-                }
-
-                if (ProviderScope.containerOf(
-                  context,
-                ).read(lobbyProvider.notifier).hasPlayerName()) {
-                  ProviderScope.containerOf(
-                    context,
-                  ).read(lobbyProvider.notifier).joinRoom(room.id);
-                }
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => ChatPage(roomId: room.id)),
-                );
-              },
+      onPressed: () {
+        ProviderScope.containerOf(
+          context,
+        ).read(lobbyProvider.notifier).joinExistingRoom(room.id);
+      },
       child: const Text('加入'),
     );
   }

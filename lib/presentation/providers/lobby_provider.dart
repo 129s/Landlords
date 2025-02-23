@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:landlords_3/data/providers/repo_providers.dart';
 import 'package:landlords_3/domain/entities/room_model.dart';
 import 'package:landlords_3/domain/repositories/room_repo.dart';
+import 'package:landlords_3/presentation/pages/chat/chat_page.dart';
 import 'package:landlords_3/presentation/widgets/player_name_dialog.dart';
 
 class LobbyState {
@@ -48,43 +49,28 @@ class LobbyNotifier extends StateNotifier<LobbyState> {
     });
   }
 
-  // 创建房间
-  Future<bool> createRoom() async {
-    if (!hasPlayerName()) return false;
-
-    await _repository.createRoom();
-
-    return true;
+  Future<void> createAndJoinRoom() async {
+    state = state.copyWith(isLoading: true);
+    try {
+      final roomId = await _repository.createRoom();
+      MaterialPageRoute(builder: (_) => ChatPage(roomId: roomId));
+    } catch (e) {
+      print(e);
+    } finally {
+      state = state.copyWith(isLoading: false);
+    }
   }
 
-  // 加入房间
-  Future<bool> joinRoom(String roomId) async {
-    if (!hasPlayerName()) return false;
-
-    await _repository.joinRoom(roomId);
-
-    return true;
-  }
-
-  // 验证玩家名
-  Future<bool> validatePlayerName(BuildContext context) async {
-    if (hasPlayerName()) return true;
-
-    final completer = Completer<bool>();
-    showDialog(
-      context: context,
-      builder:
-          (context) => PlayerNameDialog(
-            title: '设置玩家名',
-            onConfirm: (name) {
-              setPlayerName(name);
-              completer.complete(true);
-            },
-            onCancel: () => completer.complete(false),
-          ),
-    );
-
-    return completer.future;
+  Future<void> joinExistingRoom(String roomId) async {
+    state = state.copyWith(isLoading: true);
+    try {
+      await _repository.joinRoom(roomId);
+      MaterialPageRoute(builder: (_) => ChatPage(roomId: roomId));
+    } catch (e) {
+      print(e);
+    } finally {
+      state = state.copyWith(isLoading: false);
+    }
   }
 
   bool hasPlayerName() {
@@ -104,7 +90,7 @@ class LobbyNotifier extends StateNotifier<LobbyState> {
   }
 
   void exitGame() {
-    _roomSubscription?.cancel(); // 取消现有订阅
+    // _roomSubscription?.cancel(); // 取消现有订阅
     _roomSubscription = _repository.watchRooms().listen((rooms) {
       state = state.copyWith(rooms: rooms, isGaming: false);
     });

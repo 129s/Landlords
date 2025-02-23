@@ -45,7 +45,7 @@ class LobbyPage extends ConsumerWidget {
         ],
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () => _createRoom(context, ref),
+        onPressed: () => ref.read(lobbyProvider.notifier).createAndJoinRoom(),
         child: const Icon(Icons.add),
       ),
     );
@@ -83,7 +83,9 @@ class LobbyPage extends ConsumerWidget {
                 prefixIcon: Icon(Icons.search),
                 border: OutlineInputBorder(),
               ),
-              onSubmitted: (value) => _joinRoom(value, ref, context),
+              onSubmitted:
+                  (roomId) =>
+                      ref.read(lobbyProvider.notifier).joinExistingRoom(roomId),
             ),
           ),
         ],
@@ -102,54 +104,6 @@ class LobbyPage extends ConsumerWidget {
       ).showSnackBar(const SnackBar(content: Text('获取房间列表失败，请稍后重试')));
     } finally {
       ref.read(lobbyProvider.notifier).toggleLoading();
-    }
-  }
-
-  void _createRoom(BuildContext context, WidgetRef ref) async {
-    try {
-      final isValid = await ref
-          .read(lobbyProvider.notifier)
-          .validatePlayerName(context);
-      if (!isValid || !context.mounted) return;
-
-      final roomId = await ref.read(roomRepoProvider).createRoom();
-
-      if (context.mounted) {
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => ChatPage(roomId: roomId)),
-        );
-      }
-    } catch (e) {
-      print(e.toString());
-      if (context.mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('创建失败: ${e.toString()}')));
-      }
-    }
-  }
-
-  void _joinRoom(String roomId, WidgetRef ref, BuildContext context) async {
-    final isValid = await ref
-        .read(lobbyProvider.notifier)
-        .validatePlayerName(context);
-    if (!isValid || !context.mounted) return;
-
-    try {
-      await ref.read(lobbyProvider.notifier).joinRoom(roomId);
-      if (context.mounted) {
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => ChatPage(roomId: roomId)),
-        );
-      }
-    } catch (e) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('加入失败: ${e.toString()}')));
-      }
     }
   }
 }
