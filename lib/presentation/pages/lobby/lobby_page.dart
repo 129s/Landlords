@@ -46,7 +46,7 @@ class LobbyPage extends ConsumerWidget {
         ],
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () => _showCreateRoomDialog(context, ref),
+        onPressed: () => _createRoom(context, ref),
         child: const Icon(Icons.add),
       ),
     );
@@ -108,31 +108,22 @@ class LobbyPage extends ConsumerWidget {
     }
   }
 
-  void _showCreateRoomDialog(BuildContext context, WidgetRef ref) async {
-    if (ref.read(lobbyProvider).isGaming) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('您已经在游戏中，请先退出游戏')));
-      return;
-    }
-
+  void _createRoom(BuildContext context, WidgetRef ref) async {
     try {
+      final isValid = await ref
+          .read(lobbyProvider.notifier)
+          .validatePlayerName(context);
+      if (!isValid || !context.mounted) return;
+
       final roomId = await ref
           .read(roomRepoProvider)
-          .createRoom(ref.read(lobbyProvider).playerName!)
-          .timeout(const Duration(seconds: 10));
+          .createRoom(ref.read(lobbyProvider).playerName!);
 
       if (context.mounted) {
         Navigator.push(
           context,
           MaterialPageRoute(builder: (_) => ChatPage(roomId: roomId)),
         );
-      }
-    } on TimeoutException {
-      if (context.mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('房间创建超时')));
       }
     } catch (e) {
       if (context.mounted) {
@@ -143,24 +134,26 @@ class LobbyPage extends ConsumerWidget {
     }
   }
 
-  void _joinRoom(String roomId, WidgetRef ref, BuildContext context) {
-    if (ref.read(lobbyProvider).isGaming) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('您已经在游戏中，请先退出游戏')));
-      return;
-    }
+  void _joinRoom(String roomId, WidgetRef ref, BuildContext context) async {
+    final isValid = await ref
+        .read(lobbyProvider.notifier)
+        .validatePlayerName(context);
+    if (!isValid || !context.mounted) return;
 
-    if (!ref.read(lobbyProvider.notifier).hasPlayerName()) {
-      showDialog(
-        context: context,
-        builder: (context) => const PlayerNameDialog(title: '加入房间'),
-      ).then((_) => ref.read(lobbyProvider.notifier).joinRoom(roomId));
+    try {
+      await ref.read(lobbyProvider.notifier).joinRoom(roomId);
+      if (context.mounted) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => ChatPage(roomId: roomId)),
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('加入失败: ${e.toString()}')));
+      }
     }
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (_) => ChatPage(roomId: roomId)),
-    );
-    ref.read(lobbyProvider.notifier).joinRoom(roomId);
   }
 }

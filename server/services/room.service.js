@@ -53,7 +53,7 @@ class RoomService {
         return false;
     }
 
-    getAllRooms() {
+    getRooms() {
         return Array.from(this.roomStore.values());
     }
 }

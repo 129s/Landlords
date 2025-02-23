@@ -1,9 +1,11 @@
 import 'dart:async';
 
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:landlords_3/data/providers/repo_providers.dart';
 import 'package:landlords_3/domain/entities/room_model.dart';
 import 'package:landlords_3/domain/repositories/room_repo.dart';
+import 'package:landlords_3/presentation/widgets/player_name_dialog.dart';
 
 class LobbyState {
   final List<RoomModel> rooms;
@@ -72,6 +74,27 @@ class LobbyNotifier extends StateNotifier<LobbyState> {
     });
     state = state.copyWith(isGaming: true);
     return true;
+  }
+
+  // 验证玩家名
+  Future<bool> validatePlayerName(BuildContext context) async {
+    if (hasPlayerName()) return true;
+
+    final completer = Completer<bool>();
+    showDialog(
+      context: context,
+      builder:
+          (context) => PlayerNameDialog(
+            title: '设置玩家名',
+            onConfirm: (name) {
+              setPlayerName(name);
+              completer.complete(true);
+            },
+            onCancel: () => completer.complete(false),
+          ),
+    );
+
+    return completer.future;
   }
 
   bool hasPlayerName() {

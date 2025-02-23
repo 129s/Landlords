@@ -9,7 +9,7 @@ module.exports = {
         try {
           const room = roomService.createRoom(playerName, socket.id);
           socket.join(room.id);
-          io.emit('roomUpdate', roomService.getAllRooms());
+          io.emit('roomUpdate', roomService.getRooms());
           socket.emit('roomCreated', room.id);
         } catch (error) {
           logger.error("创建房间失败:", error);
@@ -46,7 +46,7 @@ module.exports = {
             }
           }
           roomService.playerConnections.delete(socket.id);
-          io.emit('roomUpdate', roomService.getAllRooms());
+          io.emit('roomUpdate', roomService.getRooms());
         }
         logger.info('用户断开连接: %s', socket.id);
       });
@@ -68,14 +68,14 @@ module.exports = {
             roomService.roomStore.delete(roomId);
             messageService.purgeRoomMessages(roomId);
           }
-          io.emit('roomUpdate', roomService.getAllRooms());
+          io.emit('roomUpdate', roomService.getRooms());
         } catch (error) {
           logger.error('退出房间失败:', error);
         }
       });
 
       socket.on('requestRooms', () => {
-        socket.emit('roomUpdate', roomService.getAllRooms());
+        socket.emit('roomUpdate', roomService.getRooms());
       });
     });
   }
