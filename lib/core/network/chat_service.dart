@@ -1,4 +1,3 @@
-//=== 文件路径：core/network/chat_service.dart ===
 import 'dart:async';
 import 'package:landlords_3/core/network/socket_manager.dart';
 import 'package:landlords_3/data/datasources/remote/dto/message_dto.dart';
@@ -19,7 +18,7 @@ class ChatService {
     final payload = {
       'roomId': roomId,
       'content': content,
-      'socketId': _socket.id, // 添加 socketId 参数
+      'socketId': _socket.id,
     };
     _socket.emit('sendMessage', payload);
   }

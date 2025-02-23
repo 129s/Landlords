@@ -2,15 +2,16 @@ const { v4: uuidv4 } = require('uuid');
 const PlayerModel = require('../models/PlayerModel');
 const RoomModel = require('../models/RoomModel');
 const logger = require('../utils/logger');
+
 class RoomService {
     constructor() {
         this.roomStore = new Map();
-        this.playerConnections = new Map();
+        this.playerConnections = new Map(); // socketId -> { roomId, playerId }
     }
 
-    createRoom(playerName, socketId) {
+    createRoom(socketId) {
         const roomId = uuidv4();
-        const player = new PlayerModel(playerName, socketId);
+        const player = new PlayerModel(socketId, socketId); // Use socketId as player ID and name
         const room = new RoomModel(roomId, [player]);
 
         this.playerConnections.set(socketId, {
@@ -22,13 +23,19 @@ class RoomService {
         return room;
     }
 
-    joinRoom(roomId, playerName, socketId) {
+    joinRoom(roomId, socketId) {
         const room = this.getRoom(roomId);
-        if (!room) logger.error('房间不存在');
-        if (room.players.length >= 3) logger.error('房间已满');
+        if (!room) {
+            logger.error('房间不存在');
+            return null;
+        }
+        if (room.players.length >= 3) {
+            logger.error('房间已满');
+            return null;
+        }
 
-        const player = new PlayerModel(playerName, socketId);
-        this.playerConnections.set(socketId, { roomId, player });
+        const player = new PlayerModel(socketId, socketId); // Use socketId as player ID and name
+        this.playerConnections.set(socketId, { roomId, playerId: player.id });
         room.players.push(player);
         return room;
     }
@@ -41,7 +48,7 @@ class RoomService {
         const conn = this.playerConnections.get(socketId);
         if (!conn) return null;
         const room = this.getRoom(conn.roomId);
-        return room?.players.find(p => p.socketId === socketId);
+        return room?.players.find(p => p.id === conn.playerId);
     }
 
     deleteRoomIfEmpty(roomId) {
@@ -59,3 +66,4 @@ class RoomService {
 }
 
 module.exports = RoomService;
+

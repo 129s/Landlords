@@ -20,13 +20,13 @@ class RoomService {
 
   Stream<List<RoomDTO>> get roomUpdates => _roomStream.stream;
 
-  Future<String> createRoom(String name) {
-    _socket.emit('createRoom', {'playerName': name, 'socketId': _socket.id});
+  Future<String> createRoom() {
+    _socket.emit('createRoom', {'socketId': _socket.id});
     return _createController.stream.first;
   }
 
-  void joinRoom(String roomId, String name) =>
-      _socket.emit('joinRoom', {'roomId': roomId, 'playerName': name});
+  void joinRoom(String roomId) =>
+      _socket.emit('joinRoom', {'roomId': roomId, 'socketId': _socket.id});
 
   void leaveRoom(String roomId) {
     _socket.emit('leaveRoom', roomId);

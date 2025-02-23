@@ -7,7 +7,9 @@ class SocketManager {
   static final SocketManager _instance = SocketManager._internal();
 
   late io.Socket _socket;
-  String? get id => _socket.id;
+  String? _socketId;
+
+  String? get id => _socketId;
 
   final _connectionStream = StreamController<GameConnectionState>.broadcast();
   final _connectionController =
@@ -20,9 +22,10 @@ class SocketManager {
       'autoConnect': false,
     });
     _socket
-      ..onConnect(
-        (_) => _connectionController.add(GameConnectionState.connected),
-      )
+      ..onConnect((_) {
+        _socketId = _socket.id; // Get the socket ID on connect
+        _connectionController.add(GameConnectionState.connected);
+      })
       ..onDisconnect(
         (_) => _connectionController.add(GameConnectionState.disconnected),
       )

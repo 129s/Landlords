@@ -1,95 +1,72 @@
-const logger = require('../utils/logger');
-const { validateRoomState } = require('../utils/room.utils');
 const CardUtils = require('../utils/card.utils');
+const logger = require('../utils/logger');
 
 class GameService {
     constructor() {
-        this.gameStates = new Map(); // roomId -> GameState
-        this.timers = new Map();     // 游戏定时器管理
+        this.gameStates = new Map(); // roomId -> gameState
+        this.timers = new Map(); // roomId -> timer
     }
 
-    // 初始化游戏状态
-    initGame(roomId, players) {
+    startGame(roomId) {
         const deck = this._createShuffledDeck();
         const hands = this._dealCards(deck);
 
-        const state = {
-            phase: 'BIDDING',
-            currentPlayer: 0,
-            landlord: null,
-            players: players.map((p, i) => ({
-                ...p,
-                cards: hands[i],
-                cardCount: 17,
-                id: p.id,
-                name: p.name,
-                seat: p.seat,
-                isLandlord: p.isLandlord,
-                socketId: p.socketId
-            })),
-            lastPlay: [],
-            currentPlay: [],
+        const gameState = {
+            roomId: roomId,
+            players: [
+                { id: 0, cards: hands[0], cardCount: hands[0].length },
+                { id: 1, cards: hands[1], cardCount: hands[1].length },
+                { id: 2, cards: hands[2], cardCount: hands[2].length }
+            ],
             baseCards: hands[3],
-            multiplier: 1
+            currentPlayer: 0,
+            phase: 'BIDDING', // BIDDING, PLAYING, ENDED
+            landlord: null,
+            landlordCandidate: null,
+            currentPlay: null,
+            lastPlay: null,
         };
 
-        this.gameStates.set(roomId, state);
+        this.gameStates.set(roomId, gameState);
         this._startBiddingTimer(roomId);
-        return state;
+        logger.info(`Game started in room: ${roomId}`);
     }
 
-    // 叫地主逻辑
-    handleBid(roomId, playerId, bidValue) {
+    bidLandlord(roomId, playerId, bid) {
         const state = this.gameStates.get(roomId);
-        if (state.phase !== 'BIDDING') return false;
+        if (!state || state.phase !== 'BIDDING') return;
 
-        const playerIndex = state.players.findIndex(p => p.id === playerId);
-        if (playerIndex !== state.currentPlayer) return false;
-
-        if (bidValue > state.multiplier) {
-            state.multiplier = bidValue;
-            state.landlordCandidate = playerIndex;
+        if (bid) {
+            state.landlordCandidate = playerId;
         }
 
-        state.currentPlayer = (playerIndex + 1) % 3;
-        if (state.currentPlayer === playerIndex) {
+        state.currentPlayer = (state.currentPlayer + 1) % 3;
+
+        if (state.currentPlayer === 0) {
+            clearTimeout(this.timers[roomId]);
             this._finalizeLandlord(roomId);
         }
-        return true;
     }
 
-    // 出牌验证
-    validatePlay(roomId, playerId, cards) {
+    playCards(roomId, playerId, cards) {
         const state = this.gameStates.get(roomId);
-        const player = state.players.find(p => p.id === playerId);
+        if (!state || state.phase !== 'PLAYING' || state.currentPlayer !== playerId) return false;
 
-        // 基础验证
-        if (!this._hasCards(player.cards, cards)) return false;
-        if (state.lastPlay.length > 0 && !CardUtils.isBigger(cards, state.lastPlay)) return false;
+        const playerCards = state.players[playerId].cards;
+        if (!this._hasCards(playerCards, cards)) return false;
 
-        return CardUtils.getCardType(cards) !== 'INVALID';
-    }
+        const cardType = CardUtils.getCardType(cards);
+        if (cardType === 'INVALID') return false;
 
-    // 执行出牌
-    applyPlay(roomId, playerId, cards) {
-        const state = this.gameStates.get(roomId);
-        const playerIndex = state.players.findIndex(p => p.id === playerId);
+        if (state.lastPlay && !CardUtils.isBigger(cards, state.lastPlay)) return false;
 
-        // 更新玩家手牌
-        state.players[playerIndex].cards = state.players[playerIndex].cards.filter(c =>
-            !cards.some(played => c.suit === played.suit && c.value === played.value)
-        );
-
-        state.players[playerIndex].cardCount = state.players[playerIndex].cards.length;
-
-        // 更新游戏状态
+        state.players[playerId].cards = playerCards.filter(card => !cards.some(c => c.suit === card.suit && c.value === card.value));
+        state.players[playerId].cardCount = state.players[playerId].cards.length;
         state.lastPlay = cards;
-        state.currentPlay = cards;
-        state.currentPlayer = (playerIndex + 1) % 3;
+        state.currentPlayer = (state.currentPlayer + 1) % 3;
 
-        // 检查游戏结束
-        if (state.players[playerIndex].cards.length === 0) {
-            this._endGame(roomId, playerIndex);
+        if (state.players[playerId].cardCount === 0) {
+            this._endGame(roomId, playerId);
         }
 
         return true;
@@ -115,14 +92,10 @@ class GameService {
     _shuffle(array) {
         let currentIndex = array.length, randomIndex;
 
-        // While there remain elements to shuffle.
         while (currentIndex != 0) {
-
-            // Pick a remaining element.
             randomIndex = Math.floor(Math.random() * currentIndex);
             currentIndex--;
 
-            // And swap it with the current element.
             [array[currentIndex], array[randomIndex]] = [
                 array[randomIndex], array[currentIndex]];
         }
@@ -185,7 +158,6 @@ class GameService {
         // 简单地将当前玩家设置为下一个玩家
         state.currentPlayer = (state.currentPlayer + 1) % 3;
         logger.info(`Room ${roomId}: Player turn timed out, skipping to next player.`);
-
     }
 }
 

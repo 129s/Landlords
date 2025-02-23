@@ -17,12 +17,12 @@ class RoomRepoImpl implements RoomRepository {
 
   @override
   Future<String> createRoom(String playerName) async {
-    return _roomService.createRoom(playerName);
+    return _roomService.createRoom();
   }
 
   @override
   Future<void> joinRoom(String roomId, String playerName) async {
-    _roomService.joinRoom(roomId, playerName);
+    _roomService.joinRoom(roomId);
   }
 
   @override
@@ -31,13 +31,13 @@ class RoomRepoImpl implements RoomRepository {
   }
 
   @override
-  Future<void> sendMessage(String roomId, String content) async {
-    _chatService.sendMessage(roomId, content);
+  Stream<List<RoomModel>> watchRooms() {
+    return _roomService.roomUpdates.map((dtos) => dtos.cast<RoomModel>());
   }
 
   @override
-  Stream<List<RoomModel>> watchRooms() {
-    return _roomService.roomUpdates.map((dtos) => dtos.cast<RoomModel>());
+  Future<void> sendMessage(String roomId, String content) async {
+    _chatService.sendMessage(roomId, content);
   }
 
   @override
