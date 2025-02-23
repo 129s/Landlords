@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:landlords_3/data/providers/socket_provider.dart';
 import 'package:landlords_3/domain/entities/message_model.dart';
@@ -18,8 +19,8 @@ class ChatPage extends ConsumerStatefulWidget {
 class _ChatPageState extends ConsumerState<ChatPage> {
   final _controller = TextEditingController();
   final _focusNode = FocusNode();
-  bool _autoScrollEnabled = true;
-  bool _userScrolling = false;
+  bool _isUserScrolling = false;
+  bool _isMyLastMessage = false;
 
   late final ScrollController _scrollController = ScrollController();
 
@@ -29,38 +30,17 @@ class _ChatPageState extends ConsumerState<ChatPage> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _focusNode.requestFocus();
     });
-
-    // 滚动监听
+    // 滚动监听器
     _scrollController.addListener(() {
-      final maxScroll = _scrollController.position.maxScrollExtent;
-      final currentScroll = _scrollController.position.pixels;
-
-      // 用户手动滚动时检测位置
-      if (_userScrolling) {
-        // 距离底部超过70像素时关闭自动滚动
-        if ((maxScroll - currentScroll) > 70) {
-          setState(() => _autoScrollEnabled = false);
-        } else {
-          setState(() => _autoScrollEnabled = true);
-        }
-        _userScrolling = false;
+      // 当用户手动滚动时更新状态
+      if (_scrollController.position.userScrollDirection ==
+          ScrollDirection.reverse) {
+        _isUserScrolling = true;
       }
     });
   }
 
   void _sendMessage() async {
-    // 在发送成功后添加滚动控制
-    if (_autoScrollEnabled) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (_scrollController.hasClients) {
-          _scrollController.animateTo(
-            _scrollController.position.maxScrollExtent,
-            duration: const Duration(milliseconds: 300),
-            curve: Curves.easeOut,
-          );
-        }
-      });
-    }
     final text = _controller.text.trim();
     if (text.isEmpty) {
       _focusNode.requestFocus(); // 保持焦点
@@ -69,6 +49,7 @@ class _ChatPageState extends ConsumerState<ChatPage> {
 
     try {
       await ref.read(roomRepoProvider).sendMessage(widget.roomId, text);
+      _isUserScrolling = false;
       _controller.clear();
       _focusNode.requestFocus();
     } catch (e) {
@@ -89,7 +70,26 @@ class _ChatPageState extends ConsumerState<ChatPage> {
   @override
   Widget build(BuildContext context) {
     final messages = ref.watch(chatProvider(widget.roomId)).value ?? [];
+    // 在 build 方法中添加消息监听
+    final messagesAsync = ref.watch(chatProvider(widget.roomId));
+    messagesAsync.when(
+      data: (messages) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (_isUserScrolling && !_isMyLastMessage) return;
 
+          if (_scrollController.hasClients) {
+            _scrollController.animateTo(
+              _scrollController.position.maxScrollExtent,
+              duration: const Duration(milliseconds: 150),
+              curve: Curves.easeOut,
+            );
+          }
+          _isMyLastMessage = false; // 重置标志
+        });
+      },
+      loading: () {},
+      error: (error, _) {},
+    );
     return Scaffold(
       appBar: AppBar(
         title: Text('房间 ${widget.roomId.substring(0, 6)}'),
@@ -103,29 +103,17 @@ class _ChatPageState extends ConsumerState<ChatPage> {
       body: Column(
         children: [
           Expanded(
-            child: NotificationListener<ScrollNotification>(
-              onNotification: (notification) {
-                // 检测用户滚动行为
-                if (notification is UserScrollNotification) {
-                  _userScrolling = true;
-                }
-                return false;
+            child: ListView.builder(
+              controller: _scrollController,
+              padding: const EdgeInsets.all(8),
+              itemCount: messages.length,
+              itemBuilder: (context, index) {
+                final message = messages[index];
+                return MessageBubble(
+                  message: message,
+                  isMe: message.senderId == ref.read(socketManagerProvider).id,
+                );
               },
-              child: ListView.builder(
-                controller: _scrollController,
-                // 添加滚动后自动恢复判断
-                reverse: false,
-                padding: const EdgeInsets.all(8),
-                itemCount: messages.length,
-                itemBuilder: (context, index) {
-                  final message = messages[index];
-                  return MessageBubble(
-                    message: message,
-                    isMe:
-                        message.senderId == ref.read(socketManagerProvider).id,
-                  );
-                },
-              ),
             ),
           ),
           _buildInputField(),
