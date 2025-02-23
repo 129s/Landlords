@@ -45,7 +45,15 @@ class LobbyPage extends ConsumerWidget {
         ],
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () => ref.read(lobbyProvider.notifier).createAndJoinRoom(),
+        onPressed:
+            () => ref.read(lobbyProvider.notifier).createAndJoinRoom().then((
+              roomId,
+            ) {
+              if (roomId == null) print("房间不存在");
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => ChatPage(roomId: roomId!)),
+              );
+            }),
         child: const Icon(Icons.add),
       ),
     );
@@ -84,8 +92,16 @@ class LobbyPage extends ConsumerWidget {
                 border: OutlineInputBorder(),
               ),
               onSubmitted:
-                  (roomId) =>
-                      ref.read(lobbyProvider.notifier).joinExistingRoom(roomId),
+                  (roomId) => ref
+                      .read(lobbyProvider.notifier)
+                      .joinExistingRoom(roomId)
+                      .then((_) {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) => ChatPage(roomId: roomId),
+                          ),
+                        );
+                      }),
             ),
           ),
         ],

@@ -50,7 +50,11 @@ class _RoomListItem extends StatelessWidget {
       onPressed: () {
         ProviderScope.containerOf(
           context,
-        ).read(lobbyProvider.notifier).joinExistingRoom(room.id);
+        ).read(lobbyProvider.notifier).joinExistingRoom(room.id).then((_) {
+          Navigator.of(
+            context,
+          ).push(MaterialPageRoute(builder: (_) => ChatPage(roomId: room.id)));
+        });
       },
       child: const Text('加入'),
     );

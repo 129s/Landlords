@@ -49,11 +49,12 @@ class LobbyNotifier extends StateNotifier<LobbyState> {
     });
   }
 
-  Future<void> createAndJoinRoom() async {
+  //如果成功则返回roomId,否则为null
+  Future<String?> createAndJoinRoom() async {
     state = state.copyWith(isLoading: true);
     try {
       final roomId = await _repository.createRoom();
-      MaterialPageRoute(builder: (_) => ChatPage(roomId: roomId));
+      return roomId;
     } catch (e) {
       print(e);
     } finally {
