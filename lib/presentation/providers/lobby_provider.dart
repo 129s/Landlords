@@ -11,13 +11,11 @@ class LobbyState {
   final List<RoomModel> rooms;
   final String? playerName;
   final bool isLoading;
-  final bool isGaming;
 
   const LobbyState({
     this.rooms = const [],
     this.playerName,
     this.isLoading = false,
-    this.isGaming = false,
   });
 
   LobbyState copyWith({
@@ -30,7 +28,6 @@ class LobbyState {
       rooms: rooms ?? this.rooms,
       playerName: playerName ?? this.playerName,
       isLoading: isLoading ?? this.isLoading,
-      isGaming: isGaming ?? this.isGaming,
     );
   }
 }
@@ -55,24 +52,17 @@ class LobbyNotifier extends StateNotifier<LobbyState> {
   Future<bool> createRoom() async {
     if (!hasPlayerName()) return false;
 
-    if (state.isGaming) {
-      // 如果正在游戏中，则阻止创建房间
-      return false;
-    }
     await _repository.createRoom();
-    state = state.copyWith(isGaming: true); // 创建房间后设置为 true
+
     return true;
   }
 
   // 加入房间
   Future<bool> joinRoom(String roomId) async {
     if (!hasPlayerName()) return false;
+
     await _repository.joinRoom(roomId);
-    // 新增房间列表刷新
-    _repository.watchRooms().listen((rooms) {
-      state = state.copyWith(rooms: rooms);
-    });
-    state = state.copyWith(isGaming: true);
+
     return true;
   }
 
