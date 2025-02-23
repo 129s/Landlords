@@ -1,3 +1,4 @@
+// services\room.service.js
 const PlayerModel = require('../models/PlayerModel');
 const RoomModel = require('../models/RoomModel');
 const logger = require('../utils/logger');
@@ -10,6 +11,12 @@ class RoomService {
     }
 
     createRoom(socketId) {
+        // 检查玩家是否已经在房间中
+        if (this.playerConnections.has(socketId)) {
+            logger.warn(`玩家 %s 尝试创建房间，但已在房间 %s 中`, socketId, this.playerConnections.get(socketId).roomId);
+            throw new Error('Player already in a room');
+        }
+
         const roomId = uuidv4();
         const player = new PlayerModel(socketId);
 
@@ -32,6 +39,12 @@ class RoomService {
             throw new Error('Room is full');
         }
 
+        // 检查玩家是否已经在房间中
+        if (this.playerConnections.has(socketId)) {
+            logger.warn(`玩家 %s 尝试加入房间 %s，但已在房间 %s 中`, socketId, roomId, this.playerConnections.get(socketId).roomId);
+            throw new Error('Player already in a room');
+        }
+
         // 名称冲突检查改为检查socketId是否已存在
         if (room.players.some(p => p.id === socketId)) {
             logger.error(`玩家 %s 已在此房间`, socketId);
@@ -44,6 +57,19 @@ class RoomService {
 
         logger.info(`玩家加入: %s 进入房间: %s`, socketId, roomId);
         return room;
+    }
+
+    leaveRoom(roomId, socketId) {
+        const room = this.getRoom(roomId);
+        if (!room) {
+            logger.error(`房间 %s 不存在`, roomId);
+            throw new Error('Room not found');
+        }
+
+        room.players = room.players.filter(p => p.id !== socketId);
+        this.playerConnections.delete(socketId);
+
+        logger.info(`玩家 %s 离开房间 %s`, socketId, roomId);
     }
 
     // 玩家名验证
