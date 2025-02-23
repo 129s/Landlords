@@ -20,7 +20,12 @@ class GameService {
             players: players.map((p, i) => ({
                 ...p,
                 cards: hands[i],
-                cardCount: 17
+                cardCount: 17,
+                id: p.id,
+                name: p.name,
+                seat: p.seat,
+                isLandlord: p.isLandlord,
+                socketId: p.socketId
             })),
             lastPlay: [],
             currentPlay: [],
@@ -47,7 +52,7 @@ class GameService {
         }
 
         state.currentPlayer = (playerIndex + 1) % 3;
-        if (state.currentPlayer === 0 && !state.landlord) {
+        if (state.currentPlayer === playerIndex) {
             this._finalizeLandlord(roomId);
         }
         return true;
@@ -60,7 +65,7 @@ class GameService {
 
         // 基础验证
         if (!this._hasCards(player.cards, cards)) return false;
-        if (state.currentPlay.length > 0 && !CardUtils.isBigger(cards, state.currentPlay)) return false;
+        if (state.lastPlay.length > 0 && !CardUtils.isBigger(cards, state.lastPlay)) return false;
 
         return CardUtils.getCardType(cards) !== 'INVALID';
     }
@@ -75,8 +80,10 @@ class GameService {
             !cards.some(played => c.suit === played.suit && c.value === played.value)
         );
 
+        state.players[playerIndex].cardCount = state.players[playerIndex].cards.length;
+
         // 更新游戏状态
-        state.lastPlay = state.currentPlay;
+        state.lastPlay = cards;
         state.currentPlay = cards;
         state.currentPlayer = (playerIndex + 1) % 3;
 
@@ -88,12 +95,39 @@ class GameService {
         return true;
     }
 
-    // 私有方法
     _createShuffledDeck() {
         const deck = [];
-        // 生成54张牌（含大小王）
-        // ...（实现逻辑与Flutter端PokerModel一致）
-        return CardUtils.shuffle(deck);
+        const suits = ['hearts', 'diamonds', 'clubs', 'spades'];
+        const values = ['3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A', '2'];
+
+        for (const suit of suits) {
+            for (const value of values) {
+                deck.push({ suit, value });
+            }
+        }
+
+        deck.push({ suit: 'joker', value: 'small' });
+        deck.push({ suit: 'joker', value: 'big' });
+
+        return this._shuffle(deck);
+    }
+
+    _shuffle(array) {
+        let currentIndex = array.length, randomIndex;
+
+        // While there remain elements to shuffle.
+        while (currentIndex != 0) {
+
+            // Pick a remaining element.
+            randomIndex = Math.floor(Math.random() * currentIndex);
+            currentIndex--;
+
+            // And swap it with the current element.
+            [array[currentIndex], array[randomIndex]] = [
+                array[randomIndex], array[currentIndex]];
+        }
+
+        return array;
     }
 
     _dealCards(deck) {
@@ -109,6 +143,7 @@ class GameService {
         const state = this.gameStates.get(roomId);
         state.landlord = state.landlordCandidate;
         state.players[state.landlord].cards.push(...state.baseCards);
+        state.players[state.landlord].cardCount = state.players[state.landlord].cards.length;
         state.phase = 'PLAYING';
         this._startTurnTimer(roomId);
     }
@@ -130,6 +165,27 @@ class GameService {
         // 计算得分等逻辑
         this.gameStates.delete(roomId);
         this.timers.delete(roomId);
+    }
+
+    _hasCards(playerCards, playedCards) {
+        for (const card of playedCards) {
+            const index = playerCards.findIndex(pc => pc.suit === card.suit && pc.value === card.value);
+            if (index === -1) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    _handleTimeout(roomId) {
+        // 处理超时逻辑，例如自动跳过玩家的回合
+        const state = this.gameStates.get(roomId);
+        if (!state) return;
+
+        // 简单地将当前玩家设置为下一个玩家
+        state.currentPlayer = (state.currentPlayer + 1) % 3;
+        logger.info(`Room ${roomId}: Player turn timed out, skipping to next player.`);
+
     }
 }
 
