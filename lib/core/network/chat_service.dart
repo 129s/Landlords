@@ -20,6 +20,6 @@ class ChatService {
       'content': content,
       'socketId': _socket.id,
     };
-    _socket.emit('sendMessage', payload);
+    _socket.emit('send_message', payload);
   }
 }

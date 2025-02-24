@@ -1,37 +1,37 @@
-const logger = require('../utils/logger');
+// controllers/message.controller.js
+const BaseController = require('./base.controller');
 
-class MessageController {
-    constructor(io, messageService, roomService) {
-        this.io = io;
-        this.messageService = messageService;
-        this.roomService = roomService;
-    }
-
+class MessageController extends BaseController {
     initHandlers(socket) {
-        socket.on('sendMessage', (data) => this.handleSendMessage(socket, data));
+        socket.on('send_message', (data) => this.sendMessage(socket, data));
+        socket.on('request_messages', () => this.sendMessageHistory(socket));
     }
 
-    handleSendMessage(socket, { roomId, content }) {
+    async sendMessage(socket, { content }) {
         try {
-            const room = this.roomService.getRoom(roomId);
-            if (!room) throw new Error('房间不存在');
+            const player = this.getPlayer(socket);
+            const room = this.getRoom(socket);
 
-            const player = this.roomService.getPlayer(socket.id);
-            if (!player) throw new Error('未加入房间');
-
-            const msg = this.messageService.addMessage(
-                roomId,
+            const message = this.messageService.addMessage(
+                room.id,
                 player.id,
                 player.name,
                 content
             );
 
-            // 统一推送完整消息列表
-            const messages = this.messageService.getMessages(roomId);
-            this.io.to(roomId).emit('messageUpdate', messages.map(m => m.toJSON()));
+            this.io.to(room.id).emit('new_message', message);
         } catch (error) {
-            logger.error('消息发送失败: %s', error);
-            socket.emit('messageError', error.message);
+            this.handleError(socket, error);
+        }
+    }
+
+    async sendMessageHistory(socket) {
+        try {
+            const room = this.getRoom(socket);
+            const messages = this.messageService.getMessages(room.id);
+            socket.emit('message_history', messages);
+        } catch (error) {
+            this.handleError(socket, error);
         }
     }
 }
