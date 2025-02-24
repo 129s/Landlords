@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:landlords_3/domain/entities/room_model.dart';
+import 'package:landlords_3/data/models/player.dart';
+import 'package:landlords_3/data/models/room.dart';
 import 'package:landlords_3/presentation/pages/chat/chat_page.dart';
 import 'package:landlords_3/presentation/pages/game/game_page.dart';
 import 'package:landlords_3/presentation/providers/lobby_provider.dart';
@@ -26,7 +27,7 @@ class RoomList extends ConsumerWidget {
 }
 
 class _RoomListItem extends StatelessWidget {
-  final RoomModel room;
+  final Room room;
 
   const _RoomListItem({required this.room});
 
@@ -36,11 +37,16 @@ class _RoomListItem extends StatelessWidget {
       child: ListTile(
         leading: const Icon(Icons.people_alt),
         title: Text('房间ID: ${room.id}'),
-        subtitle: Text('状态: ${room.displayStatus}'),
+        subtitle: Text('状态: ${_getdisplayStatus(room.players)}'),
         trailing: _buildJoinButton(context),
         onTap: () => _showRoomDetail(context),
       ),
     );
+  }
+
+  String _getdisplayStatus(List<Player> players) {
+    if (players.length == 3) return '游戏中';
+    return '等待中 (${players.length}/3)';
   }
 
   Widget _buildJoinButton(BuildContext context) {

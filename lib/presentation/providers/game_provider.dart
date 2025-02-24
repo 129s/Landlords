@@ -1,86 +1,45 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:landlords_3/data/providers/repo_providers.dart';
-import 'package:landlords_3/domain/entities/player_model.dart';
-import 'package:landlords_3/domain/entities/poker_model.dart';
-import 'package:landlords_3/domain/repositories/room_repo.dart';
-import 'package:landlords_3/core/game/card_type.dart';
-import 'package:landlords_3/core/game/card_utils.dart';
-
-enum GamePhase { connecting, dealing, bidding, playing, gameOver }
-
-class GameState {
-  final List<PlayerModel> players; // 服务端玩家数据
-  final List<PokerModel> playerCards; // 当前玩家手牌
-  final List<PokerModel> lastPlayedCards; // 全局最后出牌
-  final GamePhase phase;
-  final int currentPlayerSeat; // 当前行动玩家座位
-  final List<int> selectedIndices;
-  final String? roomId;
-  final bool isLandlord; // 是否地主
-
-  const GameState({
-    required this.players,
-    this.playerCards = const [],
-    this.lastPlayedCards = const [],
-    this.phase = GamePhase.connecting,
-    this.currentPlayerSeat = 0,
-    this.selectedIndices = const [],
-    this.roomId,
-    this.isLandlord = false,
-  });
-
-  GameState copyWith({
-    List<PlayerModel>? players,
-    List<PokerModel>? playerCards,
-    List<PokerModel>? lastPlayedCards,
-    GamePhase? phase,
-    int? currentPlayerSeat,
-    List<int>? selectedIndices,
-    String? roomId,
-    bool? isLandlord,
-  }) {
-    return GameState(
-      players: players ?? this.players,
-      playerCards: playerCards ?? this.playerCards,
-      lastPlayedCards: lastPlayedCards ?? this.lastPlayedCards,
-      phase: phase ?? this.phase,
-      currentPlayerSeat: currentPlayerSeat ?? this.currentPlayerSeat,
-      selectedIndices: selectedIndices ?? this.selectedIndices,
-      roomId: roomId ?? this.roomId,
-      isLandlord: isLandlord ?? this.isLandlord,
-    );
-  }
-}
+import 'package:landlords_3/core/network/constants.dart';
+import 'package:landlords_3/core/network/game_service.dart';
+import 'package:landlords_3/core/network/room_service.dart';
+import 'package:landlords_3/data/providers/service_providers.dart';
+import 'package:landlords_3/data/models/game_state.dart';
+import 'package:landlords_3/data/models/poker.dart';
+import 'package:landlords_3/core/card/card_type.dart';
+import 'package:landlords_3/core/card/card_utils.dart';
 
 class GameNotifier extends StateNotifier<GameState> {
-  final RoomRepository _roomRepo;
+  final GameService _gameService;
+  final RoomService _roomService;
+  StreamSubscription? _gameStateSub;
 
-  GameNotifier(this._roomRepo) : super(const GameState(players: []));
+  GameNotifier(this._gameService, this._roomService)
+    : super(const GameState(players: []));
 
   // 初始化游戏（从服务端获取数据）
   Future<void> initializeGame(String roomId) async {
     try {
-      final room = await _roomRepo.getRoomDetails(roomId);
+      final room = await _roomService.getRoom(roomId);
       state = state.copyWith(
         roomId: roomId,
         players: room.players,
-        phase: GamePhase.dealing,
+        playerCards: [],
       );
       _setupSocketListeners();
     } catch (e) {
-      state = state.copyWith(phase: GamePhase.gameOver);
+      state = state.copyWith(phase: GamePhase.error);
     }
   }
 
   void _setupSocketListeners() {
-    // 监听玩家状态变化
-    _roomRepo.onPlayerUpdate.listen((players) {
-      state = state.copyWith(players: players);
-    });
-
-    // 监听出牌事件
-    _roomRepo.onPlayCards.listen((cards) {
-      state = state.copyWith(lastPlayedCards: cards);
+    _gameStateSub?.cancel();
+    _gameStateSub = _gameService.gameStateStream().listen((newState) {
+      state = newState.copyWith(
+        selectedIndices: state.selectedIndices,
+        playerCards: state.playerCards,
+      );
     });
   }
 
@@ -105,16 +64,16 @@ class GameNotifier extends StateNotifier<GameState> {
         state.selectedIndices.map((index) => state.playerCards[index]).toList();
 
     if (_validateCards(cards)) {
-      await _roomRepo.playCards(state.roomId!, cards);
-      state = state.copyWith(
-        playerCards:
-            state.playerCards.where((card) => !cards.contains(card)).toList(),
-        selectedIndices: [],
-      );
+      _gameService.playCards(cards);
+      clearSelectedCards();
+      // 更新本地手牌状态
+      final newCards = List<Poker>.from(state.playerCards)
+        ..removeWhere((c) => cards.contains(c));
+      state = state.copyWith(playerCards: newCards);
     }
   }
 
-  bool _validateCards(List<PokerModel> cards) {
+  bool _validateCards(List<Poker> cards) {
     if (state.lastPlayedCards.isNotEmpty) {
       return CardUtils.isBigger(cards, state.lastPlayedCards) &&
           CardType.getType(cards) != CardTypeEnum.invalid;
@@ -124,13 +83,22 @@ class GameNotifier extends StateNotifier<GameState> {
 
   // 退出房间
   Future<void> leaveGame() async {
-    await _roomRepo.leaveRoom();
+    _roomService.leaveRoom();
     state = const GameState(players: []);
+  }
+
+  @override
+  void dispose() {
+    _gameStateSub?.cancel();
+    super.dispose();
   }
 }
 
 final gameProvider = StateNotifierProvider.autoDispose<GameNotifier, GameState>(
   (ref) {
-    return GameNotifier(ref.read(roomRepoProvider));
+    return GameNotifier(
+      ref.read(gameServiceProvider),
+      ref.read(roomServiceProvider),
+    );
   },
 );

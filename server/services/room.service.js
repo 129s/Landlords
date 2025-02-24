@@ -1,128 +1,98 @@
-// services\room.service.js
-const PlayerModel = require('../models/PlayerModel');
-const RoomModel = require('../models/RoomModel');
-const logger = require('../utils/logger');
+const BaseService = require('./base.service');
 const { v4: uuidv4 } = require('uuid');
-
-class RoomService {
-    constructor() {
-        this.roomStore = new Map();
-        this.playerConnections = new Map(); // socketId -> roomId
+const RoomModel = require('../models/RoomModel');
+const PlayerModel = require('../models/PlayerModel'); // 引入 PlayerModel
+const logger = require('../utils/logger');
+class RoomService extends BaseService {
+    constructor(stateStore, gameService) {
+        super(stateStore);
+        this.gameService = gameService; // 保存引用
+        this.playerConnections = new Map(); // socketId -> roomId  记录玩家和房间的对应关系
     }
 
-    createRoom(socketId) {
-        // 检查玩家是否已经在房间中
-        if (this.playerConnections.has(socketId)) {
-            logger.warn(`玩家 %s 尝试创建房间，但已在房间 %s 中`, socketId, this.playerConnections.get(socketId));
-            throw new Error('Player already in a room');
-        }
-
+    createRoom() {
         const roomId = uuidv4();
-        const player = new PlayerModel(socketId);
+        const newRoom = new RoomModel(roomId, []);
+        newRoom.status = 'PREPARING'; // 新增状态字段
 
-        this.playerConnections.set(socketId, roomId);
-        const room = new RoomModel(roomId, [player]);
-
-        this.roomStore.set(roomId, room);
-        logger.info(`房间创建: %s 创建者: %s`, roomId, socketId);
-        return room;
+        this.stateStore.rooms.set(roomId, newRoom);
+        logger.info(`创建房间: ${roomId}`);
+        return newRoom;
     }
 
-    joinRoom(roomId, socketId) {
-        const room = this.roomStore.get(roomId);
-        if (!room) {
-            logger.error(`房间 %s 不存在`, roomId);
-            throw new Error('Room not found');
-        }
+    joinRoom = this.withTransaction(async (roomId, socketId) => {
+        this.validateRoomExists(roomId);
+        const room = this.stateStore.rooms.get(roomId);
+
         if (room.players.length >= 3) {
-            logger.error(`房间 %s 已满`, roomId);
-            throw new Error('Room is full');
+            logger.error(`房间已满: ${roomId}`);
+            throw new Error('ROOM_FULL');
         }
-
-        // 检查玩家是否已经在房间中
-        if (this.playerConnections.has(socketId)) {
-            logger.warn(`玩家 %s 尝试加入房间 %s，但已在房间 %s 中`, socketId, roomId, this.playerConnections.get(socketId));
-            throw new Error('Player already in a room');
-        }
-
-        // 名称冲突检查改为检查socketId是否已存在
-        if (room.players.some(p => p.id === socketId)) {
-            logger.error(`玩家 %s 已在此房间`, socketId);
-            throw new Error('Player already in this room');
-        }
-
         const player = new PlayerModel(socketId);
-        this.playerConnections.set(socketId, roomId);
-        room.players.push(player);
+        if (!this.stateStore.atomicAddPlayer(roomId, player)) {
+            throw new Error('JOIN_ROOM_FAILED');
+        }
 
-        logger.info(`玩家加入: %s 进入房间: %s`, socketId, roomId);
+        this.playerConnections.set(socketId, roomId); // 记录玩家和房间的对应关系
+        if (room.players.length === 3) {
+            room.status = 'STARTING'; // 满员时变更状态
+            await this.gameService.startGame(roomId);
+        } else {
+            room.status = 'PREPARING'; // 未满员保持准备状态
+        }
+        logger.info(`玩家加入: ${socketId} -> ${roomId}`);
         return room;
-    }
+    });
 
     leaveRoom(socketId) {
-        const roomId = this.playerConnections.get(socketId);
-        if (!roomId) {
-            logger.warn(`玩家 %s 没有加入任何房间`, socketId);
+        const roomId = this.playerConnections.get(socketId); // 从playerConnections获取roomId
+        if (!roomId) return;
+
+        const room = this.stateStore.rooms.get(roomId);
+        room.players = room.players.filter(p => p.id !== socketId);
+        this.stateStore.connections.delete(socketId);
+        this.playerConnections.delete(socketId); // 移除玩家和房间的对应关系
+
+        if (room.players.length === 0) {
+            this._cleanupEmptyRoom(roomId);
             return;
         }
-        const room = this.getRoom(roomId);
-        room.players = room.players.filter(p => p.id !== socketId);
-        this.playerConnections.delete(socketId);
-
-        logger.info(`玩家 %s 离开房间 %s`, socketId, roomId);
-
-        // 如果房间为空，则删除房间
-        this.deleteRoomIfEmpty(roomId);
-    }
-
-    // 玩家名验证
-    _validatePlayerName(name) {
-        if (!name || name.trim().length === 0) {
-            logger.error('玩家名不能为空');
-            throw new Error('Player name cannot be empty');
-        }
-        if (name.length > 12) {
-            logger.error('玩家名最长12个字符');
-            throw new Error('Player name is too long');
-        }
-        if (/[^a-zA-Z0-9\u4e00-\u9fa5]/.test(name)) {
-            logger.error('玩家名包含非法字符');
-            throw new Error('Player name contains invalid characters');
+        if (room.players.length < 3) {
+            room.status = 'PREPARING'; // 玩家退出后检查人数
+            this.io.emit('room_update', this.getRooms());
         }
     }
 
-    getPlayer(socketId) {
-        const conn = this.playerConnections.get(socketId);
-        if (!conn) {
-            logger.warn(`找不到玩家 %s 的连接信息`, socketId);
-            return null;
-        }
-        const room = this.getRoom(conn);
-        return room?.players.find(p => p.id === socketId);
-    }
-
-    deleteRoomIfEmpty(roomId) {
-        const room = this.getRoom(roomId);
-        if (room && room.players.length === 0) {
-            this.roomStore.delete(roomId);
-            logger.info(`房间 %s 已删除，因为它是空的`, roomId);
-            return true;
-        }
-        return false;
+    _cleanupEmptyRoom(roomId) {
+        this.stateStore.rooms.delete(roomId);
+        this.stateStore.messages.delete(roomId);
+        this.stateStore.games.delete(roomId);
+        logger.info(`清理空房间: ${roomId}`);
     }
 
     getRoom(roomId) {
-        const room = this.roomStore.get(roomId);
-        if (!room) {
-            logger.warn(`房间 %s 不存在`, roomId);
-        }
-        return room;
+        this.validateRoomExists(roomId);
+        return this.stateStore.rooms.get(roomId);
     }
 
     getRooms() {
-        const rooms = Array.from(this.roomStore.values());
-        logger.debug(`获取房间列表，数量: %s`, rooms.length);
-        return rooms;
+        return Array.from(this.stateStore.rooms.values());
+    }
+
+    getPlayer(socketId) {
+        for (const room of this.stateStore.rooms.values()) {
+            const player = room.players.find(p => p.id === socketId);
+            if (player) {
+                return player;
+            }
+        }
+        return null;
+    }
+
+    _validatePlayerName(name) {
+        if (!name || name.length < 2 || name.length > 10) {
+            throw new Error('INVALID_PLAYER_NAME');
+        }
     }
 }
 

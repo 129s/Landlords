@@ -9,7 +9,6 @@ class CardDisplayArea extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final gameState = ref.watch(gameProvider);
-
     return LayoutBuilder(
       builder: (context, constraints) {
         final height = constraints.maxHeight;

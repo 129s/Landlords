@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:landlords_3/data/providers/socket_provider.dart';
-import 'package:landlords_3/domain/entities/message_model.dart';
+import 'package:landlords_3/data/models/message.dart';
 import 'package:landlords_3/presentation/pages/chat/MessageBubble.dart';
 import 'package:landlords_3/presentation/providers/chat_provider.dart';
-import 'package:landlords_3/data/providers/repo_providers.dart';
+import 'package:landlords_3/data/providers/service_providers.dart';
 import 'package:landlords_3/presentation/providers/lobby_provider.dart';
 
 class ChatPage extends ConsumerStatefulWidget {
@@ -50,8 +50,8 @@ class _ChatPageState extends ConsumerState<ChatPage> {
 
     try {
       await ref
-          .read(roomRepoProvider)
-          .sendMessage(widget.roomId, text)
+          .read(chatServiceProvider)
+          .sendMessage(text)
           .then((_) => _roll());
       _isUserScrolling = false;
       _controller.clear();

@@ -1,25 +1,33 @@
 import 'dart:async';
+
+import 'package:landlords_3/data/models/message.dart';
 import 'package:landlords_3/core/network/socket_manager.dart';
-import 'package:landlords_3/data/datasources/remote/dto/message_dto.dart';
 
 class ChatService {
-  final SocketManager _socket = SocketManager();
-  final _messageStream = StreamController<List<MessageDTO>>.broadcast();
+  final _socket = SocketManager().socket;
 
-  ChatService() {
-    _socket.on<List<dynamic>>('messageUpdate', (data) {
-      _messageStream.add((data).map((e) => MessageDTO.fromJson(e)).toList());
-    });
+  /// 发送聊天消息
+  Future<void> sendMessage(String content) {
+    final completer = Completer<void>();
+    _socket.emit('send_message', {'content': content});
+    return completer.future;
   }
 
-  Stream<List<MessageDTO>> get messages => _messageStream.stream;
+  /// 消息历史流
+  Stream<List<Message>> messageStream(String roomId) {
+    final controller = StreamController<List<Message>>();
 
-  void sendMessage(String roomId, String content) {
-    final payload = {
-      'roomId': roomId,
-      'content': content,
-      'socketId': _socket.id,
-    };
-    _socket.emit('sendMessage', payload);
+    _socket.on('message_history', (data) {
+      final messages =
+          (data as List).map((json) => Message.fromJson(json)).toList();
+      controller.add(messages);
+    });
+
+    _socket.on('new_message', (data) {
+      final message = Message.fromJson(data);
+      controller.add([message]);
+    });
+
+    return controller.stream;
   }
 }
