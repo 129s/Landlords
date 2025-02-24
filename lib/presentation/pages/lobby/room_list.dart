@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:landlords_3/domain/entities/room_model.dart';
+import 'package:landlords_3/data/models/room.dart';
 import 'package:landlords_3/presentation/pages/chat/chat_page.dart';
 import 'package:landlords_3/presentation/pages/game/game_page.dart';
 import 'package:landlords_3/presentation/providers/lobby_provider.dart';
@@ -26,7 +26,7 @@ class RoomList extends ConsumerWidget {
 }
 
 class _RoomListItem extends StatelessWidget {
-  final RoomModel room;
+  final Room room;
 
   const _RoomListItem({required this.room});
 

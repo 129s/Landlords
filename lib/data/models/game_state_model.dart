@@ -1,11 +1,11 @@
-import 'package:landlords_3/domain/entities/player_model.dart';
-import 'package:landlords_3/domain/entities/poker_model.dart';
+import 'package:landlords_3/data/models/player.dart';
+import 'package:landlords_3/data/models/poker.dart';
 import 'package:landlords_3/presentation/providers/game_provider.dart';
 
 class GameState {
-  final List<PlayerModel> players; // 服务端玩家数据
-  final List<PokerModel> playerCards; // 当前玩家手牌
-  final List<PokerModel> lastPlayedCards; // 全局最后出牌
+  final List<Player> players; // 服务端玩家数据
+  final List<Poker> playerCards; // 当前玩家手牌
+  final List<Poker> lastPlayedCards; // 全局最后出牌
   final GamePhase phase;
   final int currentPlayerSeat; // 当前行动玩家座位
   final List<int> selectedIndices;
@@ -24,9 +24,9 @@ class GameState {
   });
 
   GameState copyWith({
-    List<PlayerModel>? players,
-    List<PokerModel>? playerCards,
-    List<PokerModel>? lastPlayedCards,
+    List<Player>? players,
+    List<Poker>? playerCards,
+    List<Poker>? lastPlayedCards,
     GamePhase? phase,
     int? currentPlayerSeat,
     List<int>? selectedIndices,

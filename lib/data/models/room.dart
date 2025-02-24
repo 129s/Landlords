@@ -1,11 +1,11 @@
-import 'package:landlords_3/domain/entities/player_model.dart';
+import 'package:landlords_3/data/models/player.dart';
 
-class RoomModel {
+class Room {
   final String id;
-  final List<PlayerModel> players;
+  final List<Player> players;
   final DateTime createdAt;
 
-  const RoomModel({
+  const Room({
     required this.id,
     required this.players,
     required this.createdAt,
@@ -17,13 +17,13 @@ class RoomModel {
     return '等待中 (${players.length}/3)';
   }
 
-  RoomModel copyWith({
+  Room copyWith({
     String? id,
-    List<PlayerModel>? players,
+    List<Player>? players,
     DateTime? createdAt,
     bool? hasPassword,
   }) {
-    return RoomModel(
+    return Room(
       id: id ?? this.id,
       players: players ?? this.players,
       createdAt: createdAt ?? this.createdAt,

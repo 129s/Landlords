@@ -1,25 +1,25 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:landlords_3/core/network/game_service.dart';
+import 'package:landlords_3/core/network/room_service.dart';
 import 'package:landlords_3/data/providers/service_providers.dart';
-import 'package:landlords_3/domain/entities/game_state_model.dart';
-import 'package:landlords_3/domain/entities/poker_model.dart';
-import 'package:landlords_3/domain/repositories/game_repo.dart';
-import 'package:landlords_3/domain/repositories/room_repo.dart';
+import 'package:landlords_3/data/models/game_state_model.dart';
+import 'package:landlords_3/data/models/poker.dart';
 import 'package:landlords_3/core/card/card_type.dart';
 import 'package:landlords_3/core/card/card_utils.dart';
 
 enum GamePhase { connecting, dealing, bidding, playing, gameOver }
 
 class GameNotifier extends StateNotifier<GameState> {
-  final RoomRepository _roomRepo;
-  final GameRepository _gameRepo;
+  final GameService _gameService;
+  final RoomService _roomService;
 
-  GameNotifier(this._roomRepo, this._gameRepo)
+  GameNotifier(this._gameService, this._roomService)
     : super(const GameState(players: []));
 
   // 初始化游戏（从服务端获取数据）
   Future<void> initializeGame(String roomId) async {
     try {
-      final room = await _roomRepo.getRoomDetails(roomId);
+      final room = await _roomService.getRoomDetails(roomId);
       state = state.copyWith(
         roomId: roomId,
         players: room.players,
@@ -32,15 +32,7 @@ class GameNotifier extends StateNotifier<GameState> {
   }
 
   void _setupSocketListeners() {
-    // 监听玩家状态变化
-    _roomRepo.onPlayerUpdate.listen((players) {
-      state = state.copyWith(players: players);
-    });
-
-    // 监听出牌事件
-    _gameRepo.onPlayCards.listen((cards) {
-      state = state.copyWith(lastPlayedCards: cards);
-    });
+    // TODO: 监听游戏状态更新
   }
 
   void clearSelectedCards() {
@@ -64,7 +56,7 @@ class GameNotifier extends StateNotifier<GameState> {
         state.selectedIndices.map((index) => state.playerCards[index]).toList();
 
     if (_validateCards(cards)) {
-      await _gameRepo.playCards(cards);
+      await _gameService.playCards(cards);
       state = state.copyWith(
         playerCards:
             state.playerCards.where((card) => !cards.contains(card)).toList(),
@@ -73,7 +65,7 @@ class GameNotifier extends StateNotifier<GameState> {
     }
   }
 
-  bool _validateCards(List<PokerModel> cards) {
+  bool _validateCards(List<Poker> cards) {
     if (state.lastPlayedCards.isNotEmpty) {
       return CardUtils.isBigger(cards, state.lastPlayedCards) &&
           CardType.getType(cards) != CardTypeEnum.invalid;
@@ -83,13 +75,16 @@ class GameNotifier extends StateNotifier<GameState> {
 
   // 退出房间
   Future<void> leaveGame() async {
-    await _roomRepo.leaveRoom();
+    await _roomService.leaveRoom();
     state = const GameState(players: []);
   }
 }
 
 final gameProvider = StateNotifierProvider.autoDispose<GameNotifier, GameState>(
   (ref) {
-    return GameNotifier(ref.read(roomRepoProvider), ref.read(gamre));
+    return GameNotifier(
+      ref.read(gameServiceProvider),
+      ref.read(roomServiceProvider),
+    );
   },
 );

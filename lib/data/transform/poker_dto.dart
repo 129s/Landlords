@@ -1,4 +1,4 @@
-import 'package:landlords_3/domain/entities/poker_model.dart';
+import 'package:landlords_3/data/models/poker.dart';
 
 class PokerDTO {
   final String suit;
@@ -13,8 +13,8 @@ class PokerDTO {
     );
   }
 
-  PokerModel toModel() {
-    return PokerModel(suit: _parseSuit(suit), value: _parseValue(value));
+  Poker toModel() {
+    return Poker(suit: _parseSuit(suit), value: _parseValue(value));
   }
 
   Map<String, dynamic> toJson() {

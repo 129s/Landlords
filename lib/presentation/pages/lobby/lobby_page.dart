@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:landlords_3/data/providers/service_providers.dart';
-import 'package:landlords_3/presentation/pages/chat/chat_page.dart';
 import 'package:landlords_3/presentation/pages/game/game_page.dart';
 import 'package:landlords_3/presentation/pages/lobby/room_list.dart';
 import 'package:landlords_3/presentation/providers/lobby_provider.dart';
@@ -113,7 +112,7 @@ class LobbyPage extends ConsumerWidget {
   void _refreshRooms(BuildContext context, WidgetRef ref) async {
     ref.read(lobbyProvider.notifier).toggleLoading();
     try {
-      ref.read(roomRepoProvider).requestRooms();
+      ref.read(roomServiceProvider).requestRooms();
     } catch (e) {
       // 获取房间列表失败
       ScaffoldMessenger.of(

@@ -1,7 +1,7 @@
-import 'package:landlords_3/data/datasources/remote/dto/player_dto.dart';
-import 'package:landlords_3/domain/entities/room_model.dart';
+import 'package:landlords_3/data/transform/player_dto.dart';
+import 'package:landlords_3/data/models/room.dart';
 
-class RoomDTO extends RoomModel {
+class RoomDTO extends Room {
   RoomDTO({
     required super.id,
     required super.players,

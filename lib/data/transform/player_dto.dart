@@ -1,6 +1,6 @@
-import 'package:landlords_3/data/datasources/remote/dto/poker_dto.dart';
-import 'package:landlords_3/domain/entities/player_model.dart';
-import 'package:landlords_3/domain/entities/poker_model.dart';
+import 'package:landlords_3/data/transform/poker_dto.dart';
+import 'package:landlords_3/data/models/player.dart';
+import 'package:landlords_3/data/models/poker.dart';
 
 class PlayerDTO {
   final String id;
@@ -27,8 +27,8 @@ class PlayerDTO {
     );
   }
 
-  PlayerModel toModel() {
-    return PlayerModel(
+  Player toModel() {
+    return Player(
       id: id,
       name: name,
       seat: seat,

@@ -1,4 +1,4 @@
-import 'package:landlords_3/domain/entities/message_model.dart';
+import 'package:landlords_3/data/models/message_model.dart';
 
 class MessageDTO extends MessageModel {
   MessageDTO({

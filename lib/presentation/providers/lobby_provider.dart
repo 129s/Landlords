@@ -2,14 +2,13 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:landlords_3/core/network/room_service.dart';
 import 'package:landlords_3/data/providers/service_providers.dart';
-import 'package:landlords_3/domain/entities/room_model.dart';
-import 'package:landlords_3/domain/repositories/room_repo.dart';
+import 'package:landlords_3/data/models/room.dart';
 import 'package:landlords_3/presentation/pages/chat/chat_page.dart';
-import 'package:landlords_3/presentation/widgets/player_name_dialog.dart';
 
 class LobbyState {
-  final List<RoomModel> rooms;
+  final List<Room> rooms;
   final String? playerName;
   final bool isLoading;
 
@@ -20,7 +19,7 @@ class LobbyState {
   });
 
   LobbyState copyWith({
-    List<RoomModel>? rooms,
+    List<Room>? rooms,
     String? playerName,
     bool? isLoading,
   }) {
@@ -33,16 +32,16 @@ class LobbyState {
 }
 
 class LobbyNotifier extends StateNotifier<LobbyState> {
-  final RoomRepository _repository;
+  final RoomService _roomService;
   StreamSubscription? _roomSubscription;
 
-  LobbyNotifier(this._repository) : super(const LobbyState()) {
+  LobbyNotifier(this._roomService) : super(const LobbyState()) {
     _init();
   }
 
   void _init() {
     // 实时监听房间更新
-    _roomSubscription = _repository.watchRooms().listen((rooms) {
+    _roomSubscription = _roomService.watchRooms().listen((rooms) {
       print('Received rooms from stream: $rooms');
       state = state.copyWith(rooms: rooms);
     });
@@ -52,7 +51,7 @@ class LobbyNotifier extends StateNotifier<LobbyState> {
   Future<String?> createAndJoinRoom() async {
     state = state.copyWith(isLoading: true);
     try {
-      final roomId = await _repository.createRoom();
+      final roomId = await _roomService.createRoom();
       return roomId;
     } catch (e) {
       print(e);
@@ -64,7 +63,7 @@ class LobbyNotifier extends StateNotifier<LobbyState> {
   Future<void> joinExistingRoom(String roomId) async {
     state = state.copyWith(isLoading: true);
     try {
-      await _repository.joinRoom(roomId);
+      await _roomService.joinRoom(roomId);
       MaterialPageRoute(builder: (_) => ChatPage(roomId: roomId));
     } catch (e) {
       print(e);
@@ -73,29 +72,25 @@ class LobbyNotifier extends StateNotifier<LobbyState> {
     }
   }
 
+  Future<void> refreshRooms() async {
+    final rooms = await _roomService.requestRooms();
+    state = state.copyWith(rooms: rooms);
+  }
+
   void toggleLoading() {
     state = state.copyWith(isLoading: !state.isLoading);
   }
 
-  void updateRooms(List<RoomModel> rooms) {
+  void updateRooms(List<Room> rooms) {
     state = state.copyWith(rooms: rooms);
   }
 
   void leaveRoom() {
-    _repository.leaveRoom();
-    _roomSubscription = _repository.watchRooms().listen((rooms) {
-      state = state.copyWith(rooms: rooms);
-    });
-  }
-
-  @override
-  void dispose() {
-    _roomSubscription?.cancel();
-    super.dispose();
+    _roomService.leaveRoom();
   }
 }
 
 final lobbyProvider = StateNotifierProvider<LobbyNotifier, LobbyState>((ref) {
-  final repository = ref.watch(roomRepoProvider);
+  final repository = ref.watch(roomServiceProvider);
   return LobbyNotifier(repository);
 });

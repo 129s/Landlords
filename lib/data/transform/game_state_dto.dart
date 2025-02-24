@@ -1,6 +1,6 @@
-import 'package:landlords_3/data/datasources/remote/dto/player_dto.dart';
-import 'package:landlords_3/data/datasources/remote/dto/poker_dto.dart';
-import 'package:landlords_3/data/datasources/remote/dto/room_dto.dart';
+import 'package:landlords_3/data/transform/player_dto.dart';
+import 'package:landlords_3/data/transform/poker_dto.dart';
+import 'package:landlords_3/data/transform/room_dto.dart';
 
 class GameStateDTO {
   final String roomId;

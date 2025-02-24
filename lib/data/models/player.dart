@@ -1,13 +1,13 @@
-import 'package:landlords_3/domain/entities/poker_model.dart';
+import 'package:landlords_3/data/models/poker.dart';
 
-class PlayerModel {
+class Player {
   final String id;
   final String name;
   final int seat;
-  final List<PokerModel> cards;
+  final List<Poker> cards;
   final bool isLandlord;
 
-  PlayerModel({
+  Player({
     required this.id,
     required this.name,
     required this.seat,
@@ -15,14 +15,14 @@ class PlayerModel {
     this.isLandlord = false,
   });
 
-  PlayerModel copyWith({
+  Player copyWith({
     String? id,
     String? name,
     int? seat,
-    List<PokerModel>? cards,
+    List<Poker>? cards,
     bool? isLandlord,
   }) {
-    return PlayerModel(
+    return Player(
       id: id ?? this.id,
       name: name ?? this.name,
       seat: seat ?? this.seat,
@@ -39,7 +39,7 @@ class PlayerModel {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is PlayerModel &&
+      other is Player &&
           runtimeType == other.runtimeType &&
           id == other.id &&
           name == other.name &&

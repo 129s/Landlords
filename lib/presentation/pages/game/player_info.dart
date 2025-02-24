@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:landlords_3/domain/entities/player_model.dart';
+import 'package:landlords_3/data/models/player.dart';
 import 'package:landlords_3/presentation/providers/game_provider.dart';
 
 class PlayerInfo extends ConsumerWidget {
@@ -39,7 +39,7 @@ class PlayerInfo extends ConsumerWidget {
     );
   }
 
-  PlayerModel? _findPlayerBySeat(List<PlayerModel> players, int seat) {
+  Player? _findPlayerBySeat(List<Player> players, int seat) {
     try {
       return players.firstWhere((p) => p.seat == seat);
     } catch (_) {

@@ -10,6 +10,14 @@ class ConnectionController extends BaseController {
         socket.on('disconnect', () => this.handleDisconnect(socket));
         socket.on('request_rooms', () => this.sendRoomList(socket));
         socket.on('set_player_name', (data) => this.setPlayerName(socket, data));
+        socket.on('get_room_details', (data, callback) => {
+            try {
+                const room = this.roomService.getRoom(data.roomId);
+                callback({ success: true, room: room });
+            } catch (error) {
+                callback({ success: false, error: error.message });
+            }
+        });
     }
 
     async createRoom(socket) {

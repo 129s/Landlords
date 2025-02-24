@@ -1,4 +1,4 @@
-import 'package:landlords_3/domain/entities/poker_model.dart';
+import 'package:landlords_3/data/models/poker.dart';
 import 'package:landlords_3/core/card/card_utils.dart';
 
 enum CardTypeEnum {
@@ -19,7 +19,7 @@ enum CardTypeEnum {
 }
 
 class CardType {
-  static CardTypeEnum getType(List<PokerModel> cards) {
+  static CardTypeEnum getType(List<Poker> cards) {
     if (cards.isEmpty) return CardTypeEnum.invalid;
 
     final sortedCards = CardUtils.sortCards(cards);
@@ -114,7 +114,7 @@ class CardType {
   }
 
   // 判断是否是顺子
-  static bool _isStraight(List<PokerModel> cards) {
+  static bool _isStraight(List<Poker> cards) {
     if (cards.length < 5 || cards.length > 12) return false; // 顺子长度必须在 5-12 之间
     for (int i = 0; i < cards.length - 1; i++) {
       if (cards[i].value == CardValue.two ||
@@ -130,7 +130,7 @@ class CardType {
   }
 
   // 判断是否是连对
-  static bool _isStraightPair(List<PokerModel> cards) {
+  static bool _isStraightPair(List<Poker> cards) {
     if (cards.length < 6 || cards.length % 2 != 0)
       return false; // 连对长度必须大于等于 6 且是偶数
     for (int i = 0; i < cards.length - 2; i += 2) {
@@ -148,7 +148,7 @@ class CardType {
   }
 
   // 判断是否是飞机
-  static bool _isPlane(List<PokerModel> cards) {
+  static bool _isPlane(List<Poker> cards) {
     if (cards.length < 6 || cards.length % 3 != 0)
       return false; // 飞机长度必须大于等于 6 且是 3 的倍数
     final counts = <CardValue, int>{};
@@ -172,7 +172,7 @@ class CardType {
   }
 
   // 判断是否是飞机带翅膀
-  static bool _isPlaneWithWings(List<PokerModel> cards) {
+  static bool _isPlaneWithWings(List<Poker> cards) {
     if (cards.length < 8) return false; // 飞机带翅膀长度必须大于等于 8
     final counts = <CardValue, int>{};
     for (final card in cards) {
@@ -185,7 +185,7 @@ class CardType {
     // 飞机带单张
     if (threeCount >= 2 && (oneCount == threeCount || twoCount == threeCount)) {
       // 提取飞机部分
-      List<PokerModel> planeCards = [];
+      List<Poker> planeCards = [];
       counts.forEach((key, value) {
         if (value == 3) {
           planeCards.addAll(cards.where((card) => card.value == key));
