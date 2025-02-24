@@ -1,14 +1,10 @@
-const { v4: uuidv4 } = require('uuid');
-
 class PlayerModel {
-    constructor(name, socketId) {
-        this.id = uuidv4();
-        this.name = name;
-        this.seat = 0;
-        this.cardCount = 17;
+    constructor(socketId) {
+        this.id = socketId; // 唯一标识
+        this.name = `玩家${socketId.slice(-5)}`; // 生成可读的默认名称
+        this.seat = -1;
+        this.cardCount = 0;
         this.isLandlord = false;
-        this.socketId = socketId;
     }
 }
-
 module.exports = PlayerModel;

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:landlords_3/domain/entities/room_model.dart';
 import 'package:landlords_3/presentation/pages/chat/chat_page.dart';
+import 'package:landlords_3/presentation/pages/game/game_page.dart';
 import 'package:landlords_3/presentation/providers/lobby_provider.dart';
 import 'package:landlords_3/presentation/widgets/player_name_dialog.dart';
 
@@ -43,50 +44,19 @@ class _RoomListItem extends StatelessWidget {
   }
 
   Widget _buildJoinButton(BuildContext context) {
-    final isGaming =
-        ProviderScope.containerOf(context).read(lobbyProvider).isGaming;
-
     return ElevatedButton(
       style: ElevatedButton.styleFrom(
-        backgroundColor:
-            room.players.length == 3 || isGaming ? Colors.grey : Colors.blue,
+        backgroundColor: room.players.length == 3 ? Colors.grey : Colors.blue,
       ),
-      onPressed:
-          room.players.length == 3 || isGaming
-              ? null
-              : () async {
-                print('Attempting to join room: ${room.id}');
-                if (isGaming) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('您已经在游戏中，请先退出游戏')),
-                  );
-                  return;
-                }
-
-                final hasPlayerName =
-                    ProviderScope.containerOf(
-                      context,
-                    ).read(lobbyProvider.notifier).hasPlayerName();
-
-                if (!hasPlayerName) {
-                  await showDialog(
-                    context: context,
-                    builder: (context) => const PlayerNameDialog(title: '加入房间'),
-                  );
-                }
-
-                if (ProviderScope.containerOf(
-                  context,
-                ).read(lobbyProvider.notifier).hasPlayerName()) {
-                  ProviderScope.containerOf(
-                    context,
-                  ).read(lobbyProvider.notifier).joinRoom(room.id);
-                }
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => ChatPage(roomId: room.id)),
-                );
-              },
+      onPressed: () {
+        ProviderScope.containerOf(
+          context,
+        ).read(lobbyProvider.notifier).joinExistingRoom(room.id).then((_) {
+          Navigator.of(
+            context,
+          ).push(MaterialPageRoute(builder: (_) => GamePage(roomId: room.id)));
+        });
+      },
       child: const Text('加入'),
     );
   }

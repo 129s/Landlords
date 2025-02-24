@@ -8,7 +8,8 @@ import 'package:landlords_3/presentation/pages/game/top_bar.dart';
 import 'package:landlords_3/presentation/providers/game_provider.dart';
 
 class GamePage extends ConsumerWidget {
-  const GamePage({Key? key}) : super(key: key);
+  final String roomId;
+  const GamePage({Key? key, required this.roomId}) : super(key: key);
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -17,10 +18,9 @@ class GamePage extends ConsumerWidget {
       final notifier = ref.read(gameProvider.notifier);
       if (notifier.state.phase == GamePhase.dealing &&
           notifier.state.playerCards.isEmpty) {
-        notifier.initializeGame();
+        notifier.initializeGame(roomId);
       }
     });
-    final gameState = ref.watch(gameProvider);
     return Scaffold(
       body: Stack(
         children: [
@@ -31,10 +31,7 @@ class GamePage extends ConsumerWidget {
             child: Container(
               padding: EdgeInsets.all(8),
               color: Colors.white54,
-              child: Text(
-                '${const String.fromEnvironment('PLAYER_NAME')}',
-                style: TextStyle(fontSize: 20),
-              ),
+              child: Text("", style: TextStyle(fontSize: 20)),
             ),
           ),
           const TableArea(),
@@ -48,13 +45,13 @@ class GamePage extends ConsumerWidget {
                     Positioned(
                       left: 20.0,
                       top: 20.0,
-                      child: const PlayerInfo(isLeft: true),
+                      child: const PlayerInfo(seatNumber: 1),
                     ),
                     // 右侧玩家信息
                     Positioned(
                       right: 20.0,
                       top: 20.0,
-                      child: const PlayerInfo(isLeft: false),
+                      child: const PlayerInfo(seatNumber: 2),
                     ),
                     CardDisplayArea(),
                     // 卡牌展示区域

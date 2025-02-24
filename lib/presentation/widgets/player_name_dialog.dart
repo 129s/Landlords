@@ -1,38 +1,36 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:landlords_3/presentation/providers/lobby_provider.dart';
 
+// presentation/widgets/player_name_dialog.dart
 class PlayerNameDialog extends ConsumerWidget {
   final String title;
-  const PlayerNameDialog({required this.title, super.key});
+  final ValueChanged<String>? onConfirm;
+  final VoidCallback? onCancel;
+
+  const PlayerNameDialog({required this.title, this.onConfirm, this.onCancel});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context, ref) {
     final controller = TextEditingController();
-
     return AlertDialog(
       title: Text(title),
-      content: TextField(
-        controller: controller,
-        decoration: const InputDecoration(
-          labelText: '玩家名称',
-          border: OutlineInputBorder(),
-        ),
-      ),
+      content: TextField(controller: controller),
       actions: [
         TextButton(
-          onPressed: () => Navigator.pop(context),
+          onPressed: () {
+            Navigator.pop(context);
+            onCancel?.call();
+          },
           child: const Text('取消'),
         ),
         ElevatedButton(
           onPressed: () {
-            final name = controller.text;
-            if (name.isNotEmpty) {
-              ref.read(lobbyProvider.notifier).setPlayerName(name);
+            if (controller.text.isNotEmpty) {
               Navigator.pop(context);
+              onConfirm?.call(controller.text);
             }
           },
-          child: const Text('确定'),
+          child: const Text('确认'),
         ),
       ],
     );

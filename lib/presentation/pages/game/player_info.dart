@@ -1,14 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:landlords_3/domain/entities/player_model.dart';
+import 'package:landlords_3/presentation/providers/game_provider.dart';
 
-class PlayerInfo extends StatelessWidget {
-  final bool isLeft;
+class PlayerInfo extends ConsumerWidget {
+  final int seatNumber;
 
-  const PlayerInfo({Key? key, required this.isLeft}) : super(key: key);
+  const PlayerInfo({Key? key, required this.seatNumber}) : super(key: key);
 
   @override
-  Widget build(BuildContext context) {
-    // 假设从数据提供端获取玩家信息
-    String? avatarUrl;
+  Widget build(BuildContext context, WidgetRef ref) {
+    final gameState = ref.watch(gameProvider);
+    final player = _findPlayerBySeat(gameState.players, seatNumber);
 
     return Container(
       width: 96,
@@ -21,24 +24,26 @@ class PlayerInfo extends StatelessWidget {
         children: [
           CircleAvatar(
             radius: 20.0,
-            backgroundImage:
-                avatarUrl != null
-                    ? AssetImage(avatarUrl) as ImageProvider
-                    : null,
-            child: avatarUrl == null ? const Icon(Icons.person) : null,
+            child:
+                player != null
+                    ? Text(player.name[0])
+                    : const Icon(Icons.person),
           ),
-          const SizedBox(height: 4.0), // 修改原硬编码部分
-          Text(
-            isLeft
-                ? const String.fromEnvironment(
-                  'PLAYER_NAME',
-                  defaultValue: 'Oblakes',
-                )
-                : 'null',
-          ),
-          const Text('得分: 0'),
+          const SizedBox(height: 4.0),
+          Text(player?.name ?? '等待加入'),
+          Text('剩余: ${player?.cards.length ?? 0}'),
+          if (player?.isLandlord ?? false)
+            const Icon(Icons.star, color: Colors.yellow, size: 16),
         ],
       ),
     );
+  }
+
+  PlayerModel? _findPlayerBySeat(List<PlayerModel> players, int seat) {
+    try {
+      return players.firstWhere((p) => p.seat == seat);
+    } catch (_) {
+      return null;
+    }
   }
 }

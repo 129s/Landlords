@@ -5,11 +5,11 @@ module.exports = {
     io.on('connection', (socket) => {
       logger.info('用户连接: %s', socket.id);
 
-      socket.on('createRoom', (playerName) => {
+      socket.on('createRoom', () => {
         try {
-          const room = roomService.createRoom(playerName, socket.id);
+          const room = roomService.createRoom(socket.id);
           socket.join(room.id);
-          io.emit('roomUpdate', roomService.getAllRooms());
+          io.emit('roomUpdate', roomService.getRooms());
           socket.emit('roomCreated', room.id);
         } catch (error) {
           logger.error("创建房间失败:", error);
@@ -17,9 +17,9 @@ module.exports = {
         }
       });
 
-      socket.on('joinRoom', ({ roomId, playerName }) => {
+      socket.on('joinRoom', ({ roomId }) => {
         try {
-          const room = roomService.joinRoom(roomId, playerName, socket.id);
+          const room = roomService.joinRoom(roomId, socket.id);
           socket.join(roomId);
 
           // 加入时推送当前消息
@@ -40,12 +40,13 @@ module.exports = {
           const room = roomService.getRoom(conn.roomId);
           if (room) {
             room.players = room.players.filter(p => p.socketId !== socket.id);
-            if (roomService.deleteRoomIfEmpty(conn.roomId)) {
-              messageService.purgeRoomMessages(conn.roomId);
+            if (roomService.deleteRoomIfEmpty(room)) {
+              roomService.roomStore.delete(room);
+              messageService.purgeRoomMessages(roomId);
             }
           }
           roomService.playerConnections.delete(socket.id);
-          io.emit('roomUpdate', roomService.getAllRooms());
+          io.emit('roomUpdate', roomService.getRooms());
         }
         logger.info('用户断开连接: %s', socket.id);
       });
@@ -61,21 +62,23 @@ module.exports = {
 
           // 广播更新
           io.to(roomId).emit('playerLeft', socket.id);
-          io.emit('roomUpdate', roomService.getAllRooms());
 
           // 房间为空时清理
           if (room.players.length === 0) {
             roomService.roomStore.delete(roomId);
             messageService.purgeRoomMessages(roomId);
           }
+          io.emit('roomUpdate', roomService.getRooms());
         } catch (error) {
           logger.error('退出房间失败:', error);
         }
       });
 
       socket.on('requestRooms', () => {
-        socket.emit('roomUpdate', roomService.getAllRooms());
+        socket.emit('roomUpdate', roomService.getRooms());
       });
     });
   }
 };
+
+

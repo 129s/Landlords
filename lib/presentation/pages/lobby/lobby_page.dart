@@ -1,11 +1,13 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:landlords_3/core/network/socket_service.dart';
+import 'package:landlords_3/data/providers/repo_providers.dart';
 import 'package:landlords_3/presentation/pages/chat/chat_page.dart';
+import 'package:landlords_3/presentation/pages/game/game_page.dart';
 import 'package:landlords_3/presentation/pages/lobby/room_list.dart';
 import 'package:landlords_3/presentation/providers/lobby_provider.dart';
 import 'package:landlords_3/presentation/widgets/connection_status_indicator.dart';
-import 'package:landlords_3/presentation/widgets/player_name_dialog.dart';
 
 class LobbyPage extends ConsumerWidget {
   const LobbyPage({super.key});
@@ -23,6 +25,7 @@ class LobbyPage extends ConsumerWidget {
             onPressed: () => _refreshRooms(context, ref),
           ),
           _buildPlayerInfo(playerName),
+          _buildConnectionStatus(),
         ],
       ),
       body: Stack(
@@ -40,11 +43,18 @@ class LobbyPage extends ConsumerWidget {
               ),
             ],
           ),
-          const ConnectionStatusIndicator(), // 添加指示器
         ],
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () => _showCreateRoomDialog(context, ref),
+        onPressed:
+            () => ref.read(lobbyProvider.notifier).createAndJoinRoom().then((
+              roomId,
+            ) {
+              if (roomId == null) print("房间不存在");
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => GamePage(roomId: roomId!)),
+              );
+            }),
         child: const Icon(Icons.add),
       ),
     );
@@ -63,6 +73,13 @@ class LobbyPage extends ConsumerWidget {
     );
   }
 
+  Widget _buildConnectionStatus() {
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: const ConnectionStatusIndicator(),
+    );
+  }
+
   Widget _buildSearchBar(BuildContext context, WidgetRef ref) {
     return Padding(
       padding: const EdgeInsets.all(8.0),
@@ -75,7 +92,17 @@ class LobbyPage extends ConsumerWidget {
                 prefixIcon: Icon(Icons.search),
                 border: OutlineInputBorder(),
               ),
-              onSubmitted: (value) => _joinRoom(value, ref, context),
+              onSubmitted:
+                  (roomId) => ref
+                      .read(lobbyProvider.notifier)
+                      .joinExistingRoom(roomId)
+                      .then((_) {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) => GamePage(roomId: roomId),
+                          ),
+                        );
+                      }),
             ),
           ),
         ],
@@ -86,7 +113,7 @@ class LobbyPage extends ConsumerWidget {
   void _refreshRooms(BuildContext context, WidgetRef ref) async {
     ref.read(lobbyProvider.notifier).toggleLoading();
     try {
-      SocketService().requestRooms();
+      ref.read(roomRepoProvider).requestRooms();
     } catch (e) {
       // 获取房间列表失败
       ScaffoldMessenger.of(
@@ -95,52 +122,5 @@ class LobbyPage extends ConsumerWidget {
     } finally {
       ref.read(lobbyProvider.notifier).toggleLoading();
     }
-  }
-
-  void _showCreateRoomDialog(BuildContext context, WidgetRef ref) async {
-    if (ref.read(lobbyProvider).isGaming) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('您已经在游戏中，请先退出游戏')));
-      return;
-    }
-
-    if (!ref.read(lobbyProvider.notifier).hasPlayerName()) {
-      showDialog(
-        context: context,
-        builder: (context) => const PlayerNameDialog(title: '创建房间'),
-      ).then((_) => ref.read(lobbyProvider.notifier).createRoom());
-    }
-    ref.read(lobbyProvider.notifier).createRoom();
-    await SocketService().roomCreatedStream.first.then(
-      (roomId) => {
-        print("房间" + roomId),
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => ChatPage(roomId: roomId)),
-        ),
-      },
-    );
-  }
-
-  void _joinRoom(String roomId, WidgetRef ref, BuildContext context) {
-    if (ref.read(lobbyProvider).isGaming) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('您已经在游戏中，请先退出游戏')));
-      return;
-    }
-
-    if (!ref.read(lobbyProvider.notifier).hasPlayerName()) {
-      showDialog(
-        context: context,
-        builder: (context) => const PlayerNameDialog(title: '加入房间'),
-      ).then((_) => ref.read(lobbyProvider.notifier).joinRoom(roomId));
-    }
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (_) => ChatPage(roomId: roomId)),
-    );
-    ref.read(lobbyProvider.notifier).joinRoom(roomId);
   }
 }

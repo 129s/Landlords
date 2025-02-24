@@ -1,3 +1,5 @@
+const logger = require('./logger');
+
 // 房间状态验证工具
 const validateRoomState = (room) => {
     const validations = [
@@ -7,14 +9,17 @@ const validateRoomState = (room) => {
     ];
 
     const error = validations.find(v => v.check);
-    if (error) throw new Error(`房间状态异常: ${error.message}`);
+    if (error) {
+        logger.error(`房间状态异常: %s`, error.message);
+        throw new Error(`房间状态异常: ${error.message}`);
+    }
 };
 
 // 玩家匹配算法
 const matchPlayers = (players) => {
-    return players.sort((a, b) =>
-        a.joinTime - b.joinTime // 按加入时间排序
-    ).slice(0, 3); // 只保留前三位玩家
+    const sortedPlayers = players.sort((a, b) => a.joinTime - b.joinTime); // 按加入时间排序
+    logger.debug(`玩家匹配，排序后的玩家数量: %s`, sortedPlayers.length);
+    return sortedPlayers.slice(0, 3); // 只保留前三位玩家
 };
 
 module.exports = { validateRoomState, matchPlayers };
