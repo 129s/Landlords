@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:landlords_3/core/network/constants.dart';
 import 'package:landlords_3/core/network/game_service.dart';
 import 'package:landlords_3/core/network/room_service.dart';
 import 'package:landlords_3/data/providers/service_providers.dart';
@@ -20,7 +21,7 @@ class GameNotifier extends StateNotifier<GameState> {
   // 初始化游戏（从服务端获取数据）
   Future<void> initializeGame(String roomId) async {
     try {
-      final room = await _roomService.getRoomDetails(roomId);
+      final room = await _roomService.getRoom(roomId);
       state = state.copyWith(
         roomId: roomId,
         players: room.players,
@@ -34,7 +35,7 @@ class GameNotifier extends StateNotifier<GameState> {
 
   void _setupSocketListeners() {
     _gameStateSub?.cancel();
-    _gameStateSub = _gameService.gameStateUpdates.listen((newState) {
+    _gameStateSub = _gameService.gameStateStream().listen((newState) {
       state = newState.copyWith(
         selectedIndices: state.selectedIndices,
         playerCards: state.playerCards,
@@ -63,7 +64,7 @@ class GameNotifier extends StateNotifier<GameState> {
         state.selectedIndices.map((index) => state.playerCards[index]).toList();
 
     if (_validateCards(cards)) {
-      await _gameService.playCards(cards);
+      _gameService.playCards(cards);
       clearSelectedCards();
       // 更新本地手牌状态
       final newCards = List<Poker>.from(state.playerCards)
@@ -82,7 +83,7 @@ class GameNotifier extends StateNotifier<GameState> {
 
   // 退出房间
   Future<void> leaveGame() async {
-    await _roomService.leaveRoom();
+    _roomService.leaveRoom();
     state = const GameState(players: []);
   }
 

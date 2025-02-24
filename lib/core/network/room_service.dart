@@ -1,67 +1,73 @@
 import 'dart:async';
-import 'package:landlords_3/core/network/socket_manager.dart';
+
 import 'package:landlords_3/data/models/room.dart';
+import 'package:landlords_3/core/network/socket_manager.dart';
+import 'package:logger/web.dart';
 
 class RoomService {
-  final SocketManager _socket = SocketManager();
-  final _roomStream = StreamController<List<Room>>.broadcast();
-  final _roomsRequestController = StreamController<List<Room>>.broadcast();
-  final _roomCreatedStream = StreamController<String>.broadcast();
+  final _socket = SocketManager().socket;
+  final _logger = Logger();
 
-  RoomService() {
-    _socket.on<List<dynamic>>('room_update', (data) {
-      final rooms = data.map((e) => Room.fromJson(e)).toList();
-      _roomStream.add(rooms);
-      _roomsRequestController.add(rooms);
-    });
+  /// 创建并加入房间
+  Future<String> createRoom() async {
+    final completer = Completer<String>();
 
-    _socket.on<List<dynamic>>('room_created', (data) {
-      _roomCreatedStream.add(data[0]);
-    });
-  }
-
-  Stream<List<Room>> get roomUpdates => _roomStream.stream;
-  Stream<String> get roomCreated => _roomCreatedStream.stream;
-
-  Future<void> createRoom() async {
     _socket.emit('create_room');
+    _socket.once('room_created', (roomId) {
+      _logger.d('Room created: $roomId');
+      completer.complete(roomId as String);
+    });
+
+    return completer.future;
   }
 
+  /// 加入现有房间
   Future<void> joinRoom(String roomId) async {
+    final completer = Completer<void>();
+
     _socket.emit('join_room', {'roomId': roomId});
+    _socket.once('player_joined', (_) {
+      _logger.d('Joined room: $roomId');
+      completer.complete();
+    });
+
+    return completer.future;
   }
 
-  Future<void> leaveRoom() async {
-    _socket.emit('leave_room');
+  /// 实时房间列表流
+  Stream<List<Room>> roomStream() {
+    final controller = StreamController<List<Room>>();
+
+    _socket.on('room_update', (data) {
+      final rooms = (data as List).map((json) => Room.fromJson(json)).toList();
+      controller.add(rooms);
+    });
+
+    return controller.stream;
   }
 
-  Stream<List<Room>> watchRooms() {
+  Future<Room> getRoom(String roomId) async {
+    final completer = Completer<Room>();
+    _socket.emit('get_room', {'roomId': roomId});
+    _socket.once('player_joined', (data) {
+      final room = Room.fromJson(data);
+      completer.complete(room);
+    });
+    return completer.future;
+  }
+
+  Future<List<Room>> getRooms() async {
+    final completer = Completer<List<Room>>();
     _socket.emit('request_rooms');
-    return _roomsRequestController.stream;
+    _socket.once('room_update', (data) {
+      final rooms = (data as List).map((json) => Room.fromJson(json)).toList();
+      completer.complete(rooms);
+    });
+    return completer.future;
   }
 
-  Future<Room> getRoomDetails(String roomId) async {
-    try {
-      final completer = Completer<Room>();
-      _socket.emitWithAck('get_room_details', {'roomId': roomId}, (ack) {
-        if (ack['success']) {
-          completer.complete(Room.fromJson(ack['room']));
-        } else {
-          completer.completeError(ack['error']);
-        }
-      });
-      return completer.future;
-    } catch (e) {
-      throw Exception('获取房间详情失败: ${e.toString()}');
-    }
-  }
-
-  Future<void> requestRooms() async {
-    try {
-      _socket.emit('request_rooms');
-      print("\nHERE\n");
-    } catch (e) {
-      throw Exception('获取房间列表失败: ${e.toString()}');
-    }
+  /// 离开当前房间
+  void leaveRoom() {
+    _socket.emit('leave_room');
   }
 }

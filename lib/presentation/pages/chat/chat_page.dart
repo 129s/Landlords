@@ -51,7 +51,7 @@ class _ChatPageState extends ConsumerState<ChatPage> {
     try {
       await ref
           .read(chatServiceProvider)
-          .sendMessage(widget.roomId, text)
+          .sendMessage(text)
           .then((_) => _roll());
       _isUserScrolling = false;
       _controller.clear();

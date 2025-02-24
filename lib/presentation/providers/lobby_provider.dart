@@ -41,7 +41,7 @@ class LobbyNotifier extends StateNotifier<LobbyState> {
 
   void _init() {
     // 实时监听房间更新
-    _roomSubscription = _roomService.watchRooms().listen((rooms) {
+    _roomSubscription = _roomService.roomStream().listen((rooms) {
       print('Received rooms from stream: $rooms');
       state = state.copyWith(rooms: rooms);
     });
@@ -50,11 +50,8 @@ class LobbyNotifier extends StateNotifier<LobbyState> {
   Future<String> createAndJoinRoom() async {
     state = state.copyWith(isLoading: true);
     try {
-      // 发送创建请求
-      await _roomService.createRoom();
-
-      // 等待房间创建成功事件
-      final roomId = await _roomService.roomCreated.first;
+      // 发送创建请求并等待房间创建成功返回id
+      final roomId = await _roomService.createRoom();
 
       // 自动加入自己创建的房间
       await _roomService.joinRoom(roomId);
@@ -80,7 +77,7 @@ class LobbyNotifier extends StateNotifier<LobbyState> {
   }
 
   void refreshRooms() {
-    _roomService.requestRooms();
+    _roomService.getRooms();
   }
 
   void toggleLoading() {

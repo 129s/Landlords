@@ -1,41 +1,33 @@
 import 'dart:async';
-import 'package:landlords_3/core/network/socket_manager.dart';
+
 import 'package:landlords_3/data/models/message.dart';
+import 'package:landlords_3/core/network/socket_manager.dart';
 
 class ChatService {
-  final SocketManager _socket = SocketManager();
-  final _messageStream = StreamController<List<Message>>.broadcast();
-  List<Message> _currentMessages = []; // 当前消息缓存
+  final _socket = SocketManager().socket;
 
-  Stream<List<Message>> watchMessages(String roomId) {
-    // 初始化时清空缓存
-    _currentMessages = [];
-    _socket.on<List<dynamic>>('message_history', (data) {
-      final messages = data.map((e) => Message.fromJson(e)).toList();
-      _currentMessages = messages; // 更新缓存
-      _messageStream.add(messages);
-    });
-
-    _socket.on<Map<String, dynamic>>('new_message', (message) {
-      final newMessage = Message.fromJson(message);
-      _currentMessages = [..._currentMessages, newMessage];
-      _messageStream.add(_currentMessages);
-    });
-
-    _socket.emit('request_messages', {'roomId': roomId});
-    return _messageStream.stream;
+  /// 发送聊天消息
+  Future<void> sendMessage(String content) {
+    final completer = Completer<void>();
+    _socket.emit('send_message', {'content': content});
+    return completer.future;
   }
 
-  Future<void> sendMessage(String roomId, String content) async {
-    try {
-      final message = {
-        'roomId': roomId,
-        'content': content,
-        'timestamp': DateTime.now().millisecondsSinceEpoch,
-      };
-      _socket.emit('send_message', message);
-    } catch (e) {
-      throw Exception('消息发送失败: ${e.toString()}');
-    }
+  /// 消息历史流
+  Stream<List<Message>> messageStream(String roomId) {
+    final controller = StreamController<List<Message>>();
+
+    _socket.on('message_history', (data) {
+      final messages =
+          (data as List).map((json) => Message.fromJson(json)).toList();
+      controller.add(messages);
+    });
+
+    _socket.on('new_message', (data) {
+      final message = Message.fromJson(data);
+      controller.add([message]);
+    });
+
+    return controller.stream;
   }
 }

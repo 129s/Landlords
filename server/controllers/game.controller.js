@@ -5,14 +5,7 @@ const logger = require('../utils/logger');
 class GameController extends BaseController {
     initHandlers(socket) {
         socket.on('place_bid', (data) => this.handleBid(socket, data));
-        socket.on('play_cards', (data, callback) => {
-            try {
-                const result = this.gameService.playCards(socket, data);
-                callback({ success: true, data: result });
-            } catch (error) {
-                callback({ success: false, error: error.message });
-            }
-        });
+        socket.on('play_cards', (data) => this.gameService.playCards(socket, data));
         socket.on('pass_turn', () => this.passTurn(socket));
     }
 
