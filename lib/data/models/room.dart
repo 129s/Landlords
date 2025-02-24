@@ -1,8 +1,14 @@
+import 'package:json_annotation/json_annotation.dart';
 import 'package:landlords_3/data/models/player.dart';
 
+part 'room.g.dart';
+
+@JsonSerializable(explicitToJson: true)
 class Room {
   final String id;
+  @JsonKey(defaultValue: [])
   final List<Player> players;
+  @JsonKey(fromJson: _fromJson, toJson: _toJson)
   final DateTime createdAt;
 
   const Room({
@@ -11,22 +17,10 @@ class Room {
     required this.createdAt,
   });
 
-  // 简化版房间信息用于列表展示
-  String get displayStatus {
-    if (players.length == 3) return '游戏中';
-    return '等待中 (${players.length}/3)';
-  }
+  factory Room.fromJson(Map<String, dynamic> json) => _$RoomFromJson(json);
+  Map<String, dynamic> toJson() => _$RoomToJson(this);
 
-  Room copyWith({
-    String? id,
-    List<Player>? players,
-    DateTime? createdAt,
-    bool? hasPassword,
-  }) {
-    return Room(
-      id: id ?? this.id,
-      players: players ?? this.players,
-      createdAt: createdAt ?? this.createdAt,
-    );
-  }
+  static DateTime _fromJson(int timestamp) =>
+      DateTime.fromMillisecondsSinceEpoch(timestamp);
+  static int _toJson(DateTime time) => time.millisecondsSinceEpoch;
 }

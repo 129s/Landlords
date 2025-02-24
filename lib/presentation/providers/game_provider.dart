@@ -2,7 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:landlords_3/core/network/game_service.dart';
 import 'package:landlords_3/core/network/room_service.dart';
 import 'package:landlords_3/data/providers/service_providers.dart';
-import 'package:landlords_3/data/models/game_state_model.dart';
+import 'package:landlords_3/data/models/game_state.dart';
 import 'package:landlords_3/data/models/poker.dart';
 import 'package:landlords_3/core/card/card_type.dart';
 import 'package:landlords_3/core/card/card_utils.dart';
@@ -20,14 +20,10 @@ class GameNotifier extends StateNotifier<GameState> {
   Future<void> initializeGame(String roomId) async {
     try {
       final room = await _roomService.getRoomDetails(roomId);
-      state = state.copyWith(
-        roomId: roomId,
-        players: room.players,
-        phase: GamePhase.dealing,
-      );
+      // TODO: 更新状态
       _setupSocketListeners();
     } catch (e) {
-      state = state.copyWith(phase: GamePhase.gameOver);
+      // TODO: 更新状态
     }
   }
 
@@ -36,7 +32,7 @@ class GameNotifier extends StateNotifier<GameState> {
   }
 
   void clearSelectedCards() {
-    state = state.copyWith(selectedIndices: []);
+    // TODO: 更新状态
   }
 
   // 选择卡牌
@@ -45,7 +41,7 @@ class GameNotifier extends StateNotifier<GameState> {
     newIndices.contains(index)
         ? newIndices.remove(index)
         : newIndices.add(index);
-    state = state.copyWith(selectedIndices: newIndices);
+    // TODO: 更新状态
   }
 
   // 提交出牌
@@ -57,11 +53,7 @@ class GameNotifier extends StateNotifier<GameState> {
 
     if (_validateCards(cards)) {
       await _gameService.playCards(cards);
-      state = state.copyWith(
-        playerCards:
-            state.playerCards.where((card) => !cards.contains(card)).toList(),
-        selectedIndices: [],
-      );
+      // TODO: 更新状态
     }
   }
 

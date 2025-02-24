@@ -13,16 +13,36 @@ class RoomService {
     _socket.on<List<dynamic>>('room_update', (data) {});
 
     _socket.on<List<dynamic>>('player_update', (data) {});
+
+    _socket.on<List<dynamic>>('room_update', (data) {
+      final rooms = data.map((e) => Room.fromJson(e)).toList();
+      _roomStream.add(rooms);
+      _roomsRequestController.add(rooms);
+    });
+
+    _socket.on<List<dynamic>>('player_update', (data) {
+      final players = data.map((e) => Player.fromJson(e)).toList();
+      _playerUpdateStream.add(players);
+    });
   }
 
   Stream<List<Room>> get roomUpdates => _roomStream.stream;
   Stream<List<Player>> get playerUpdates => _playerUpdateStream.stream;
 
   Future<String> createRoom() async {
-    final completer = Completer<String>();
-    _socket.emit('room_created', (roomId) => completer.complete(roomId));
-    _socket.emit('create_room');
-    return completer.future;
+    try {
+      final completer = Completer<String>();
+      _socket.emitWithAck('create_room', null, (ack) {
+        if (ack['success']) {
+          completer.complete(ack['roomId']);
+        } else {
+          completer.completeError(ack['error']);
+        }
+      });
+      return completer.future;
+    } catch (e) {
+      throw Exception('房间创建失败: ${e.toString()}');
+    }
   }
 
   Future<void> joinRoom(String roomId) async {
@@ -39,54 +59,31 @@ class RoomService {
   }
 
   Future<Room> getRoomDetails(String roomId) async {
-    final completer = Completer<Room>();
-
-    _socket.emitWithAck('get_room_details', {'roomId': roomId}, (response) {
-      if (response['success']) {
-        // 解析房间数据
-        final players =
-            (response['room']['players'] as List)
-                .map(
-                  (p) => Player(
-                    id: p['id'],
-                    name: p['name'],
-                    seat: p['seat'],
-                    isLandlord: p['isLandlord'],
-                  ),
-                )
-                .toList();
-
-        completer.complete(
-          Room(
-            id: response['room']['id'],
-            players: players,
-            createdAt: DateTime.parse(response['room']['createdAt']),
-          ),
-        );
-      } else {
-        completer.completeError(Exception(response['error']));
-      }
-    });
-
-    return completer.future.timeout(
-      const Duration(seconds: 3),
-      onTimeout: () => throw TimeoutException('房间详情请求超时'),
-    );
+    try {
+      final completer = Completer<Room>();
+      _socket.emitWithAck('get_room_details', {'roomId': roomId}, (ack) {
+        if (ack['success']) {
+          completer.complete(Room.fromJson(ack['room']));
+        } else {
+          completer.completeError(ack['error']);
+        }
+      });
+      return completer.future;
+    } catch (e) {
+      throw Exception('获取房间详情失败: ${e.toString()}');
+    }
   }
 
   Future<List<Room>> requestRooms() async {
-    final completer = Completer<List<Room>>();
-
-    _socket.emitWithAck('request_rooms', null, (response) {
-      if (response['success']) {
-        final rooms =
-            (response['rooms'] as List).map((r) => _parseRoom(r)).toList();
+    try {
+      final completer = Completer<List<Room>>();
+      _socket.emitWithAck('request_rooms', null, (ack) {
+        final rooms = (ack as List).map((e) => Room.fromJson(e)).toList();
         completer.complete(rooms);
-      } else {
-        completer.completeError(Exception(response['error']));
-      }
-    });
-
-    return completer.future;
+      });
+      return completer.future;
+    } catch (e) {
+      throw Exception('获取房间列表失败: ${e.toString()}');
+    }
   }
 }

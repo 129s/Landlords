@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'package:landlords_3/core/network/socket_manager.dart';
-import 'package:landlords_3/data/models/game_state_model.dart';
+import 'package:landlords_3/data/models/game_state.dart';
 import 'package:landlords_3/data/models/player.dart';
 import 'package:landlords_3/data/models/poker.dart';
 
@@ -18,20 +18,33 @@ class GameService {
   Stream<List<Poker>> get onPlayCards => _playCardsStream.stream;
 
   Future<void> startGame(String roomId) async {
-    _socket.emit('start_game', {'roomId': roomId});
+    try {
+      _socket.emit('start_game', {'roomId': roomId});
+    } catch (e) {
+      throw Exception('游戏启动失败: ${e.toString()}');
+    }
   }
 
   Future<void> placeBid(int bidValue) async {
-    _socket.emit('place_bid', {'bidValue': bidValue});
+    try {
+      _socket.emit('place_bid', {
+        'bidValue': bidValue,
+        'timestamp': DateTime.now().millisecondsSinceEpoch,
+      });
+    } catch (e) {
+      throw Exception('出价失败: ${e.toString()}');
+    }
   }
 
   Future<void> playCards(List<Poker> cards) async {
-    _socket.emit('play_cards', {
-      'cards': cards.map((c) => _convertPokerToJson(c)).toList(),
-    });
-  }
-
-  Map<String, dynamic> _convertPokerToJson(Poker poker) {
-    return {'suit': poker.suit.name, 'value': poker.value.name};
+    try {
+      final cardData = cards.map((c) => c.toJson()).toList();
+      _socket.emit('play_cards', {
+        'cards': cardData,
+        'timestamp': DateTime.now().millisecondsSinceEpoch,
+      });
+    } catch (e) {
+      throw Exception('出牌失败: ${e.toString()}');
+    }
   }
 }
