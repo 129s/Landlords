@@ -11,6 +11,7 @@ class GameState {
   final List<int> selectedIndices;
   final String? roomId;
   final bool isLandlord; // 是否地主
+  final String actionType;
 
   const GameState({
     required this.players,
@@ -21,6 +22,7 @@ class GameState {
     this.selectedIndices = const [],
     this.roomId,
     this.isLandlord = false,
+    this.actionType = 'STATE_UPDATE',
   });
 
   GameState copyWith({

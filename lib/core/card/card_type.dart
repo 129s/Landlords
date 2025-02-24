@@ -1,6 +1,26 @@
 import 'package:landlords_3/data/models/poker.dart';
 import 'package:landlords_3/core/card/card_utils.dart';
 
+enum Suit { hearts, diamonds, clubs, spades, joker }
+
+enum CardValue {
+  ace,
+  two,
+  three,
+  four,
+  five,
+  six,
+  seven,
+  eight,
+  nine,
+  ten,
+  jack,
+  queen,
+  king,
+  jokerSmall, // 小王
+  jokerBig, // 大王
+}
+
 enum CardTypeEnum {
   single, // 单张
   pair, // 对子

@@ -10,32 +10,9 @@ class RoomService {
   final _roomsRequestController = StreamController<List<Room>>.broadcast();
 
   RoomService() {
-    _socket.on<List<dynamic>>('room_update', (data) {
-      final rooms = data.map((r) => _parseRoom(r)).toList();
-      _roomStream.add(rooms);
-      _roomsRequestController.add(rooms);
-    });
+    _socket.on<List<dynamic>>('room_update', (data) {});
 
-    _socket.on<List<dynamic>>('player_update', (data) {
-      _playerUpdateStream.add(data.map((p) => _parsePlayer(p)).toList());
-    });
-  }
-
-  Room _parseRoom(dynamic data) {
-    return Room(
-      id: data['id'],
-      players: (data['players'] as List).map((p) => _parsePlayer(p)).toList(),
-      createdAt: DateTime.parse(data['createdAt']),
-    );
-  }
-
-  Player _parsePlayer(dynamic data) {
-    return Player(
-      id: data['id'],
-      name: data['name'],
-      seat: data['seat'],
-      isLandlord: data['isLandlord'],
-    );
+    _socket.on<List<dynamic>>('player_update', (data) {});
   }
 
   Stream<List<Room>> get roomUpdates => _roomStream.stream;

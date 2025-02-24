@@ -1,30 +1,30 @@
 import 'package:flutter/material.dart';
+import 'package:json_annotation/json_annotation.dart';
+import 'package:landlords_3/core/card/card_type.dart';
+part 'poker.g.dart';
 
-enum Suit { hearts, diamonds, clubs, spades, joker }
-
-enum CardValue {
-  ace,
-  two,
-  three,
-  four,
-  five,
-  six,
-  seven,
-  eight,
-  nine,
-  ten,
-  jack,
-  queen,
-  king,
-  jokerSmall, // 小王
-  jokerBig, // 大王
-}
-
+@JsonSerializable()
 class Poker {
+  @JsonKey(name: 'suit', toJson: _suitToJson, fromJson: _suitFromJson)
   final Suit suit;
+  @JsonKey(name: 'value', toJson: _valueToJson, fromJson: _valueFromJson)
   final CardValue value;
 
   Poker({required this.suit, required this.value});
+
+  factory Poker.fromJson(Map<String, dynamic> json) => _$PokerFromJson(json);
+  Map<String, dynamic> toJson() => _$PokerToJson(this);
+
+  // 枚举转换方法
+  static String _suitToJson(Suit suit) => suit.name;
+  static Suit _suitFromJson(String json) =>
+      Suit.values.firstWhere((e) => e.name == json, orElse: () => Suit.joker);
+
+  static String _valueToJson(CardValue value) => value.name;
+  static CardValue _valueFromJson(String json) => CardValue.values.firstWhere(
+    (e) => e.name == json,
+    orElse: () => CardValue.jokerBig,
+  );
 
   // 用于显示的文字
   String get displayValue {

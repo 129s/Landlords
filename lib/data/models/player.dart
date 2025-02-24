@@ -1,10 +1,17 @@
 import 'package:landlords_3/data/models/poker.dart';
 
+import 'package:json_annotation/json_annotation.dart';
+
+part 'player.g.dart';
+
+@JsonSerializable(explicitToJson: true)
 class Player {
   final String id;
   final String name;
   final int seat;
+  @JsonKey(defaultValue: [])
   final List<Poker> cards;
+  @JsonKey(defaultValue: false)
   final bool isLandlord;
 
   Player({
@@ -15,43 +22,6 @@ class Player {
     this.isLandlord = false,
   });
 
-  Player copyWith({
-    String? id,
-    String? name,
-    int? seat,
-    List<Poker>? cards,
-    bool? isLandlord,
-  }) {
-    return Player(
-      id: id ?? this.id,
-      name: name ?? this.name,
-      seat: seat ?? this.seat,
-      cards: cards ?? this.cards,
-      isLandlord: isLandlord ?? this.isLandlord,
-    );
-  }
-
-  @override
-  String toString() {
-    return 'PlayerData{id: $id, name: $name, seat: $seat, cards: $cards, isLandlord: $isLandlord}';
-  }
-
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is Player &&
-          runtimeType == other.runtimeType &&
-          id == other.id &&
-          name == other.name &&
-          seat == other.seat &&
-          cards == other.cards &&
-          isLandlord == other.isLandlord;
-
-  @override
-  int get hashCode =>
-      id.hashCode ^
-      name.hashCode ^
-      seat.hashCode ^
-      cards.hashCode ^
-      isLandlord.hashCode;
+  factory Player.fromJson(Map<String, dynamic> json) => _$PlayerFromJson(json);
+  Map<String, dynamic> toJson() => _$PlayerToJson(this);
 }

@@ -1,25 +1,11 @@
 import 'dart:async';
 import 'package:landlords_3/core/network/socket_manager.dart';
-import 'package:landlords_3/data/transform/message_dto.dart';
 
 class ChatService {
   final SocketManager _socket = SocketManager();
   final _messageStream = StreamController<List<MessageDTO>>.broadcast();
-  final _messageHistoryRequests = <String, Completer<List<MessageDTO>>>{};
 
-  ChatService() {
-    _socket.on<List<dynamic>>('new_message', (data) {
-      _messageStream.add(data.map((e) => MessageDTO.fromJson(e)).toList());
-    });
-
-    _socket.on<List<dynamic>>('message_history', (data) {
-      final roomId = data.isNotEmpty ? data[0]['roomId'] : '';
-      final completer = _messageHistoryRequests[roomId];
-      if (completer != null && !completer.isCompleted) {
-        completer.complete(data.map((e) => MessageDTO.fromJson(e)).toList());
-      }
-    });
-  }
+  ChatService() {}
 
   Stream<List<MessageDTO>> watchMessages(String roomId) {
     return _messageStream.stream

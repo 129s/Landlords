@@ -43,6 +43,7 @@ class GameService extends BaseService {
         });
     }
 
+
     handleBid(roomId, playerId, bidValue) {
         return this.withTransaction(async () => {
             const gameState = this._getValidGameState(roomId, GamePhase.BIDDING);
@@ -198,7 +199,6 @@ class GameService extends BaseService {
         this.io.to(roomId).emit('gameStateUpdate', this._getPublicState(gameState));
     }
 
-    // 辅助方法
     _getPublicState(gameState) {
         return {
             phase: gameState.phase,
@@ -211,7 +211,8 @@ class GameService extends BaseService {
             currentPlayer: gameState.currentPlayer,
             lastPlayedCards: gameState.lastPlayedCards,
             currentBid: gameState.currentBid,
-            history: gameState.history
+            history: gameState.history,
+            actionType: gameState.lastActionType   // 新增动作类型字段
         };
     }
 }

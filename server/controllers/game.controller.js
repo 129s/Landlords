@@ -20,10 +20,12 @@ class GameController extends BaseController {
     async startGame(socket) {
         try {
             const room = this.getRoom(socket);
-            if (room.players.length !== 3) throw new Error('INSUFFICIENT_PLAYERS');
+            if (room.players.length !== 3) throw new Error('INSUFFICIENT_PLAYERS', '需要3名玩家才能开始游戏');
 
             const gameState = this.gameService.startGame(room.id);
-            this.io.to(room.id).emit('game_started', gameState);
+            // 统一触发game_state_updated事件
+            this.io.to(room.id).emit('game_state_updated',
+                this.gameService._getPublicState(gameState));
         } catch (error) {
             this.handleError(socket, error);
         }
@@ -34,8 +36,12 @@ class GameController extends BaseController {
             const room = this.getRoom(socket);
             const player = this.getPlayer(socket);
 
-            this.gameService.bidLandlord(room.id, player.id, bidValue);
-            this.io.to(room.id).emit('bid_updated', this.gameService.gameStates.get(room.id));
+            const updatedState = this.gameService.bidLandlord(
+                room.id, player.id, bidValue
+            );
+            // 统一触发game_state_updated事件
+            this.io.to(room.id).emit('game_state_updated',
+                this.gameService._getPublicState(updatedState));
         } catch (error) {
             this.handleError(socket, error);
         }
@@ -47,7 +53,9 @@ class GameController extends BaseController {
             const player = this.getPlayer(socket);
 
             const state = this.gameService.playCards(room.id, player.id, cards);
-            this.io.to(room.id).emit('game_state_updated', state);
+            // 统一触发game_state_updated事件
+            this.io.to(room.id).emit('game_state_updated',
+                this.gameService._getPublicState(updatedState));
         } catch (error) {
             this.handleError(socket, error);
         }
@@ -57,7 +65,9 @@ class GameController extends BaseController {
         try {
             const room = this.getRoom(socket);
             const state = this.gameService.passTurn(room.id);
-            this.io.to(room.id).emit('turn_passed', state);
+            // 统一触发game_state_updated事件
+            this.io.to(room.id).emit('game_state_updated',
+                this.gameService._getPublicState(updatedState));
         } catch (error) {
             this.handleError(socket, error);
         }
