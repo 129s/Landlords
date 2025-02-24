@@ -6,6 +6,7 @@ enum PokerListAlignment { start, center, end }
 
 class PokerListWidget extends StatefulWidget {
   final List<PokerModel> cards;
+  final bool isLoading;
   final List<int> selectedIndices;
   final double minVisibleWidth;
   final PokerListAlignment alignment;
@@ -18,6 +19,7 @@ class PokerListWidget extends StatefulWidget {
   const PokerListWidget({
     Key? key,
     required this.cards,
+    this.isLoading = false,
     required this.onCardTapped,
     this.selectedIndices = const [],
     this.minVisibleWidth = 20.0,
@@ -46,8 +48,21 @@ class _PokerListWidgetState extends State<PokerListWidget> {
 
   @override
   Widget build(BuildContext context) {
+    // 空数据且非加载状态时不渲染
+    if (widget.cards.isEmpty && !widget.isLoading) {
+      return const SizedBox.shrink();
+    }
     return LayoutBuilder(
       builder: (context, constraints) {
+        // 加载状态显示指示器
+        if (widget.isLoading) {
+          return Center(
+            child: CircularProgressIndicator(
+              strokeWidth: 2,
+              valueColor: AlwaysStoppedAnimation(Colors.blue.shade400),
+            ),
+          );
+        }
         _calculateLayoutParams(constraints);
         return GestureDetector(
           onPanStart: widget.isSelectable ? _handlePanStart : null,

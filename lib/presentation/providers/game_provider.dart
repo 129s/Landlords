@@ -3,8 +3,8 @@ import 'package:landlords_3/data/providers/repo_providers.dart';
 import 'package:landlords_3/domain/entities/player_model.dart';
 import 'package:landlords_3/domain/entities/poker_model.dart';
 import 'package:landlords_3/domain/repositories/room_repo.dart';
-import 'package:landlords_3/core/game/card_type.dart';
-import 'package:landlords_3/core/game/card_utils.dart';
+import 'package:landlords_3/core/card/card_type.dart';
+import 'package:landlords_3/core/card/card_utils.dart';
 
 enum GamePhase { connecting, dealing, bidding, playing, gameOver }
 
