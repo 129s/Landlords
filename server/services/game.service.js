@@ -197,7 +197,7 @@ class GameService extends BaseService {
                 this._autoPassTurn(gameState);
                 break;
         }
-        this.io.to(roomId).emit('gameStateUpdate', this._getPublicState(gameState));
+        this.io.to(roomId).emit('game_state_updated', this._getPublicState(gameState));
     }
 
     _getPublicState(gameState) {

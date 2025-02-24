@@ -53,10 +53,8 @@ class LobbyNotifier extends StateNotifier<LobbyState> {
       // 发送创建请求
       await _roomService.createRoom();
 
-      print("\n1\n");
       // 等待房间创建成功事件
       final roomId = await _roomService.roomCreated.first;
-      print("\n2\n");
 
       // 自动加入自己创建的房间
       await _roomService.joinRoom(roomId);
@@ -81,17 +79,12 @@ class LobbyNotifier extends StateNotifier<LobbyState> {
     }
   }
 
-  Future<void> refreshRooms() async {
-    final rooms = await _roomService.requestRooms();
-    state = state.copyWith(rooms: rooms);
+  void refreshRooms() {
+    _roomService.requestRooms();
   }
 
   void toggleLoading() {
     state = state.copyWith(isLoading: !state.isLoading);
-  }
-
-  void updateRooms(List<Room> rooms) {
-    state = state.copyWith(rooms: rooms);
   }
 
   void leaveRoom() {

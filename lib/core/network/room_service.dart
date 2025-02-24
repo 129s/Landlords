@@ -1,12 +1,10 @@
 import 'dart:async';
 import 'package:landlords_3/core/network/socket_manager.dart';
 import 'package:landlords_3/data/models/room.dart';
-import 'package:landlords_3/data/models/player.dart';
 
 class RoomService {
   final SocketManager _socket = SocketManager();
   final _roomStream = StreamController<List<Room>>.broadcast();
-  final _playerUpdateStream = StreamController<List<Player>>.broadcast();
   final _roomsRequestController = StreamController<List<Room>>.broadcast();
   final _roomCreatedStream = StreamController<String>.broadcast();
 
@@ -17,17 +15,12 @@ class RoomService {
       _roomsRequestController.add(rooms);
     });
 
-    _socket.on<List<dynamic>>('player_update', (data) {
-      final players = data.map((e) => Player.fromJson(e)).toList();
-      _playerUpdateStream.add(players);
-    });
     _socket.on<List<dynamic>>('room_created', (data) {
       _roomCreatedStream.add(data[0]);
     });
   }
 
   Stream<List<Room>> get roomUpdates => _roomStream.stream;
-  Stream<List<Player>> get playerUpdates => _playerUpdateStream.stream;
   Stream<String> get roomCreated => _roomCreatedStream.stream;
 
   Future<void> createRoom() async {
@@ -63,14 +56,10 @@ class RoomService {
     }
   }
 
-  Future<List<Room>> requestRooms() async {
+  Future<void> requestRooms() async {
     try {
-      final completer = Completer<List<Room>>();
-      _socket.emitWithAck('request_rooms', null, (ack) {
-        final rooms = (ack as List).map((e) => Room.fromJson(e)).toList();
-        completer.complete(rooms);
-      });
-      return completer.future;
+      _socket.emit('request_rooms');
+      print("\nHERE\n");
     } catch (e) {
       throw Exception('获取房间列表失败: ${e.toString()}');
     }

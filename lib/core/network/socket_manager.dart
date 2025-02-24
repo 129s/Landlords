@@ -50,9 +50,6 @@ class SocketManager {
 
   void emit(String event, [dynamic data]) => _socket.emit(event, data);
 
-  void emitWithAck(String event, dynamic data, Function? ack) =>
-      _socket.emitWithAck(event, data, ack: ack);
-
   void on<T>(String event, void Function(T data) handler) =>
       _socket.on(event, (data) => handler(data as T));
   void off(String event) => _socket.off(event);
