@@ -1,82 +1,94 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:landlords_3/data/providers/repo_providers.dart';
+import 'package:landlords_3/domain/entities/player_model.dart';
 import 'package:landlords_3/domain/entities/poker_model.dart';
-import 'dart:math';
+import 'package:landlords_3/domain/repositories/room_repo.dart';
 import 'package:landlords_3/core/game/card_type.dart';
 import 'package:landlords_3/core/game/card_utils.dart';
 
-enum GamePhase { dealing, bidding, playing, gameOver }
+enum GamePhase { connecting, dealing, bidding, playing, gameOver }
 
 class GameState {
-  final List<PokerModel> playerCards;
-  final List<PokerModel> displayedCards; // 当前玩家
-  final List<PokerModel> displayedCardsOther1; // 其他玩家1
-  final List<PokerModel> displayedCardsOther2; // 其他玩家2
+  final List<PlayerModel> players; // 服务端玩家数据
+  final List<PokerModel> playerCards; // 当前玩家手牌
+  final List<PokerModel> lastPlayedCards; // 全局最后出牌
   final GamePhase phase;
-  final int? landlordSeat; // 地主座位号
+  final int currentPlayerSeat; // 当前行动玩家座位
   final List<int> selectedIndices;
-  final List<PokerModel> lastPlayedCards; // 上一手出的牌
+  final String? roomId;
+  final bool isLandlord; // 是否地主
 
   const GameState({
-    required this.playerCards,
-    required this.displayedCards,
-    required this.displayedCardsOther1,
-    required this.displayedCardsOther2,
-    required this.phase,
-    this.landlordSeat,
-    this.selectedIndices = const [],
+    required this.players,
+    this.playerCards = const [],
     this.lastPlayedCards = const [],
+    this.phase = GamePhase.connecting,
+    this.currentPlayerSeat = 0,
+    this.selectedIndices = const [],
+    this.roomId,
+    this.isLandlord = false,
   });
 
   GameState copyWith({
+    List<PlayerModel>? players,
     List<PokerModel>? playerCards,
-    List<PokerModel>? displayedCards,
-    List<PokerModel>? displayedCardsOther1,
-    List<PokerModel>? displayedCardsOther2,
-    GamePhase? phase,
-    int? landlordSeat,
-    List<int>? selectedIndices,
     List<PokerModel>? lastPlayedCards,
+    GamePhase? phase,
+    int? currentPlayerSeat,
+    List<int>? selectedIndices,
+    String? roomId,
+    bool? isLandlord,
   }) {
     return GameState(
+      players: players ?? this.players,
       playerCards: playerCards ?? this.playerCards,
-      displayedCards: displayedCards ?? this.displayedCards,
-      displayedCardsOther1: displayedCardsOther1 ?? this.displayedCardsOther1,
-      displayedCardsOther2: displayedCardsOther2 ?? this.displayedCardsOther2,
-      phase: phase ?? this.phase,
-      landlordSeat: landlordSeat ?? this.landlordSeat,
-      selectedIndices: selectedIndices ?? this.selectedIndices,
       lastPlayedCards: lastPlayedCards ?? this.lastPlayedCards,
+      phase: phase ?? this.phase,
+      currentPlayerSeat: currentPlayerSeat ?? this.currentPlayerSeat,
+      selectedIndices: selectedIndices ?? this.selectedIndices,
+      roomId: roomId ?? this.roomId,
+      isLandlord: isLandlord ?? this.isLandlord,
     );
   }
 }
 
 class GameNotifier extends StateNotifier<GameState> {
-  GameNotifier()
-    : super(
-        GameState(
-          playerCards: [],
-          displayedCards: [],
-          displayedCardsOther1: [],
-          displayedCardsOther2: [],
-          phase: GamePhase.dealing,
-          lastPlayedCards: [],
-        ),
+  final RoomRepository _roomRepo;
+
+  GameNotifier(this._roomRepo) : super(const GameState(players: []));
+
+  // 初始化游戏（从服务端获取数据）
+  Future<void> initializeGame(String roomId) async {
+    try {
+      final room = await _roomRepo.getRoomDetails(roomId);
+      state = state.copyWith(
+        roomId: roomId,
+        players: room.players,
+        phase: GamePhase.dealing,
       );
-
-  // 发牌逻辑
-  void dealCards() {
-    final deck = _createShuffledDeck();
-    final playerCards = deck.sublist(0, 17);
-    // 对玩家手牌进行排序
-    final sortedPlayerCards = CardUtils.sortCards(playerCards);
-
-    state = state.copyWith(
-      playerCards: sortedPlayerCards,
-      phase: GamePhase.bidding,
-    );
+      _setupSocketListeners();
+    } catch (e) {
+      state = state.copyWith(phase: GamePhase.gameOver);
+    }
   }
 
-  // 卡牌选择逻辑
+  void _setupSocketListeners() {
+    // 监听玩家状态变化
+    _roomRepo.onPlayerUpdate.listen((players) {
+      state = state.copyWith(players: players);
+    });
+
+    // 监听出牌事件
+    _roomRepo.onPlayCards.listen((cards) {
+      state = state.copyWith(lastPlayedCards: cards);
+    });
+  }
+
+  void clearSelectedCards() {
+    state = state.copyWith(selectedIndices: []);
+  }
+
+  // 选择卡牌
   void toggleCardSelection(int index) {
     final newIndices = List<int>.from(state.selectedIndices);
     newIndices.contains(index)
@@ -85,87 +97,40 @@ class GameNotifier extends StateNotifier<GameState> {
     state = state.copyWith(selectedIndices: newIndices);
   }
 
-  // 出牌逻辑 (需要修改)
-  void playSelectedCards() {
-    final selectedCards =
+  // 提交出牌
+  Future<void> playSelectedCards() async {
+    if (state.selectedIndices.isEmpty) return;
+
+    final cards =
         state.selectedIndices.map((index) => state.playerCards[index]).toList();
 
-    // 验证牌型
-    final cardType = CardType.getType(selectedCards);
-    if (cardType == CardTypeEnum.invalid) {
-      print('Invalid card type!');
-      return; // 牌型不合法，不执行出牌
+    if (_validateCards(cards)) {
+      await _roomRepo.playCards(state.roomId!, cards);
+      state = state.copyWith(
+        playerCards:
+            state.playerCards.where((card) => !cards.contains(card)).toList(),
+        selectedIndices: [],
+      );
     }
-
-    // 验证大小
-    if (state.lastPlayedCards.isNotEmpty &&
-        !CardUtils.isBigger(selectedCards, state.lastPlayedCards)) {
-      print('Cards are not bigger than last played cards!');
-      return; // 牌太小，不执行出牌
-    }
-
-    // 假设当前玩家出牌，更新当前玩家的 displayedCards
-    state = state.copyWith(
-      displayedCards: selectedCards,
-      playerCards:
-          state.playerCards
-              .where((card) => !selectedCards.contains(card))
-              .toList(),
-      selectedIndices: [],
-      lastPlayedCards: selectedCards, // 更新上一手牌
-    );
-
-    // TODO:  需要根据游戏逻辑，判断是哪个玩家出牌，并更新对应的 displayedCardsOther1 或 displayedCardsOther2
   }
 
-  void initializeGame() {
-    final deck = _createShuffledDeck();
-    final playerCards = deck.sublist(0, 17);
-    // 对玩家手牌进行排序
-    final sortedPlayerCards = CardUtils.sortCards(playerCards);
-
-    state = state.copyWith(
-      playerCards: sortedPlayerCards,
-      displayedCards: [],
-      displayedCardsOther1: [],
-      displayedCardsOther2: [],
-      phase: GamePhase.dealing,
-      landlordSeat: null,
-      selectedIndices: [],
-      lastPlayedCards: [], // 初始化上一手牌
-    );
-  }
-
-  // 清空选择
-  void clearSelectedCards() {
-    state = state.copyWith(selectedIndices: []);
-  }
-
-  List<PokerModel> _createShuffledDeck() {
-    final List<PokerModel> deck = [];
-
-    // 添加普通牌
-    for (var suit in Suit.values) {
-      if (suit != Suit.joker) {
-        for (var value in CardValue.values) {
-          if (value != CardValue.jokerBig && value != CardValue.jokerSmall) {
-            deck.add(PokerModel(suit: suit, value: value));
-          }
-        }
-      }
+  bool _validateCards(List<PokerModel> cards) {
+    if (state.lastPlayedCards.isNotEmpty) {
+      return CardUtils.isBigger(cards, state.lastPlayedCards) &&
+          CardType.getType(cards) != CardTypeEnum.invalid;
     }
+    return CardType.getType(cards) != CardTypeEnum.invalid;
+  }
 
-    // 添加大小王
-    deck.add(PokerModel(suit: Suit.joker, value: CardValue.jokerSmall));
-    deck.add(PokerModel(suit: Suit.joker, value: CardValue.jokerBig));
-
-    // 洗牌
-    deck.shuffle(Random());
-
-    return deck;
+  // 退出房间
+  Future<void> leaveGame() async {
+    await _roomRepo.leaveRoom();
+    state = const GameState(players: []);
   }
 }
 
-final gameProvider = StateNotifierProvider<GameNotifier, GameState>((ref) {
-  return GameNotifier();
-});
+final gameProvider = StateNotifierProvider.autoDispose<GameNotifier, GameState>(
+  (ref) {
+    return GameNotifier(ref.read(roomRepoProvider));
+  },
+);

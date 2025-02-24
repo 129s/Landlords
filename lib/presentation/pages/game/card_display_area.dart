@@ -31,7 +31,10 @@ class CardDisplayArea extends ConsumerWidget {
                         height: height / 2,
                         child: Center(
                           child: PokerListWidget(
-                            cards: gameState.displayedCardsOther1,
+                            cards:
+                                gameState.players
+                                    .firstWhere((p) => p.seat == 0)
+                                    .cards,
                             minVisibleWidth: 25.0,
                             alignment: PokerListAlignment.center,
                             onCardTapped: (_) {},
@@ -52,7 +55,10 @@ class CardDisplayArea extends ConsumerWidget {
                         height: height / 2,
                         child: Center(
                           child: PokerListWidget(
-                            cards: gameState.displayedCardsOther2,
+                            cards:
+                                gameState.players
+                                    .firstWhere((p) => p.seat == 1)
+                                    .cards,
                             minVisibleWidth: 25.0,
                             alignment: PokerListAlignment.center,
                             onCardTapped: (_) {},
@@ -75,7 +81,10 @@ class CardDisplayArea extends ConsumerWidget {
                     height: height / 2,
                     child: Center(
                       child: PokerListWidget(
-                        cards: gameState.displayedCards,
+                        cards:
+                            gameState.players
+                                .firstWhere((p) => p.seat == 2)
+                                .cards,
                         minVisibleWidth: 25.0,
                         alignment: PokerListAlignment.center,
                         onCardTapped: (_) {},

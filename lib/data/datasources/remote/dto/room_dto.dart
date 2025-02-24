@@ -13,7 +13,7 @@ class RoomDTO extends RoomModel {
       id: json['id'] as String,
       players:
           (json['players'] as List)
-              .map((playerJson) => PlayerDTO.fromJson(playerJson))
+              .map((playerJson) => PlayerDTO.fromJson(playerJson).toModel())
               .toList(),
       createdAt: DateTime.parse(json['createdAt'] as String),
     );

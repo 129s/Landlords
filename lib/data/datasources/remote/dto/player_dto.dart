@@ -1,12 +1,20 @@
+import 'package:landlords_3/data/datasources/remote/dto/poker_dto.dart';
 import 'package:landlords_3/domain/entities/player_model.dart';
+import 'package:landlords_3/domain/entities/poker_model.dart';
 
-class PlayerDTO extends PlayerModel {
-  PlayerDTO({
-    required super.id,
-    required super.name,
-    required super.seat,
-    required super.cardCount,
-    super.isLandlord = false,
+class PlayerDTO {
+  final String id;
+  final String name;
+  final int seat;
+  final List<Map<String, dynamic>> cards;
+  final bool isLandlord;
+
+  const PlayerDTO({
+    required this.id,
+    required this.name,
+    required this.seat,
+    required this.cards,
+    required this.isLandlord,
   });
 
   factory PlayerDTO.fromJson(Map<String, dynamic> json) {
@@ -14,8 +22,28 @@ class PlayerDTO extends PlayerModel {
       id: json['id'] as String,
       name: json['name'] as String,
       seat: json['seat'] as int,
-      cardCount: json['cardCount'] as int,
-      isLandlord: json['isLandlord'] as bool? ?? false,
+      cards: (json['cards'] as List<dynamic>).cast<Map<String, dynamic>>(),
+      isLandlord: json['isLandlord'] as bool,
     );
+  }
+
+  PlayerModel toModel() {
+    return PlayerModel(
+      id: id,
+      name: name,
+      seat: seat,
+      cards: cards.map((card) => PokerDTO.fromJson(card).toModel()).toList(),
+      isLandlord: isLandlord,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'name': name,
+      'seat': seat,
+      'cards': cards,
+      'isLandlord': isLandlord,
+    };
   }
 }

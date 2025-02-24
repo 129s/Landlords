@@ -99,6 +99,7 @@ class _ChatPageState extends ConsumerState<ChatPage> {
     );
     return Scaffold(
       appBar: AppBar(
+        automaticallyImplyLeading: false,
         title: Text('房间 ${widget.roomId.substring(0, 6)}'),
         actions: [
           IconButton(

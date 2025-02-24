@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:landlords_3/data/providers/repo_providers.dart';
 import 'package:landlords_3/presentation/pages/chat/chat_page.dart';
+import 'package:landlords_3/presentation/pages/game/game_page.dart';
 import 'package:landlords_3/presentation/pages/lobby/room_list.dart';
 import 'package:landlords_3/presentation/providers/lobby_provider.dart';
 import 'package:landlords_3/presentation/widgets/connection_status_indicator.dart';
@@ -51,7 +52,7 @@ class LobbyPage extends ConsumerWidget {
             ) {
               if (roomId == null) print("房间不存在");
               Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => ChatPage(roomId: roomId!)),
+                MaterialPageRoute(builder: (_) => GamePage(roomId: roomId!)),
               );
             }),
         child: const Icon(Icons.add),
@@ -98,7 +99,7 @@ class LobbyPage extends ConsumerWidget {
                       .then((_) {
                         Navigator.of(context).push(
                           MaterialPageRoute(
-                            builder: (_) => ChatPage(roomId: roomId),
+                            builder: (_) => GamePage(roomId: roomId),
                           ),
                         );
                       }),

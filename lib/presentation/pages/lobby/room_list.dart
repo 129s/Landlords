@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:landlords_3/domain/entities/room_model.dart';
 import 'package:landlords_3/presentation/pages/chat/chat_page.dart';
+import 'package:landlords_3/presentation/pages/game/game_page.dart';
 import 'package:landlords_3/presentation/providers/lobby_provider.dart';
 import 'package:landlords_3/presentation/widgets/player_name_dialog.dart';
 
@@ -53,7 +54,7 @@ class _RoomListItem extends StatelessWidget {
         ).read(lobbyProvider.notifier).joinExistingRoom(room.id).then((_) {
           Navigator.of(
             context,
-          ).push(MaterialPageRoute(builder: (_) => ChatPage(roomId: room.id)));
+          ).push(MaterialPageRoute(builder: (_) => GamePage(roomId: room.id)));
         });
       },
       child: const Text('加入'),
