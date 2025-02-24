@@ -3,6 +3,7 @@ const BaseService = require('./base.service');
 const CardUtils = require('../utils/card.utils');
 const logger = require('../utils/logger');
 GamePhase = {
+    PREPARING: 'PREPARING',
     BIDDING: 'BIDDING',
     PLAYING: 'PLAYING',
     ENDED: 'ENDED'
@@ -212,7 +213,6 @@ class GameService extends BaseService {
             lastPlayedCards: gameState.lastPlayedCards,
             currentBid: gameState.currentBid,
             history: gameState.history,
-            actionType: gameState.lastActionType   // 新增动作类型字段
         };
     }
 }

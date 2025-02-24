@@ -28,9 +28,9 @@ const io = new Server(server, {
 
 // 初始化核心服务
 const stateStore = new StateStore();
-const roomService = new RoomService(stateStore);
 const messageService = new MessageService(stateStore);
 const gameService = new GameService(stateStore);
+const roomService = new RoomService(stateStore, gameService);
 
 // 初始化控制器
 const controllers = {

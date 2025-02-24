@@ -4,7 +4,6 @@ const logger = require('../utils/logger');
 
 class GameController extends BaseController {
     initHandlers(socket) {
-        socket.on('start_game', () => this.startGame(socket));
         socket.on('place_bid', (data) => this.handleBid(socket, data));
         socket.on('play_cards', (data, callback) => {
             try {
@@ -39,7 +38,6 @@ class GameController extends BaseController {
             const updatedState = this.gameService.bidLandlord(
                 room.id, player.id, bidValue
             );
-            // 统一触发game_state_updated事件
             this.io.to(room.id).emit('game_state_updated',
                 this.gameService._getPublicState(updatedState));
         } catch (error) {
@@ -53,7 +51,6 @@ class GameController extends BaseController {
             const player = this.getPlayer(socket);
 
             const state = this.gameService.playCards(room.id, player.id, cards);
-            // 统一触发game_state_updated事件
             this.io.to(room.id).emit('game_state_updated',
                 this.gameService._getPublicState(updatedState));
         } catch (error) {
@@ -65,7 +62,6 @@ class GameController extends BaseController {
         try {
             const room = this.getRoom(socket);
             const state = this.gameService.passTurn(room.id);
-            // 统一触发game_state_updated事件
             this.io.to(room.id).emit('game_state_updated',
                 this.gameService._getPublicState(updatedState));
         } catch (error) {

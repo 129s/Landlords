@@ -11,17 +11,37 @@ class GameState {
   final List<int> selectedIndices;
   final String? roomId;
   final bool isLandlord; // 是否地主
-  final String actionType;
 
   const GameState({
     required this.players,
     this.playerCards = const [],
     this.lastPlayedCards = const [],
-    this.phase = GamePhase.connecting,
+    this.phase = GamePhase.preparing,
     this.currentPlayerSeat = 0,
     this.selectedIndices = const [],
     this.roomId,
     this.isLandlord = false,
-    this.actionType = 'STATE_UPDATE',
   });
+
+  GameState copyWith({
+    List<Player>? players,
+    List<Poker>? playerCards,
+    List<Poker>? lastPlayedCards,
+    GamePhase? phase,
+    int? currentPlayerSeat,
+    List<int>? selectedIndices,
+    String? roomId,
+    bool? isLandlord,
+  }) {
+    return GameState(
+      players: players ?? this.players,
+      playerCards: playerCards ?? this.playerCards,
+      lastPlayedCards: lastPlayedCards ?? this.lastPlayedCards,
+      phase: phase ?? this.phase,
+      currentPlayerSeat: currentPlayerSeat ?? this.currentPlayerSeat,
+      selectedIndices: selectedIndices ?? this.selectedIndices,
+      roomId: roomId ?? this.roomId,
+      isLandlord: isLandlord ?? this.isLandlord,
+    );
+  }
 }

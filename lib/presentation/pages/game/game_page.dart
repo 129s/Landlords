@@ -17,7 +17,7 @@ class GamePage extends ConsumerWidget {
     final gameState = ref.watch(gameProvider);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final notifier = ref.read(gameProvider.notifier);
-      if (notifier.state.phase == GamePhase.dealing &&
+      if (notifier.state.phase == GamePhase.preparing &&
           notifier.state.playerCards.isEmpty) {
         notifier.initializeGame(roomId);
       }
@@ -54,7 +54,7 @@ class GamePage extends ConsumerWidget {
                       top: 20.0,
                       child: const PlayerInfo(seatNumber: 2),
                     ),
-                    gameState.phase == GamePhase.connecting
+                    gameState.phase == GamePhase.preparing
                         ? SizedBox.shrink()
                         : CardDisplayArea(),
                     // 卡牌展示区域

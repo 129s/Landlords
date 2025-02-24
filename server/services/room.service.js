@@ -5,10 +5,10 @@ const { v4: uuidv4 } = require('uuid');
 const RoomModel = require('../models/RoomModel');
 const PlayerModel = require('../models/PlayerModel'); // 引入 PlayerModel
 const logger = require('../utils/logger');
-
 class RoomService extends BaseService {
-    constructor(stateStore) {
+    constructor(stateStore, gameService) {
         super(stateStore);
+        this.gameService = gameService; // 保存引用
         this.playerConnections = new Map(); // socketId -> roomId  记录玩家和房间的对应关系
     }
 
@@ -29,14 +29,15 @@ class RoomService extends BaseService {
             logger.error(`房间已满: ${roomId}`);
             throw new Error('ROOM_FULL');
         }
-
         const player = new PlayerModel(socketId);
         if (!this.stateStore.atomicAddPlayer(roomId, player)) {
             throw new Error('JOIN_ROOM_FAILED');
         }
 
         this.playerConnections.set(socketId, roomId); // 记录玩家和房间的对应关系
-
+        if (room.players.length === 3) {
+            await this.gameService.startGame(roomId);
+        }
         logger.info(`玩家加入: ${socketId} -> ${roomId}`);
         return room;
     });

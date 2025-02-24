@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:landlords_3/core/network/game_service.dart';
 import 'package:landlords_3/core/network/room_service.dart';
@@ -7,11 +9,12 @@ import 'package:landlords_3/data/models/poker.dart';
 import 'package:landlords_3/core/card/card_type.dart';
 import 'package:landlords_3/core/card/card_utils.dart';
 
-enum GamePhase { connecting, dealing, bidding, playing, gameOver }
+enum GamePhase { preparing, bidding, playing, end, error }
 
 class GameNotifier extends StateNotifier<GameState> {
   final GameService _gameService;
   final RoomService _roomService;
+  StreamSubscription? _gameStateSub;
 
   GameNotifier(this._gameService, this._roomService)
     : super(const GameState(players: []));
@@ -20,19 +23,29 @@ class GameNotifier extends StateNotifier<GameState> {
   Future<void> initializeGame(String roomId) async {
     try {
       final room = await _roomService.getRoomDetails(roomId);
-      // TODO: 更新状态
+      state = state.copyWith(
+        roomId: roomId,
+        players: room.players,
+        playerCards: [],
+      );
       _setupSocketListeners();
     } catch (e) {
-      // TODO: 更新状态
+      state = state.copyWith(phase: GamePhase.error);
     }
   }
 
   void _setupSocketListeners() {
-    // TODO: 监听游戏状态更新
+    _gameStateSub?.cancel();
+    _gameStateSub = _gameService.gameStateUpdates.listen((newState) {
+      state = newState.copyWith(
+        selectedIndices: state.selectedIndices,
+        playerCards: state.playerCards,
+      );
+    });
   }
 
   void clearSelectedCards() {
-    // TODO: 更新状态
+    state = state.copyWith(selectedIndices: []);
   }
 
   // 选择卡牌
@@ -41,7 +54,7 @@ class GameNotifier extends StateNotifier<GameState> {
     newIndices.contains(index)
         ? newIndices.remove(index)
         : newIndices.add(index);
-    // TODO: 更新状态
+    state = state.copyWith(selectedIndices: newIndices);
   }
 
   // 提交出牌
@@ -53,7 +66,11 @@ class GameNotifier extends StateNotifier<GameState> {
 
     if (_validateCards(cards)) {
       await _gameService.playCards(cards);
-      // TODO: 更新状态
+      clearSelectedCards();
+      // 更新本地手牌状态
+      final newCards = List<Poker>.from(state.playerCards)
+        ..removeWhere((c) => cards.contains(c));
+      state = state.copyWith(playerCards: newCards);
     }
   }
 
@@ -69,6 +86,12 @@ class GameNotifier extends StateNotifier<GameState> {
   Future<void> leaveGame() async {
     await _roomService.leaveRoom();
     state = const GameState(players: []);
+  }
+
+  @override
+  void dispose() {
+    _gameStateSub?.cancel();
+    super.dispose();
   }
 }
 

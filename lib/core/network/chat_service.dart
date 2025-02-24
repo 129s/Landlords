@@ -7,8 +7,6 @@ class ChatService {
   final _messageStream = StreamController<List<Message>>.broadcast();
   List<Message> _currentMessages = []; // 当前消息缓存
 
-  ChatService() {}
-
   Stream<List<Message>> watchMessages(String roomId) {
     // 初始化时清空缓存
     _currentMessages = [];
