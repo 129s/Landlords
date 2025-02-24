@@ -1,6 +1,7 @@
 import 'package:landlords_3/data/models/player.dart';
 import 'package:landlords_3/data/models/poker.dart';
-import 'package:landlords_3/presentation/providers/game_provider.dart';
+
+enum GamePhase { preparing, bidding, playing, end, error }
 
 class GameState {
   final List<Player> players; // 服务端玩家数据

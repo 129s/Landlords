@@ -8,12 +8,9 @@ class RoomService {
   final _roomStream = StreamController<List<Room>>.broadcast();
   final _playerUpdateStream = StreamController<List<Player>>.broadcast();
   final _roomsRequestController = StreamController<List<Room>>.broadcast();
+  final _roomCreatedStream = StreamController<String>.broadcast();
 
   RoomService() {
-    _socket.on<List<dynamic>>('room_update', (data) {});
-
-    _socket.on<List<dynamic>>('player_update', (data) {});
-
     _socket.on<List<dynamic>>('room_update', (data) {
       final rooms = data.map((e) => Room.fromJson(e)).toList();
       _roomStream.add(rooms);
@@ -24,25 +21,17 @@ class RoomService {
       final players = data.map((e) => Player.fromJson(e)).toList();
       _playerUpdateStream.add(players);
     });
+    _socket.on<List<dynamic>>('room_created', (data) {
+      _roomCreatedStream.add(data[0]);
+    });
   }
 
   Stream<List<Room>> get roomUpdates => _roomStream.stream;
   Stream<List<Player>> get playerUpdates => _playerUpdateStream.stream;
+  Stream<String> get roomCreated => _roomCreatedStream.stream;
 
-  Future<String> createRoom() async {
-    try {
-      final completer = Completer<String>();
-      _socket.emitWithAck('create_room', null, (ack) {
-        if (ack['success']) {
-          completer.complete(ack['roomId']);
-        } else {
-          completer.completeError(ack['error']);
-        }
-      });
-      return completer.future;
-    } catch (e) {
-      throw Exception('房间创建失败: ${e.toString()}');
-    }
+  Future<void> createRoom() async {
+    _socket.emit('create_room');
   }
 
   Future<void> joinRoom(String roomId) async {

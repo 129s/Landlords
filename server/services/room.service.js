@@ -1,5 +1,3 @@
-// services/room.service.js
-
 const BaseService = require('./base.service');
 const { v4: uuidv4 } = require('uuid');
 const RoomModel = require('../models/RoomModel');
@@ -12,13 +10,14 @@ class RoomService extends BaseService {
         this.playerConnections = new Map(); // socketId -> roomId  记录玩家和房间的对应关系
     }
 
-    createRoom(creatorId) {
+    createRoom() {
         const roomId = uuidv4();
         const newRoom = new RoomModel(roomId, []);
+        newRoom.status = 'PREPARING'; // 新增状态字段
 
         this.stateStore.rooms.set(roomId, newRoom);
         logger.info(`创建房间: ${roomId}`);
-        return this.joinRoom(roomId, creatorId);
+        return newRoom;
     }
 
     joinRoom = this.withTransaction(async (roomId, socketId) => {
@@ -36,7 +35,10 @@ class RoomService extends BaseService {
 
         this.playerConnections.set(socketId, roomId); // 记录玩家和房间的对应关系
         if (room.players.length === 3) {
+            room.status = 'STARTING'; // 满员时变更状态
             await this.gameService.startGame(roomId);
+        } else {
+            room.status = 'PREPARING'; // 未满员保持准备状态
         }
         logger.info(`玩家加入: ${socketId} -> ${roomId}`);
         return room;
@@ -53,6 +55,11 @@ class RoomService extends BaseService {
 
         if (room.players.length === 0) {
             this._cleanupEmptyRoom(roomId);
+            return;
+        }
+        if (room.players.length < 3) {
+            room.status = 'PREPARING'; // 玩家退出后检查人数
+            this.io.emit('room_update', this.getRooms());
         }
     }
 

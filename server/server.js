@@ -59,6 +59,5 @@ io.on('connection', (socket) => {
 // 启动服务器
 server.listen(PORT, () => {
     logger.info(`服务器运行在 http://localhost:${PORT}`);
-    logger.info(`Socket.io 端点: ws://localhost:${PORT}/socket.io/`);
 });
 

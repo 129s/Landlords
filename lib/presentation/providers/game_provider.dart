@@ -9,8 +9,6 @@ import 'package:landlords_3/data/models/poker.dart';
 import 'package:landlords_3/core/card/card_type.dart';
 import 'package:landlords_3/core/card/card_utils.dart';
 
-enum GamePhase { preparing, bidding, playing, end, error }
-
 class GameNotifier extends StateNotifier<GameState> {
   final GameService _gameService;
   final RoomService _roomService;

@@ -26,11 +26,15 @@ class ConnectionController extends BaseController {
                 throw new Error('ALREADY_IN_ROOM');
             }
 
-            const room = this.roomService.createRoom(socket.id);
+            // logger.debug('%s', socket.id);
+            const room = this.roomService.createRoom();
+            // logger.debug('%s', room.id);
             socket.join(room.id);
 
-            this.io.emit('room_update', this.roomService.getRooms());
             socket.emit('room_created', room.id);
+            // logger.debug('%s', room.id);
+
+            this.io.emit('room_update', this.roomService.getRooms());
         } catch (error) {
             this.handleError(socket, error);
         }

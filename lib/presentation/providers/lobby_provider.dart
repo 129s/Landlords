@@ -47,14 +47,23 @@ class LobbyNotifier extends StateNotifier<LobbyState> {
     });
   }
 
-  //如果成功则返回roomId,否则为null
-  Future<String?> createAndJoinRoom() async {
+  Future<String> createAndJoinRoom() async {
     state = state.copyWith(isLoading: true);
     try {
-      final roomId = await _roomService.createRoom();
+      // 发送创建请求
+      await _roomService.createRoom();
+
+      print("\n1\n");
+      // 等待房间创建成功事件
+      final roomId = await _roomService.roomCreated.first;
+      print("\n2\n");
+
+      // 自动加入自己创建的房间
+      await _roomService.joinRoom(roomId);
+
       return roomId;
     } catch (e) {
-      print(e);
+      throw Exception('房间创建失败: $e');
     } finally {
       state = state.copyWith(isLoading: false);
     }

@@ -10,13 +10,13 @@ class GameService {
   final _gameStateController = StreamController<GameState>.broadcast();
 
   GameService() {
-    _socket.on<Map<String, dynamic>>('game_state_updated', (data) {
+    _socket.on<List<Map<String, dynamic>>>('game_state_updated', (data) {
       final state = GameState(
-        players: _parsePlayers(data['players']),
-        lastPlayedCards: _parseCards(data['lastPlayedCards']),
-        phase: _parsePhase(data['phase']),
-        currentPlayerSeat: data['currentPlayer'],
-        isLandlord: data['isLandlord'] ?? false,
+        players: _parsePlayers(data[0]['players']),
+        lastPlayedCards: _parseCards(data[0]['lastPlayedCards']),
+        phase: _parsePhase(data[0]['phase']),
+        currentPlayerSeat: data[0]['currentPlayer'],
+        isLandlord: data[0]['isLandlord'] ?? false,
       );
       _gameStateController.add(state);
     });
