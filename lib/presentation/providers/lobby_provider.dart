@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:landlords_3/data/providers/repo_providers.dart';
+import 'package:landlords_3/data/providers/service_providers.dart';
 import 'package:landlords_3/domain/entities/room_model.dart';
 import 'package:landlords_3/domain/repositories/room_repo.dart';
 import 'package:landlords_3/presentation/pages/chat/chat_page.dart';

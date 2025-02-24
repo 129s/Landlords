@@ -5,7 +5,7 @@ import 'package:landlords_3/data/providers/socket_provider.dart';
 import 'package:landlords_3/domain/entities/message_model.dart';
 import 'package:landlords_3/presentation/pages/chat/MessageBubble.dart';
 import 'package:landlords_3/presentation/providers/chat_provider.dart';
-import 'package:landlords_3/data/providers/repo_providers.dart';
+import 'package:landlords_3/data/providers/service_providers.dart';
 import 'package:landlords_3/presentation/providers/lobby_provider.dart';
 
 class ChatPage extends ConsumerStatefulWidget {

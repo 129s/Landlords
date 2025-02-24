@@ -77,15 +77,4 @@ class RoomRepoImpl implements RoomRepository {
       (cardDTOs) => cardDTOs.map((c) => c.toModel()).toList(),
     );
   }
-
-  @override
-  Future<void> playCards(String roomId, List<PokerModel> cards) async {
-    final pokerDTOs =
-        cards.map((poker) {
-          final suitStr = poker.suit.toString().split('.').last.toLowerCase();
-          final valueStr = poker.value.toString().split('.').last.toLowerCase();
-          return PokerDTO(suit: suitStr, value: valueStr);
-        }).toList();
-    _roomService.emitPlayCards(roomId, pokerDTOs);
-  }
 }

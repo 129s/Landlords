@@ -14,5 +14,4 @@ abstract class RoomRepository {
   Future<RoomModel> getRoomDetails(String roomId);
   Stream<List<PlayerModel>> get onPlayerUpdate;
   Stream<List<PokerModel>> get onPlayCards;
-  Future<void> playCards(String roomId, List<PokerModel> cards);
 }
