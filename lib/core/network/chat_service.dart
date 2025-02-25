@@ -9,7 +9,17 @@ class ChatService {
   /// 发送聊天消息
   Future<void> sendMessage(String content) {
     final completer = Completer<void>();
-    _socket.emit('send_message', {'content': content});
+    _socket.emitWithAck(
+      'send_message',
+      {'content': content},
+      ack: (response) {
+        if (response['status'] == 'success') {
+          completer.complete();
+        } else {
+          completer.completeError(response['error']);
+        }
+      },
+    );
     return completer.future;
   }
 

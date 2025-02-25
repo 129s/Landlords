@@ -49,7 +49,7 @@ class RoomService {
   Future<Room> getRoom(String roomId) async {
     final completer = Completer<Room>();
     _socket.emit('get_room', {'roomId': roomId});
-    _socket.once('player_joined', (data) {
+    _socket.once('room_info', (data) {
       final room = Room.fromJson(data);
       completer.complete(room);
     });
