@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:landlords_3/core/services/constants.dart';
+import 'package:landlords_3/core/network_services/constants/constants.dart';
 import 'package:landlords_3/data/models/game_state.dart';
 import 'package:landlords_3/presentation/pages/game/bottom_area.dart';
 import 'package:landlords_3/presentation/pages/game/card_display_area.dart';
@@ -19,7 +19,7 @@ class GamePage extends ConsumerWidget {
     final gameState = ref.watch(gameProvider);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final notifier = ref.read(gameProvider.notifier);
-      if (notifier.state.phase == GamePhase.preparing &&
+      if (notifier.state.gamePhase == GamePhase.preparing &&
           notifier.state.playerCards.isEmpty) {
         notifier.initializeGame(roomId);
       }
@@ -56,7 +56,7 @@ class GamePage extends ConsumerWidget {
                       top: 20.0,
                       child: const PlayerInfo(seatNumber: 2),
                     ),
-                    gameState.phase == GamePhase.preparing
+                    gameState.gamePhase == GamePhase.preparing
                         ? SizedBox.shrink()
                         : CardDisplayArea(),
                     // 卡牌展示区域
@@ -66,7 +66,7 @@ class GamePage extends ConsumerWidget {
 
               Stack(
                 children: [
-                  (gameState.phase == GamePhase.bidding)
+                  (gameState.gamePhase == GamePhase.bidding)
                       ? _buildBiddingUI(ref)
                       : BottomArea(),
                   Positioned(right: 24, top: 24, child: _buildChatButton()),

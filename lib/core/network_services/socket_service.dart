@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:landlords_3/core/services/constants.dart';
+import 'package:landlords_3/core/network_services/constants/constants.dart';
 import 'package:socket_io_client/socket_io_client.dart';
 import 'package:logger/logger.dart';
 

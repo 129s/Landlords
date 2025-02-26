@@ -1,9 +1,9 @@
 import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:landlords_3/core/services/constants.dart';
-import 'package:landlords_3/core/services/game_service.dart';
-import 'package:landlords_3/core/services/room_service.dart';
+import 'package:landlords_3/core/network_services/constants/constants.dart';
+import 'package:landlords_3/core/network_services/game_service.dart';
+import 'package:landlords_3/core/network_services/room_service.dart';
 import 'package:landlords_3/data/providers/service_providers.dart';
 import 'package:landlords_3/data/models/game_state.dart';
 import 'package:landlords_3/data/models/poker.dart';
@@ -13,7 +13,6 @@ import 'package:landlords_3/core/card/card_utils.dart';
 class GameNotifier extends StateNotifier<GameState> {
   final GameService _gameService;
   final RoomService _roomService;
-  StreamSubscription? _gameStateSub;
 
   GameNotifier(this._gameService, this._roomService)
     : super(const GameState(players: []));
@@ -23,24 +22,9 @@ class GameNotifier extends StateNotifier<GameState> {
     try {
       final room = _roomService.currentRoom;
       state = state.copyWith(room: room);
-      _setupSocketListeners();
     } catch (e) {
       state = state.copyWith(phase: GamePhase.error);
     }
-  }
-
-  // 修改game_provider.dart中的_setupSocketListeners
-  void _setupSocketListeners() {
-    _gameStateSub = _gameService.gameStateStream().listen((newState) {
-      if (newState.phase == GamePhase.bidding &&
-          newState.currentPlayerSeat == state.currentPlayerSeat) {
-        //
-      }
-      state = newState.copyWith(
-        selectedIndices: state.selectedIndices,
-        playerCards: state.playerCards,
-      );
-    });
   }
 
   void clearSelectedCards() {
@@ -57,7 +41,7 @@ class GameNotifier extends StateNotifier<GameState> {
   }
 
   void placeBid(int bidValue) {
-    if (state.currentPlayerSeat != state.currentPlayerSeat) return;
+    if (state.currentPlayerIndex != state.currentPlayerIndex) return;
 
     _gameService.placeBid(bidValue);
   }
@@ -95,7 +79,6 @@ class GameNotifier extends StateNotifier<GameState> {
 
   @override
   void dispose() {
-    _gameStateSub?.cancel();
     super.dispose();
   }
 }

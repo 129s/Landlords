@@ -1,7 +1,7 @@
 import 'dart:async';
 
-import 'package:landlords_3/core/services/constants.dart';
-import 'package:landlords_3/core/services/socket_service.dart';
+import 'package:landlords_3/core/network_services/constants/constants.dart';
+import 'package:landlords_3/core/network_services/socket_service.dart';
 import 'package:landlords_3/data/models/room.dart';
 import 'package:logger/logger.dart';
 
@@ -112,7 +112,7 @@ class RoomService {
 
   // 加入房间
   void joinRoom(String roomId) {
-    _socketService.emit('join_room', {'roomId': roomId});
+    _socketService.emit('join_room', {'room_id': roomId});
     _logger.i('Joining room: $roomId');
   }
 

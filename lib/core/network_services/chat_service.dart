@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:landlords_3/core/services/socket_service.dart';
+import 'package:landlords_3/core/network_services/socket_service.dart';
 import 'package:landlords_3/data/models/message.dart';
 import 'package:logger/logger.dart';
 
