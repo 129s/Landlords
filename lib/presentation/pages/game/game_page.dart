@@ -26,11 +26,11 @@ class GamePage extends ConsumerWidget {
           Column(
             children: [
               // 顶部操作栏
-              _buildTopBar(context, ref),
+              _buildTopBar(context, gameState, gameNotifer),
               // 中央游戏区域
               Expanded(child: _buildGameArea(gameState)),
               // 功能按钮栏
-              _buildActionBar(gameState),
+              _buildActionBar(gameState, gameNotifer),
               // 玩家手牌区域
               _buildMyHandCards(gameState, gameNotifer),
             ],
@@ -51,18 +51,21 @@ class GamePage extends ConsumerWidget {
     );
   }
 
-  Widget _buildTopBar(BuildContext context, WidgetRef ref) {
-    final gameState = ref.watch(gameProvider);
+  Widget _buildTopBar(
+    BuildContext context,
+    GameState gameState,
+    GameNotifier gameNotifer,
+  ) {
     return AppBar(
       leading: IconButton(
         icon: const Icon(Icons.exit_to_app, color: Colors.white),
-        onPressed: () => _handleExit(context, ref),
+        onPressed: () => gameNotifer.leaveGame(),
       ),
       title: _buildCardCounter(gameState), // 记牌器区域
       actions: [
         IconButton(
           icon: const Icon(Icons.settings, color: Colors.white),
-          onPressed: () => _showSettings(context),
+          onPressed: () {}, //TODO: 显示设置面板
         ),
       ],
     );
@@ -118,26 +121,26 @@ class GamePage extends ConsumerWidget {
     );
   }
 
-  Widget _buildActionBar(GameState gameState) {
+  Widget _buildActionBar(GameState gameState, GameNotifier gameNotifer) {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 10),
       child:
           gameState.gamePhase == GamePhase.bidding
-              ? _buildBiddingButtons()
+              ? _buildBiddingButtons(gameNotifer)
               : gameState.gamePhase == GamePhase.playing
-              ? _buildPlayingButtons()
+              ? _buildPlayerControls(gameNotifer)
               : const SizedBox.shrink(),
     );
   }
 
-  Widget _buildBiddingButtons() {
+  Widget _buildBiddingButtons(GameNotifier gameNotifer) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children:
           [1, 2, 3]
               .map(
                 (score) => ElevatedButton(
-                  onPressed: () => _placeBid(score),
+                  onPressed: () => gameNotifer.placeBid(score),
                   child: Text("$score 分"),
                 ),
               )
@@ -145,16 +148,69 @@ class GamePage extends ConsumerWidget {
     );
   }
 
-  Widget _buildPlayingButtons() {
+  Widget _buildPlayerControls(GameNotifier gameNotifer) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        ElevatedButton(onPressed: _playCards, child: const Text("出牌")),
-        const SizedBox(width: 36),
-        ElevatedButton(onPressed: _showHint, child: const Text("提示")),
-        const SizedBox(width: 36),
-        ElevatedButton(onPressed: _passTurn, child: const Text("跳过")),
+        _buildActionButton(
+          icon: Icons.help_outline,
+          label: '提示',
+          onPressed: () => gameNotifer.showHint(),
+        ),
+        _buildActionButton(
+          icon: Icons.close,
+          label: '不出',
+          onPressed: () => gameNotifer.passTurn(),
+        ),
+        _buildActionButton(
+          icon: Icons.play_arrow,
+          label: '出牌',
+          onPressed: () => gameNotifer.playSelectedCards(),
+        ),
       ],
+    );
+  }
+
+  Widget _buildActionButton({
+    required IconData icon,
+    required String label,
+    required VoidCallback? onPressed,
+  }) {
+    const buttonHeight = 48.0;
+    const iconSize = 24.0;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 8.0),
+      child: ElevatedButton(
+        style: ElevatedButton.styleFrom(
+          foregroundColor: Colors.white,
+          backgroundColor: Colors.blue.shade600,
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(24),
+          ),
+          elevation: 2,
+          animationDuration: const Duration(milliseconds: 150),
+        ),
+        onPressed: onPressed,
+        child: SizedBox(
+          width: 100, // 固定宽度保持按钮大小一致
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(icon, size: iconSize),
+              const SizedBox(width: 8),
+              Text(
+                label,
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 
@@ -295,12 +351,4 @@ class GamePage extends ConsumerWidget {
       },
     );
   }
-
-  // 交互方法（需要后续连接游戏逻辑）
-  void _handleExit(BuildContext context, WidgetRef ref) {}
-  void _showSettings(BuildContext context) {}
-  void _placeBid(int score) {}
-  void _playCards() {}
-  void _showHint() {}
-  void _passTurn() {}
 }

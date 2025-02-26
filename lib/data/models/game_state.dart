@@ -21,11 +21,11 @@ class GameState {
   final List<int> selectedIndices;
   final Room? room;
   final int landlordIndex;
-
   bool get isLandlord => myPlayerIndex == landlordIndex;
 
   const GameState({
     this.gamePhase = GamePhase.preparing,
+
     this.players = const [],
     this.playerCards = const [],
     this.lastPlayedCards = const [],

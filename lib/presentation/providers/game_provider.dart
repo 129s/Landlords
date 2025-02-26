@@ -46,6 +46,32 @@ class GameNotifier extends StateNotifier<GameState> {
     _gameService.placeBid(bidValue);
   }
 
+  // 新增提示功能
+  void showHint() {
+    final playableCards = _findPlayableCards();
+    if (playableCards.isNotEmpty) {
+      final indices =
+          playableCards.map((c) => state.playerCards.indexOf(c)).toList();
+      state = state.copyWith(selectedIndices: indices);
+    }
+  }
+
+  List<Poker> _findPlayableCards() {
+    // 实现智能选牌算法（示例基础逻辑）
+    final allCards = state.playerCards;
+    final lastPlayed = state.lastPlayedCards;
+
+    // 优先找单张
+    for (final card in allCards) {
+      if (CardUtils.isBigger([card], lastPlayed)) {
+        return [card];
+      }
+    }
+
+    // 其他牌型检测（需要扩展）
+    return [];
+  }
+
   // 提交出牌
   Future<void> playSelectedCards() async {
     if (state.selectedIndices.isEmpty) return;
@@ -53,22 +79,57 @@ class GameNotifier extends StateNotifier<GameState> {
     final cards =
         state.selectedIndices.map((index) => state.playerCards[index]).toList();
 
-    if (_validateCards(cards)) {
+    if (!_validateCards(cards)) {
+      // 显示错误提示（需在UI层实现）
+      return;
+    }
+
+    try {
       _gameService.playCards(cards);
-      clearSelectedCards();
       // 更新本地手牌状态
       final newCards = List<Poker>.from(state.playerCards)
         ..removeWhere((c) => cards.contains(c));
-      state = state.copyWith(playerCards: newCards);
+      state = state.copyWith(
+        playerCards: newCards,
+        selectedIndices: [],
+        lastPlayedCards: cards,
+      );
+    } catch (e) {
+      // 处理出牌失败
     }
   }
 
+  // 出牌验证逻辑
   bool _validateCards(List<Poker> cards) {
-    if (state.lastPlayedCards.isNotEmpty) {
-      return CardUtils.isBigger(cards, state.lastPlayedCards) &&
-          CardType.getType(cards) != CardTypeEnum.invalid;
+    if (cards.isEmpty) return false;
+
+    final cardType = CardType.getType(cards);
+    if (cardType == CardTypeEnum.invalid) return false;
+
+    // 首出
+    if (state.lastPlayedCards.isEmpty) {
+      return true;
     }
-    return CardType.getType(cards) != CardTypeEnum.invalid;
+
+    // 炸弹
+    if (cardType == CardTypeEnum.bomb) {
+      return state.lastPlayedCards.length != 4 ||
+          CardUtils.isBigger(cards, state.lastPlayedCards);
+    }
+
+    return CardUtils.isBigger(cards, state.lastPlayedCards) &&
+        cardType == CardType.getType(state.lastPlayedCards);
+  }
+
+  // 跳过逻辑
+  void passTurn() {
+    if (state.lastPlayedCards.isEmpty) {
+      // 首出不能跳过
+      return;
+    }
+
+    _gameService.passTurn();
+    state = state.copyWith(selectedIndices: []);
   }
 
   // 退出房间
