@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:landlords_3/core/card/card_type.dart';
 import 'package:landlords_3/core/network_services/constants/constants.dart';
 import 'package:landlords_3/data/models/game_state.dart';
+import 'package:landlords_3/presentation/pages/game/additional_cards_widget.dart';
 import 'package:landlords_3/presentation/pages/game/card_counter_widget.dart';
 import 'package:landlords_3/presentation/pages/game/player_info_widget.dart';
 import 'package:landlords_3/presentation/providers/game_provider.dart';
@@ -23,6 +24,18 @@ class GamePage extends ConsumerWidget {
         children: [
           // 背景图片
           _buildBackground(),
+          // 底牌展示
+          Positioned(
+            top: MediaQuery.of(context).size.height * 0.3,
+            left: 0,
+            right: 0,
+            child: Center(
+              child: AdditionalCardsWidget(
+                cards: gameState.additionalCards,
+                isRevealed: gameState.landlordIndex != -1,
+              ),
+            ),
+          ),
           // 主内容区域
           Column(
             children: [
