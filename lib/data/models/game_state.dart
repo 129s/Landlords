@@ -18,7 +18,9 @@ class GameState {
   final List<Poker> playerCards;
   final List<int> selectedIndices;
   final Room? room;
-  final bool isLandlord;
+  final int landlordIndex;
+
+  bool get isLandlord => currentPlayerIndex == landlordIndex;
 
   const GameState({
     this.gamePhase = GamePhase.preparing,
@@ -30,7 +32,7 @@ class GameState {
     this.playerCards = const [],
     this.selectedIndices = const [],
     this.room,
-    this.isLandlord = false,
+    this.landlordIndex = -1, // 初始值-1表示未设置
   });
 
   factory GameState.fromJson(Map<String, dynamic> json) =>
@@ -55,7 +57,7 @@ class GameState {
     List<Poker>? playerCards,
     List<int>? selectedIndices,
     Room? room,
-    bool? isLandlord,
+    int? landlordIndex,
   }) {
     return GameState(
       gamePhase: phase ?? this.gamePhase,
@@ -67,7 +69,7 @@ class GameState {
       playerCards: playerCards ?? this.playerCards,
       selectedIndices: selectedIndices ?? this.selectedIndices,
       room: room ?? this.room,
-      isLandlord: isLandlord ?? this.isLandlord,
+      landlordIndex: landlordIndex ?? this.landlordIndex,
     );
   }
 }

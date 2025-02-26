@@ -95,9 +95,9 @@ class GameService {
   // 叫分处理实现
   void _handleBiddingUpdate(Map<String, dynamic> data) {
     try {
-      final currentPlayerIndex = data['current_player_index'] as int;
-      final bidValue = data['bid_value'] as int;
-      final isHighest = data['is_highest'] as bool;
+      final currentPlayerIndex = data['currentPlayerIndex'] as int;
+      final bidValue = data['bidValue'] as int;
+      final isHighest = data['isHighest'] as bool;
 
       _currentGameState = _currentGameState?.copyWith(
         currentPlayerIndex: currentPlayerIndex,
