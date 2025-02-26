@@ -121,33 +121,47 @@ class GamePage extends ConsumerWidget {
     );
   }
 
+  //行动栏
   Widget _buildActionBar(GameState gameState, GameNotifier gameNotifer) {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 10),
       child:
           gameState.gamePhase == GamePhase.bidding
-              ? _buildBiddingButtons(gameNotifer)
+              ? _buildBiddingButtons(gameState, gameNotifer)
               : gameState.gamePhase == GamePhase.playing
               ? _buildPlayerControls(gameNotifer)
               : const SizedBox.shrink(),
     );
   }
 
-  Widget _buildBiddingButtons(GameNotifier gameNotifer) {
+  // 叫分按钮
+  Widget _buildBiddingButtons(GameState gameState, GameNotifier gameNotifer) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children:
-          [1, 2, 3]
-              .map(
-                (score) => ElevatedButton(
-                  onPressed: () => gameNotifer.placeBid(score),
-                  child: Text("$score 分"),
+          [1, 2, 3].map((score) {
+            final isDisabled = score <= (gameState.highestBid ?? 0);
+            return Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8.0),
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: isDisabled ? Colors.grey : Colors.blue,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 12,
+                  ),
                 ),
-              )
-              .toList(),
+                onPressed:
+                    isDisabled ? null : () => gameNotifer.placeBid(score),
+                child: Text("$score 分"),
+              ),
+            );
+          }).toList(),
     );
   }
 
+  // 控制按钮
   Widget _buildPlayerControls(GameNotifier gameNotifer) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
