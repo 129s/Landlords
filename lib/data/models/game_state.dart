@@ -12,10 +12,11 @@ class GameState {
   final GamePhase gamePhase;
   final List<Player> players;
   final List<Poker> lastPlayedCards;
+  final List<Poker> playerCards;
+  final List<Poker> additionalCards;
   final int currentPlayerIndex;
   final int currentBid;
   final int? highestBid;
-  final List<Poker> playerCards;
   final List<int> selectedIndices;
   final Room? room;
   final int landlordIndex;
@@ -25,11 +26,12 @@ class GameState {
   const GameState({
     this.gamePhase = GamePhase.preparing,
     this.players = const [],
+    this.playerCards = const [],
     this.lastPlayedCards = const [],
+    this.additionalCards = const [], //底牌和playercards分开算，即playerCards中不含有底牌
     this.currentPlayerIndex = 0,
     this.currentBid = 0,
     this.highestBid = 0,
-    this.playerCards = const [],
     this.selectedIndices = const [],
     this.room,
     this.landlordIndex = -1, // 初始值-1表示未设置
@@ -48,25 +50,27 @@ class GameState {
   static String _phaseToJson(GamePhase phase) => phase.name;
 
   GameState copyWith({
-    GamePhase? phase,
+    GamePhase? gamePhase,
     List<Player>? players,
     List<Poker>? lastPlayedCards,
+    List<Poker>? playerCards,
+    List<Poker>? additionalCards,
     int? currentPlayerIndex,
     int? currentBid,
     int? highestBid,
-    List<Poker>? playerCards,
     List<int>? selectedIndices,
     Room? room,
     int? landlordIndex,
   }) {
     return GameState(
-      gamePhase: phase ?? this.gamePhase,
+      gamePhase: gamePhase ?? this.gamePhase,
       players: players ?? this.players,
       lastPlayedCards: lastPlayedCards ?? this.lastPlayedCards,
+      playerCards: playerCards ?? this.playerCards,
+      additionalCards: additionalCards ?? this.additionalCards,
       currentPlayerIndex: currentPlayerIndex ?? this.currentPlayerIndex,
       currentBid: currentBid ?? this.currentBid,
       highestBid: highestBid ?? this.highestBid,
-      playerCards: playerCards ?? this.playerCards,
       selectedIndices: selectedIndices ?? this.selectedIndices,
       room: room ?? this.room,
       landlordIndex: landlordIndex ?? this.landlordIndex,

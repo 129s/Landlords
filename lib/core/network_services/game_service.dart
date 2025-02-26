@@ -40,8 +40,8 @@ class GameService {
 
   void _setupEventListeners() {
     _socketService.on<Map<String, dynamic>>(
-      'gameStateUpdate',
-      _handleGameStateUpdate,
+      'gamePhaseUpdate',
+      _handleGamePhaseUpdate,
     );
     _socketService.on<Map<String, dynamic>>(
       'playCardUpdate',
@@ -51,16 +51,51 @@ class GameService {
       'biddingUpdate',
       _handleBiddingUpdate,
     );
+    _socketService.on<Map<String, dynamic>>(
+      'landlordUpdate',
+      _handleLandlordUpdate,
+    );
   }
 
-  // 游戏状态更新
-  void _handleGameStateUpdate(Map<String, dynamic> data) {
+  // 游戏阶段更新处理
+  void _handleGamePhaseUpdate(Map<String, dynamic> data) {
     try {
-      _currentGameState = GameState.fromJson(data);
+      final phase = GamePhase.values.firstWhere(
+        (e) => e.name == data['gamePhase'],
+        orElse: () => GamePhase.error,
+      );
+      final currentPlayerIndex = data['currentPlayerIndex'] as int;
+
+      _currentGameState = _currentGameState?.copyWith(
+        gamePhase: phase,
+        currentPlayerIndex: currentPlayerIndex,
+      );
+
       _gameStateController.add(_currentGameState);
-      _logger.i('State update: player${_currentGameState?.currentPlayerIndex}');
+      _logger.i('Phase changed to $phase');
     } catch (e) {
-      _logger.e('Game state error: ${e.toString()}');
+      _logger.e('Phase update error: ${e.toString()}');
+    }
+  }
+
+  // 地主更新处理
+  void _handleLandlordUpdate(Map<String, dynamic> data) {
+    try {
+      final landlordIndex = data['landlordIndex'] as int;
+      final additionalCards =
+          (data['additionalCards'] as List)
+              .map((c) => Poker.fromJson(c as Map<String, dynamic>))
+              .toList();
+
+      _currentGameState = _currentGameState?.copyWith(
+        landlordIndex: landlordIndex,
+        additionalCards: additionalCards,
+      );
+
+      _gameStateController.add(_currentGameState);
+      _logger.i('Landlord updated to $landlordIndex');
+    } catch (e) {
+      _logger.e('Landlord update error: ${e.toString()}');
     }
   }
 
@@ -102,7 +137,7 @@ class GameService {
       _currentGameState = _currentGameState?.copyWith(
         currentPlayerIndex: currentPlayerIndex,
         highestBid: isHighest ? bidValue : _currentGameState?.highestBid,
-        phase: GamePhase.bidding,
+        gamePhase: GamePhase.bidding,
       );
 
       _gameStateController.add(_currentGameState);

@@ -23,7 +23,7 @@ class GameNotifier extends StateNotifier<GameState> {
       final room = _roomService.currentRoom;
       state = state.copyWith(room: room);
     } catch (e) {
-      state = state.copyWith(phase: GamePhase.error);
+      state = state.copyWith(gamePhase: GamePhase.error);
     }
   }
 
