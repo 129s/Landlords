@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:landlords_3/core/card/card_type.dart';
 import 'package:landlords_3/core/network_services/constants/constants.dart';
 import 'package:landlords_3/data/models/game_state.dart';
+import 'package:landlords_3/presentation/pages/game/card_counter_widget.dart';
 import 'package:landlords_3/presentation/pages/game/player_info_widget.dart';
 import 'package:landlords_3/presentation/providers/game_provider.dart';
 import 'package:landlords_3/presentation/widgets/poker_list_widget.dart';
@@ -59,39 +60,16 @@ class GamePage extends ConsumerWidget {
     return AppBar(
       leading: IconButton(
         icon: const Icon(Icons.exit_to_app, color: Colors.white),
-        onPressed: () => gameNotifer.leaveGame(),
+        onPressed: () => gameNotifer.leaveGame(), // 退出按钮
       ),
-      title: _buildCardCounter(gameState), // 记牌器区域
+      title: CardCounterWidget(gameState: gameState), // 记牌器区域
       actions: [
         IconButton(
           icon: const Icon(Icons.settings, color: Colors.white),
-          onPressed: () {}, //TODO: 显示设置面板
+          onPressed: () {}, // 设置按钮 TODO: 显示设置面板
         ),
       ],
     );
-  }
-
-  Widget _buildCardCounter(GameState gameState) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        const Text("剩余牌数", style: TextStyle(color: Colors.white, fontSize: 12)),
-        Text(
-          _calculateRemainingCards(gameState).toString(),
-          style: const TextStyle(color: Colors.amber, fontSize: 18),
-        ),
-      ],
-    );
-  }
-
-  int _calculateRemainingCards(GameState state) {
-    // 计算逻辑：总牌数54 - 已出牌数 - 玩家手牌总数
-    final playedCount = state.lastPlayedCards.length;
-    final playerHands = state.players.fold<int>(
-      0,
-      (sum, p) => sum + p.cards.length,
-    );
-    return 54 - playedCount - playerHands - state.playerCards.length;
   }
 
   Widget _buildGameArea(GameState gameState) {
