@@ -49,9 +49,8 @@ class LobbyPage extends ConsumerWidget {
             () => ref.read(lobbyProvider.notifier).createAndJoinRoom().then((
               roomId,
             ) {
-              if (roomId == null) print("房间不存在");
               Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => GamePage(roomId: roomId!)),
+                MaterialPageRoute(builder: (_) => GamePage(roomId: roomId)),
               );
             }),
         child: const Icon(Icons.add),
@@ -87,21 +86,11 @@ class LobbyPage extends ConsumerWidget {
           Expanded(
             child: TextField(
               decoration: const InputDecoration(
-                hintText: '输入房间ID加入游戏',
+                hintText: '输入ID查找房间',
                 prefixIcon: Icon(Icons.search),
                 border: OutlineInputBorder(),
               ),
-              onSubmitted:
-                  (roomId) => ref
-                      .read(lobbyProvider.notifier)
-                      .joinExistingRoom(roomId)
-                      .then((_) {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (_) => GamePage(roomId: roomId),
-                          ),
-                        );
-                      }),
+              onSubmitted: (_) {}, //TODO: 实现列表筛选
             ),
           ),
         ],

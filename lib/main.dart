@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:landlords_3/core/network_services/socket_service.dart';
+import 'package:landlords_3/presentation/pages/game/game_page.dart';
 import 'package:landlords_3/presentation/pages/lobby/lobby_page.dart';
 
 void main() {
@@ -18,7 +19,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: '斗地主',
       theme: ThemeData(primarySwatch: Colors.blue),
-      home: const LobbyPage(),
+      home: const GamePage(roomId: "test"),
       debugShowCheckedModeBanner: false,
     );
   }

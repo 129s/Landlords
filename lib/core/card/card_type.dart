@@ -39,6 +39,25 @@ enum CardTypeEnum {
 }
 
 class CardType {
+  static getTypeName(CardTypeEnum type) {
+    const names = {
+      CardTypeEnum.single: '单张',
+      CardTypeEnum.pair: '对子',
+      CardTypeEnum.three: '三张',
+      CardTypeEnum.threeWithOne: '三带一',
+      CardTypeEnum.threeWithTwo: '三带二',
+      CardTypeEnum.straight: '顺子',
+      CardTypeEnum.straightPair: '连对',
+      CardTypeEnum.plane: '飞机',
+      CardTypeEnum.planeWithWings: '飞机带翅膀',
+      CardTypeEnum.bomb: '炸弹',
+      CardTypeEnum.rocket: '火箭',
+      CardTypeEnum.fourWithTwo: '四带二',
+      CardTypeEnum.fourWithTwoPair: '四带两对',
+    };
+    return names[type] ?? '';
+  }
+
   static CardTypeEnum getType(List<Poker> cards) {
     if (cards.isEmpty) return CardTypeEnum.invalid;
 

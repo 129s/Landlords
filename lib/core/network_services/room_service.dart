@@ -75,7 +75,6 @@ class RoomService {
   // 处理玩家加入事件
   void _handlePlayerJoined(Map<String, dynamic> data) {
     try {
-      // Assuming the server sends the updated room data after a player joins
       _currentRoom = Room.fromJson(data);
       _currentRoomController.add(_currentRoom);
       _logger.i('Player joined room: ${_currentRoom?.toJson()}');
@@ -87,7 +86,6 @@ class RoomService {
   // 处理玩家离开事件
   void _handlePlayerLeft(Map<String, dynamic> data) {
     try {
-      // Assuming the server sends the updated room data after a player leaves
       _currentRoom = Room.fromJson(data);
       _currentRoomController.add(_currentRoom);
       _logger.i('Player left room: ${_currentRoom?.toJson()}');

@@ -11,17 +11,18 @@ class GameState {
   @JsonKey(fromJson: _phaseFromJson, toJson: _phaseToJson)
   final GamePhase gamePhase;
   final List<Player> players;
-  final List<Poker> lastPlayedCards;
-  final List<Poker> playerCards;
-  final List<Poker> additionalCards;
-  final int currentPlayerIndex;
+  final List<Poker> lastPlayedCards; // 最后一次出的牌（全局），因为每回合只显示一组牌
+  final List<Poker> playerCards; // 我方玩家手牌
+  final List<Poker> additionalCards; // 底牌
+  final int myPlayerIndex; // 我方玩家索引(索引充当座位号)
+  final int currentPlayerIndex; // 当前行动玩家索引
   final int currentBid;
   final int? highestBid;
   final List<int> selectedIndices;
   final Room? room;
   final int landlordIndex;
 
-  bool get isLandlord => currentPlayerIndex == landlordIndex;
+  bool get isLandlord => myPlayerIndex == landlordIndex;
 
   const GameState({
     this.gamePhase = GamePhase.preparing,
@@ -29,6 +30,7 @@ class GameState {
     this.playerCards = const [],
     this.lastPlayedCards = const [],
     this.additionalCards = const [], //底牌和playercards分开算，即playerCards中不含有底牌
+    this.myPlayerIndex = 0,
     this.currentPlayerIndex = 0,
     this.currentBid = 0,
     this.highestBid = 0,
@@ -55,6 +57,7 @@ class GameState {
     List<Poker>? lastPlayedCards,
     List<Poker>? playerCards,
     List<Poker>? additionalCards,
+    int? myPlayerIndex,
     int? currentPlayerIndex,
     int? currentBid,
     int? highestBid,
@@ -68,6 +71,7 @@ class GameState {
       lastPlayedCards: lastPlayedCards ?? this.lastPlayedCards,
       playerCards: playerCards ?? this.playerCards,
       additionalCards: additionalCards ?? this.additionalCards,
+      myPlayerIndex: myPlayerIndex ?? this.myPlayerIndex,
       currentPlayerIndex: currentPlayerIndex ?? this.currentPlayerIndex,
       currentBid: currentBid ?? this.currentBid,
       highestBid: highestBid ?? this.highestBid,
