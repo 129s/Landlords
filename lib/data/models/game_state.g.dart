@@ -8,9 +8,9 @@ part of 'game_state.dart';
 
 GameState _$GameStateFromJson(Map<String, dynamic> json) => GameState(
   gamePhase:
-      json['phase'] == null
+      json['gamePhase'] == null
           ? GamePhase.preparing
-          : GameState._phaseFromJson(json['phase'] as String),
+          : GameState._phaseFromJson(json['gamePhase'] as String),
   players:
       (json['players'] as List<dynamic>?)
           ?.map((e) => Player.fromJson(e as Map<String, dynamic>))
@@ -21,10 +21,11 @@ GameState _$GameStateFromJson(Map<String, dynamic> json) => GameState(
           ?.map((e) => Poker.fromJson(e as Map<String, dynamic>))
           .toList() ??
       [],
-  currentPlayerIndex: (json['currentPlayerSeat'] as num?)?.toInt() ?? 0,
+  currentPlayerIndex: (json['currentPlayerIndex'] as num?)?.toInt() ?? 0,
   currentBid: (json['currentBid'] as num?)?.toInt() ?? 0,
+  highestBid: (json['highestBid'] as num?)?.toInt() ?? 0,
   playerCards:
-      (json['history'] as List<dynamic>?)
+      (json['playerCards'] as List<dynamic>?)
           ?.map((e) => Poker.fromJson(e as Map<String, dynamic>))
           .toList() ??
       [],
@@ -41,12 +42,13 @@ GameState _$GameStateFromJson(Map<String, dynamic> json) => GameState(
 );
 
 Map<String, dynamic> _$GameStateToJson(GameState instance) => <String, dynamic>{
-  'phase': GameState._phaseToJson(instance.gamePhase),
+  'gamePhase': GameState._phaseToJson(instance.gamePhase),
   'players': instance.players.map((e) => e.toJson()).toList(),
   'lastPlayedCards': instance.lastPlayedCards.map((e) => e.toJson()).toList(),
-  'currentPlayerSeat': instance.currentPlayerIndex,
+  'currentPlayerIndex': instance.currentPlayerIndex,
   'currentBid': instance.currentBid,
-  'history': instance.playerCards.map((e) => e.toJson()).toList(),
+  'highestBid': instance.highestBid,
+  'playerCards': instance.playerCards.map((e) => e.toJson()).toList(),
   'selectedIndices': instance.selectedIndices,
   'room': instance.room?.toJson(),
   'isLandlord': instance.isLandlord,

@@ -60,9 +60,9 @@ class ChatService {
   }
 
   // 发送聊天消息
-  void sendMessage(Message message) {
-    _socketService.emit('send_message', message.toJson());
-    _logger.i('Sending message: ${message.toJson()}');
+  void sendMessage(String text) {
+    _socketService.emit('send_message', text);
+    _logger.i('Sending message: $text');
   }
 
   // 释放资源

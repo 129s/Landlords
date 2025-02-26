@@ -49,9 +49,8 @@ class _ChatPageState extends ConsumerState<ChatPage> {
     }
 
     try {
-      await ref
-          .read(chatServiceProvider)
-          .sendMessage(text)
+      ref.read(chatServiceProvider).sendMessage(text);
+      // TODO: 发送消息后刷新滚动
           .then((_) => _roll());
       _isUserScrolling = false;
       _controller.clear();

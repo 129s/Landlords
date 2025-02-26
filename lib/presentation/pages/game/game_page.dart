@@ -21,7 +21,7 @@ class GamePage extends ConsumerWidget {
       final notifier = ref.read(gameProvider.notifier);
       if (notifier.state.gamePhase == GamePhase.preparing &&
           notifier.state.playerCards.isEmpty) {
-        notifier.initializeGame(roomId);
+        notifier.initializeGame();
       }
     });
     return Scaffold(

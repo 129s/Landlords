@@ -11,6 +11,8 @@ class Player {
   final int seat;
   @JsonKey(defaultValue: [])
   final List<Poker> cards;
+  @JsonKey(name: 'ready')
+  final bool ready;
   @JsonKey(defaultValue: false)
   final bool isLandlord;
 
@@ -18,6 +20,7 @@ class Player {
     required this.id,
     required this.name,
     required this.seat,
+    required this.ready,
     this.cards = const [],
     this.isLandlord = false,
   });

@@ -8,16 +8,14 @@ part of 'room.dart';
 
 Room _$RoomFromJson(Map<String, dynamic> json) => Room(
   id: json['id'] as String,
-  players:
-      (json['players'] as List<dynamic>?)
-          ?.map((e) => Player.fromJson(e as Map<String, dynamic>))
-          .toList() ??
-      [],
+  playerCount: (json['player_count'] as num).toInt(),
+  roomStatus: json['room_status'] as String,
   createdAt: Room._fromJson((json['createdAt'] as num).toInt()),
 );
 
 Map<String, dynamic> _$RoomToJson(Room instance) => <String, dynamic>{
   'id': instance.id,
-  'players': instance.players.map((e) => e.toJson()).toList(),
+  'player_count': instance.playerCount,
+  'room_status': instance.roomStatus,
   'createdAt': Room._toJson(instance.createdAt),
 };
