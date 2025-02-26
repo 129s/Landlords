@@ -43,7 +43,7 @@ class ChatService {
 
   // 初始化事件监听器
   void _setupEventListeners() {
-    _socketService.on<Map<String, dynamic>>('new_message', _handleNewMessage);
+    _socketService.on<Map<String, dynamic>>('newMessage', _handleNewMessage);
     // 添加其他聊天相关的事件监听器
   }
 
@@ -61,7 +61,7 @@ class ChatService {
 
   // 发送聊天消息
   void sendMessage(String text) {
-    _socketService.emit('send_message', text);
+    _socketService.emit('sendMessage', text);
     _logger.i('Sending message: $text');
   }
 
@@ -69,7 +69,7 @@ class ChatService {
   void dispose() {
     _messageController.close();
     // 移除所有事件监听器，避免内存泄漏
-    _socketService.off('new_message');
+    _socketService.off('newMessage');
     // 移除其他事件监听器
   }
 }

@@ -37,22 +37,17 @@ class _RoomListItem extends StatelessWidget {
       child: ListTile(
         leading: const Icon(Icons.people_alt),
         title: Text('房间ID: ${room.id}'),
-        subtitle: Text('状态: ${_getdisplayStatus(room.players)}'),
+        subtitle: Text('状态: ${room.roomStatus}'),
         trailing: _buildJoinButton(context),
         onTap: () => _showRoomDetail(context),
       ),
     );
   }
 
-  String _getdisplayStatus(List<Player> players) {
-    if (players.length == 3) return '游戏中';
-    return '等待中 (${players.length}/3)';
-  }
-
   Widget _buildJoinButton(BuildContext context) {
     return ElevatedButton(
       style: ElevatedButton.styleFrom(
-        backgroundColor: room.players.length == 3 ? Colors.grey : Colors.blue,
+        backgroundColor: room.playerCount == 3 ? Colors.grey : Colors.blue,
       ),
       onPressed: () {
         ProviderScope.containerOf(
@@ -79,7 +74,7 @@ class _RoomListItem extends StatelessWidget {
               children: [
                 Text('创建时间: ${room.createdAt.toString()}'),
                 const SizedBox(height: 8),
-                Text('玩家人数: ${room.players.length}/3'),
+                Text('玩家人数: ${room.playerCount}/3'),
               ],
             ),
           ),

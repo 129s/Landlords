@@ -112,7 +112,7 @@ class LobbyPage extends ConsumerWidget {
   void _refreshRooms(BuildContext context, WidgetRef ref) async {
     ref.read(lobbyProvider.notifier).toggleLoading();
     try {
-      ref.read(roomServiceProvider).getRooms();
+      ref.read(roomServiceProvider).refreshRoomList();
     } catch (e) {
       // 获取房间列表失败
       ScaffoldMessenger.of(

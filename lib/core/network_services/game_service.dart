@@ -40,28 +40,23 @@ class GameService {
 
   void _setupEventListeners() {
     _socketService.on<Map<String, dynamic>>(
-      'game_state_update',
-      _handleGameUpdate,
+      'gameStateUpdate',
+      _handleGameStateUpdate,
     );
     _socketService.on<Map<String, dynamic>>(
-      'play_card_update',
-      _handlePlayUpdate,
+      'playCardUpdate',
+      _handlePlayCardUpdate,
     );
     _socketService.on<Map<String, dynamic>>(
-      'bidding_update',
+      'biddingUpdate',
       _handleBiddingUpdate,
     );
   }
 
   // 游戏状态更新
-  void _handleGameUpdate(Map data) {
+  void _handleGameStateUpdate(Map<String, dynamic> data) {
     try {
-      _currentGameState = GameState.fromJson({
-        'current_player_index': data['current_player_index'],
-        'phase': data['game_phase'],
-        'last_played_cards': data['played_cards'],
-        'highest_bid': data['current_bid_value'],
-      });
+      _currentGameState = GameState.fromJson(data);
       _gameStateController.add(_currentGameState);
       _logger.i('State update: player${_currentGameState?.currentPlayerIndex}');
     } catch (e) {
@@ -70,24 +65,27 @@ class GameService {
   }
 
   // 出牌处理实现
-  void _handlePlayUpdate(Map<String, dynamic> data) {
+  void _handlePlayCardUpdate(Map<String, dynamic> data) {
     try {
-      final currentPlayerIndex = data['current_player_index'] as int;
-      final playedCards =
-          (data['played_cards'] as List)
+      final currentPlayerIndex = data['currentPlayerIndex'] as int;
+      final playerCards =
+          (data['playerCards'] as List)
               .map((c) => Poker.fromJson(c as Map<String, dynamic>))
               .toList();
-      final isValid = data['is_valid'] as bool;
+      final lastPlayedCards =
+          (data['lastPlayedCards'] as List)
+              .map((c) => Poker.fromJson(c as Map<String, dynamic>))
+              .toList();
 
       _currentGameState = _currentGameState?.copyWith(
         currentPlayerIndex: currentPlayerIndex,
-        lastPlayedCards: isValid ? playedCards : [],
-        phase: isValid ? GamePhase.playing : GamePhase.error,
+        lastPlayedCards: lastPlayedCards,
+        playerCards: playerCards,
       );
 
       _gameStateController.add(_currentGameState);
       _logger.i(
-        'Card play update: ${playedCards.length} cards by $currentPlayerIndex',
+        'Card play update: ${lastPlayedCards.length} cards by $currentPlayerIndex',
       );
     } catch (e) {
       _logger.e('Play update parse error: ${e.toString()}');

@@ -8,19 +8,13 @@ part 'game_state.g.dart';
 
 @JsonSerializable(explicitToJson: true)
 class GameState {
-  @JsonKey(name: 'gamePhase', fromJson: _phaseFromJson, toJson: _phaseToJson)
+  @JsonKey(fromJson: _phaseFromJson, toJson: _phaseToJson)
   final GamePhase gamePhase;
-  @JsonKey(name: 'players', defaultValue: [])
   final List<Player> players;
-  @JsonKey(name: 'lastPlayedCards', defaultValue: [])
   final List<Poker> lastPlayedCards;
-  @JsonKey(name: 'currentPlayerIndex', defaultValue: 0)
   final int currentPlayerIndex;
-  @JsonKey(name: 'currentBid', defaultValue: 0)
   final int currentBid;
-  @JsonKey(name: 'highestBid', defaultValue: 0)
   final int? highestBid;
-  @JsonKey(name: 'playerCards', defaultValue: [])
   final List<Poker> playerCards;
   final List<int> selectedIndices;
   final Room? room;
@@ -44,20 +38,12 @@ class GameState {
   Map<String, dynamic> toJson() => _$GameStateToJson(this);
 
   // 枚举转换方法
-  static GamePhase _phaseFromJson(String phase) {
-    switch (phase.toUpperCase()) {
-      case 'BIDDING':
-        return GamePhase.bidding;
-      case 'PLAYING':
-        return GamePhase.playing;
-      case 'ENDED':
-        return GamePhase.end;
-      default:
-        return GamePhase.preparing;
-    }
-  }
+  static GamePhase _phaseFromJson(String json) => GamePhase.values.firstWhere(
+    (e) => e.name == json,
+    orElse: () => GamePhase.error,
+  );
 
-  static String _phaseToJson(GamePhase phase) => phase.name.toUpperCase();
+  static String _phaseToJson(GamePhase phase) => phase.name;
 
   GameState copyWith({
     GamePhase? phase,

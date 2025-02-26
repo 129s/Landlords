@@ -78,6 +78,13 @@ class SocketService {
     _logger.i('Socket emit event: $event');
   }
 
+  void emitWithAck(String event, void Function(dynamic) ackCallback) {
+    if (_connectionState == GameConnectionState.connected) {
+      _socket.emitWithAck(event, ackCallback);
+    }
+    _logger.i('Socket emit with ack: $event');
+  }
+
   void connect() {
     _connectionController.add(GameConnectionState.connecting);
     _socket.connect();

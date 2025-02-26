@@ -51,13 +51,13 @@ class RoomService {
 
   // 初始化事件监听器
   void _setupEventListeners() {
-    _socketService.on<Map<String, dynamic>>('room_update', _handleRoomUpdate);
+    _socketService.on<Map<String, dynamic>>('roomUpdate', _handleRoomUpdate);
     _socketService.on<Map<String, dynamic>>(
-      'player_joined',
+      'playerJoined',
       _handlePlayerJoined,
     );
-    _socketService.on<Map<String, dynamic>>('player_left', _handlePlayerLeft);
-    _socketService.on<List<dynamic>>('room_list', _handleRoomList);
+    _socketService.on<Map<String, dynamic>>('playerLeft', _handlePlayerLeft);
+    _socketService.on<List<dynamic>>('roomListUpdate', _handleRoomListUpdate);
     // 添加其他房间相关的事件监听器
   }
 
@@ -97,7 +97,7 @@ class RoomService {
   }
 
   // 处理房间列表事件
-  void _handleRoomList(List<dynamic> data) {
+  void _handleRoomListUpdate(List<dynamic> data) {
     try {
       _roomList =
           data
@@ -112,27 +112,38 @@ class RoomService {
 
   // 加入房间
   void joinRoom(String roomId) {
-    _socketService.emit('join_room', {'room_id': roomId});
+    _socketService.emit('joinRoom', {'room_id': roomId});
     _logger.i('Joining room: $roomId');
   }
 
   // 离开房间
   void leaveRoom() {
-    _socketService.emit('leave_room');
+    _socketService.emit('leaveRoom');
     _logger.i('Leaving room');
     _currentRoom = null; // Clear the current room when leaving
     _currentRoomController.add(null);
   }
 
   // 创建房间
-  void createRoom() {
-    _socketService.emit('create_room');
-    _logger.i('Creating room');
+  Future<String> createRoom() async {
+    final completer = Completer<String>();
+    _socketService.emitWithAck('createRoom', (data) {
+      try {
+        if (data is Map && data['roomId'] != null) {
+          completer.complete(data['roomId'] as String);
+        } else {
+          completer.completeError('Invalid room creation response');
+        }
+      } catch (e) {
+        completer.completeError(e);
+      }
+    });
+    return completer.future;
   }
 
   // 刷新房间列表
   void refreshRoomList() {
-    _socketService.emit('get_room_list');
+    _socketService.emit('getRoomList');
     _logger.i('Refreshing room list');
   }
 
@@ -141,10 +152,10 @@ class RoomService {
     _roomListController.close();
     _currentRoomController.close();
     // 移除所有事件监听器，避免内存泄漏
-    _socketService.off('room_update');
-    _socketService.off('player_joined');
-    _socketService.off('player_left');
-    _socketService.off('room_list');
+    _socketService.off('roomUpdate');
+    _socketService.off('playerJoined');
+    _socketService.off('playerLeft');
+    _socketService.off('roomList');
     // 移除其他事件监听器
   }
 }
