@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:landlords_3/data/models/game_state.dart';
-import 'package:landlords_3/core/network/socket_service.dart';
+import 'package:landlords_3/core/services/socket_service.dart';
 import 'package:landlords_3/data/models/poker.dart';
 
 class GameService {

@@ -6,5 +6,5 @@ final chatProvider = StreamProvider.family<List<Message>, String>((
   ref,
   roomId,
 ) {
-  return ref.watch(chatServiceProvider).messageStream(roomId);
+  return ref.watch(chatServiceProvider).messageStream;
 });

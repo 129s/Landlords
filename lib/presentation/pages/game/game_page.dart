@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:landlords_3/core/network/constants.dart';
+import 'package:landlords_3/core/services/constants.dart';
 import 'package:landlords_3/data/models/game_state.dart';
 import 'package:landlords_3/presentation/pages/game/bottom_area.dart';
 import 'package:landlords_3/presentation/pages/game/card_display_area.dart';

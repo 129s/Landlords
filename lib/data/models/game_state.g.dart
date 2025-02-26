@@ -21,7 +21,7 @@ GameState _$GameStateFromJson(Map<String, dynamic> json) => GameState(
           ?.map((e) => Poker.fromJson(e as Map<String, dynamic>))
           .toList() ??
       [],
-  currentPlayerSeat: (json['currentPlayer'] as num?)?.toInt() ?? 0,
+  currentPlayerSeat: (json['currentPlayerSeat'] as num?)?.toInt() ?? 0,
   currentBid: (json['currentBid'] as num?)?.toInt() ?? 0,
   playerCards:
       (json['history'] as List<dynamic>?)
@@ -33,7 +33,10 @@ GameState _$GameStateFromJson(Map<String, dynamic> json) => GameState(
           ?.map((e) => (e as num).toInt())
           .toList() ??
       const [],
-  roomId: json['roomId'] as String?,
+  room:
+      json['room'] == null
+          ? null
+          : Room.fromJson(json['room'] as Map<String, dynamic>),
   isLandlord: json['isLandlord'] as bool? ?? false,
 );
 
@@ -41,10 +44,10 @@ Map<String, dynamic> _$GameStateToJson(GameState instance) => <String, dynamic>{
   'phase': GameState._phaseToJson(instance.phase),
   'players': instance.players.map((e) => e.toJson()).toList(),
   'lastPlayedCards': instance.lastPlayedCards.map((e) => e.toJson()).toList(),
-  'currentPlayer': instance.currentPlayerSeat,
+  'currentPlayerSeat': instance.currentPlayerSeat,
   'currentBid': instance.currentBid,
   'history': instance.playerCards.map((e) => e.toJson()).toList(),
   'selectedIndices': instance.selectedIndices,
-  'roomId': instance.roomId,
+  'room': instance.room?.toJson(),
   'isLandlord': instance.isLandlord,
 };

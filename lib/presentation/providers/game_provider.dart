@@ -1,9 +1,9 @@
 import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:landlords_3/core/network/constants.dart';
-import 'package:landlords_3/core/network/game_service.dart';
-import 'package:landlords_3/core/network/room_service.dart';
+import 'package:landlords_3/core/services/constants.dart';
+import 'package:landlords_3/core/services/game_service.dart';
+import 'package:landlords_3/core/services/room_service.dart';
 import 'package:landlords_3/data/providers/service_providers.dart';
 import 'package:landlords_3/data/models/game_state.dart';
 import 'package:landlords_3/data/models/poker.dart';
@@ -19,14 +19,10 @@ class GameNotifier extends StateNotifier<GameState> {
     : super(const GameState(players: []));
 
   // 初始化游戏（从服务端获取数据）
-  Future<void> initializeGame(String roomId) async {
+  Future<void> initializeGame() async {
     try {
-      final room = await _roomService.getRoom(roomId);
-      state = state.copyWith(
-        roomId: roomId,
-        players: room.players,
-        playerCards: [],
-      );
+      final room = _roomService.currentRoom;
+      state = state.copyWith(room: room);
       _setupSocketListeners();
     } catch (e) {
       state = state.copyWith(phase: GamePhase.error);

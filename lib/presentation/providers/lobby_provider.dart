@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:landlords_3/core/network/room_service.dart';
+import 'package:landlords_3/core/services/room_service.dart';
 import 'package:landlords_3/data/providers/service_providers.dart';
 import 'package:landlords_3/data/models/room.dart';
 import 'package:landlords_3/presentation/pages/chat/chat_page.dart';
@@ -41,7 +41,7 @@ class LobbyNotifier extends StateNotifier<LobbyState> {
 
   void _init() {
     // 实时监听房间更新
-    _roomSubscription = _roomService.roomStream().listen((rooms) {
+    _roomSubscription = _roomService.roomListStream.listen((rooms) {
       print('Received rooms from stream: $rooms');
       state = state.copyWith(rooms: rooms);
     });
@@ -54,7 +54,7 @@ class LobbyNotifier extends StateNotifier<LobbyState> {
       final roomId = await _roomService.createRoom();
 
       // 自动加入自己创建的房间
-      await _roomService.joinRoom(roomId);
+      _roomService.joinRoom(roomId);
 
       return roomId;
     } catch (e) {
@@ -67,7 +67,7 @@ class LobbyNotifier extends StateNotifier<LobbyState> {
   Future<void> joinExistingRoom(String roomId) async {
     state = state.copyWith(isLoading: true);
     try {
-      await _roomService.joinRoom(roomId);
+      _roomService.joinRoom(roomId);
       MaterialPageRoute(builder: (_) => ChatPage(roomId: roomId));
     } catch (e) {
       print(e);
@@ -77,7 +77,7 @@ class LobbyNotifier extends StateNotifier<LobbyState> {
   }
 
   void refreshRooms() {
-    _roomService.getRooms();
+    _roomService.refreshRoomList();
   }
 
   void toggleLoading() {

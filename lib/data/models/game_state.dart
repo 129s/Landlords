@@ -1,7 +1,8 @@
 import 'package:json_annotation/json_annotation.dart';
-import 'package:landlords_3/core/network/constants.dart';
+import 'package:landlords_3/core/services/constants.dart';
 import 'package:landlords_3/data/models/player.dart';
 import 'package:landlords_3/data/models/poker.dart';
+import 'package:landlords_3/data/models/room.dart';
 
 part 'game_state.g.dart';
 
@@ -20,7 +21,7 @@ class GameState {
   @JsonKey(name: 'history', defaultValue: [])
   final List<Poker> playerCards;
   final List<int> selectedIndices;
-  final String? roomId;
+  final Room? room;
   final bool isLandlord;
 
   const GameState({
@@ -31,7 +32,7 @@ class GameState {
     this.currentBid = 0,
     this.playerCards = const [],
     this.selectedIndices = const [],
-    this.roomId,
+    this.room,
     this.isLandlord = false,
   });
 
@@ -64,7 +65,7 @@ class GameState {
     int? currentBid,
     List<Poker>? playerCards,
     List<int>? selectedIndices,
-    String? roomId,
+    Room? room,
     bool? isLandlord,
   }) {
     return GameState(
@@ -75,7 +76,7 @@ class GameState {
       currentBid: currentBid ?? this.currentBid,
       playerCards: playerCards ?? this.playerCards,
       selectedIndices: selectedIndices ?? this.selectedIndices,
-      roomId: roomId ?? this.roomId,
+      room: room ?? this.room,
       isLandlord: isLandlord ?? this.isLandlord,
     );
   }
