@@ -122,7 +122,9 @@ class _ChatPageState extends ConsumerState<ChatPage> {
                 final message = messages[index];
                 return MessageBubble(
                   message: message,
-                  isMe: message.senderId == ref.read(socketManagerProvider).id,
+                  isMe:
+                      message.senderId ==
+                      ref.read(socketManagerProvider).socket.id,
                 );
               },
             ),

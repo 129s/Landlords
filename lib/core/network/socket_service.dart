@@ -4,24 +4,28 @@ import 'package:landlords_3/core/network/constants.dart';
 import 'package:socket_io_client/socket_io_client.dart';
 import 'package:logger/logger.dart';
 
-class SocketManager {
-  static final _instance = SocketManager._internal();
-  late Socket _socket;
+class SocketService {
   final _logger = Logger();
-  var _connectionState = GameConnectionState.disconnected;
-  String? _socketId;
-  String? get id => _socketId;
+  late Socket _socket;
+  GameConnectionState _connectionState = GameConnectionState.disconnected;
 
-  // 连接状态流控制器
+  // 流控制
   final _connectionController =
       StreamController<GameConnectionState>.broadcast();
 
-  SocketManager._internal() {
+  // get
+  Stream<GameConnectionState> get connectionStream =>
+      _connectionController.stream;
+  Socket get socket => _socket;
+
+  // 单例
+  static final _instance = SocketService._internal();
+  SocketService._internal() {
     _initSocket();
   }
+  factory SocketService() => _instance;
 
-  factory SocketManager() => _instance;
-
+  // 初始化
   void _initSocket() {
     _socket = io(
       'http://localhost:3000',
@@ -29,7 +33,6 @@ class SocketManager {
     );
 
     _socket.onConnect((_) {
-      _socketId = _socket.id;
       _connectionState = GameConnectionState.connected;
       _connectionController.add(_connectionState);
       _logger.i('Socket connected');
@@ -48,28 +51,24 @@ class SocketManager {
     });
   }
 
-  // 公共访问方法
-  Stream<GameConnectionState> get connectionStream =>
-      _connectionController.stream;
-  Socket get socket => _socket;
-  GameConnectionState get currentState => _connectionState;
-
   void emit(String event, [dynamic data]) {
     if (_connectionState == GameConnectionState.connected) {
       _socket.emit(event, data);
     }
+    _logger.i('Socket emit event: $event');
   }
 
   void connect() {
     _connectionController.add(GameConnectionState.connecting);
     _socket.connect();
-    print('Socket connecting...'); // Log connection attempt
+    _logger.i('Socket connecting...');
+  }
+
+  void disconnect() {
+    _socket.disconnect();
   }
 
   void on<T>(String event, void Function(T data) handler) =>
       _socket.on(event, (data) => handler(data as T));
   void off(String event) => _socket.off(event);
-  void disconnect() {
-    _socket.disconnect();
-  }
 }

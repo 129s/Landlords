@@ -1,11 +1,11 @@
 import 'dart:async';
 
 import 'package:landlords_3/data/models/room.dart';
-import 'package:landlords_3/core/network/socket_manager.dart';
-import 'package:logger/web.dart';
+import 'package:landlords_3/core/network/socket_service.dart';
+import 'package:logger/logger.dart';
 
 class RoomService {
-  final _socket = SocketManager().socket;
+  final _socket = SocketService().socket;
   final _logger = Logger();
 
   /// 创建并加入房间

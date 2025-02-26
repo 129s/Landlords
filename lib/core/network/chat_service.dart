@@ -1,10 +1,10 @@
 import 'dart:async';
 
 import 'package:landlords_3/data/models/message.dart';
-import 'package:landlords_3/core/network/socket_manager.dart';
+import 'package:landlords_3/core/network/socket_service.dart';
 
 class ChatService {
-  final _socket = SocketManager().socket;
+  final _socket = SocketService().socket;
 
   /// 发送聊天消息
   Future<void> sendMessage(String content) {

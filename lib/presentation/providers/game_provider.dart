@@ -33,9 +33,13 @@ class GameNotifier extends StateNotifier<GameState> {
     }
   }
 
+  // 修改game_provider.dart中的_setupSocketListeners
   void _setupSocketListeners() {
-    _gameStateSub?.cancel();
     _gameStateSub = _gameService.gameStateStream().listen((newState) {
+      if (newState.phase == GamePhase.bidding &&
+          newState.currentPlayerSeat == state.currentPlayerSeat) {
+        //
+      }
       state = newState.copyWith(
         selectedIndices: state.selectedIndices,
         playerCards: state.playerCards,
@@ -54,6 +58,12 @@ class GameNotifier extends StateNotifier<GameState> {
         ? newIndices.remove(index)
         : newIndices.add(index);
     state = state.copyWith(selectedIndices: newIndices);
+  }
+
+  void placeBid(int bidValue) {
+    if (state.currentPlayerSeat != state.currentPlayerSeat) return;
+
+    _gameService.placeBid(bidValue);
   }
 
   // 提交出牌
@@ -95,10 +105,8 @@ class GameNotifier extends StateNotifier<GameState> {
 }
 
 final gameProvider = StateNotifierProvider.autoDispose<GameNotifier, GameState>(
-  (ref) {
-    return GameNotifier(
-      ref.read(gameServiceProvider),
-      ref.read(roomServiceProvider),
-    );
-  },
+  (ref) => GameNotifier(
+    ref.read(gameServiceProvider),
+    ref.read(roomServiceProvider),
+  ),
 );

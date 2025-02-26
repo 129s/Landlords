@@ -66,11 +66,47 @@ class GamePage extends ConsumerWidget {
 
               Stack(
                 children: [
-                  BottomArea(),
+                  (gameState.phase == GamePhase.bidding)
+                      ? _buildBiddingUI(ref)
+                      : BottomArea(),
                   Positioned(right: 24, top: 24, child: _buildChatButton()),
                 ],
               ),
             ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBiddingUI(WidgetRef ref) {
+    final currentBid = ref.watch(gameProvider).currentBid;
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text("当前叫分: $currentBid", style: TextStyle(fontSize: 24)),
+          const SizedBox(height: 20),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children:
+                [1, 2, 3]
+                    .map(
+                      (bid) => Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 8),
+                        child: ElevatedButton(
+                          onPressed:
+                              () =>
+                                  ref.read(gameProvider.notifier).placeBid(bid),
+                          child: Text("叫 $bid 分"),
+                        ),
+                      ),
+                    )
+                    .toList(),
+          ),
+          ElevatedButton(
+            onPressed: () => ref.read(gameProvider.notifier).placeBid(0),
+            child: const Text("不叫"),
           ),
         ],
       ),

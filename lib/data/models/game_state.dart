@@ -13,7 +13,7 @@ class GameState {
   final List<Player> players;
   @JsonKey(name: 'lastPlayedCards', defaultValue: [])
   final List<Poker> lastPlayedCards;
-  @JsonKey(name: 'currentPlayer', defaultValue: 0)
+  @JsonKey(name: 'currentPlayerSeat', defaultValue: 0)
   final int currentPlayerSeat;
   @JsonKey(name: 'currentBid', defaultValue: 0)
   final int currentBid;

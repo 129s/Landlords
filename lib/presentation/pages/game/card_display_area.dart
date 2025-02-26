@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:landlords_3/data/providers/socket_provider.dart';
 import 'package:landlords_3/presentation/providers/game_provider.dart';
 import 'package:landlords_3/presentation/widgets/poker_list_widget.dart';
 
@@ -9,6 +10,16 @@ class CardDisplayArea extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final gameState = ref.watch(gameProvider);
+    final currentPlayerSeat = ref.watch(
+      gameProvider.select(
+        (s) =>
+            s.players
+                .firstWhere(
+                  (p) => p.id == ref.read(socketManagerProvider).socket.id,
+                )
+                .seat,
+      ),
+    );
     return LayoutBuilder(
       builder: (context, constraints) {
         final height = constraints.maxHeight;

@@ -1,11 +1,11 @@
 import 'dart:async';
 
 import 'package:landlords_3/data/models/game_state.dart';
-import 'package:landlords_3/core/network/socket_manager.dart';
+import 'package:landlords_3/core/network/socket_service.dart';
 import 'package:landlords_3/data/models/poker.dart';
 
 class GameService {
-  final _socket = SocketManager().socket;
+  final _socket = SocketService().socket;
 
   /// 游戏状态流
   Stream<GameState> gameStateStream() {
