@@ -1,5 +1,5 @@
 import { Socket, Server } from "socket.io";
-import { Room } from "../models/Room";
+import { Room, RoomStatus } from "../models/Room";
 import { Player } from "../models/Player";
 import { GamePhase } from "../constants/constants";
 import { GameController } from "./GameController";
@@ -77,24 +77,27 @@ export class RoomController {
 
             // 自动开始检测
             if (room.players.every(p => p.ready) &&
-                room.players.length === 3 &&
-                room.roomStatus === 'waiting') {
+                room.players.length === 3) {
+                room.roomStatus = RoomStatus.PLAYING;
                 this.gameController.initializeGame(room.id);
+                this.updateRoomState(room);
             }
         }
     }
 
     private updateRoomState(room: Room) {
+        const playersInfo = room.players.map(p => ({
+            id: p.id,
+            name: p.name,
+            seat: p.seat,
+            ready: p.ready,
+            cardCount: p.cardCount || 0
+        }));
+
         const response = {
             id: room.id,
             roomStatus: room.roomStatus,
-            players: room.players.map(p => ({
-                id: p.id,
-                name: p.name,
-                seat: p.seat,
-                ready: p.ready,
-                cardCount: p.cardCount || 0
-            }))
+            players: playersInfo
         };
 
         this.io.to(room.id).emit('roomUpdate', response);

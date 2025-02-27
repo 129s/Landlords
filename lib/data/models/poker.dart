@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:json_annotation/json_annotation.dart';
 import 'package:landlords_3/core/card/card_type.dart';
+
 part 'poker.g.dart';
 
 @JsonSerializable()

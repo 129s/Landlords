@@ -44,7 +44,10 @@ class GameNotifier extends StateNotifier<GameState> {
     _gameService.placeBid(bidValue);
   }
 
-  // 新增提示功能
+  void toggleReady() {
+    _gameService.toggleReady();
+  }
+
   void showHint() {
     final playableCards = _findPlayableCards();
     if (playableCards.isNotEmpty) {

@@ -20,7 +20,7 @@ export class GameState {
             lastPlayedCards: this.lastPlayedCards.map(c => c.toJSON()),
             landlordIndex: this.landlordIndex,
             additionalCards: this.additionalCards.map(c => c.toJSON()),
-            highestBid: Math.max(...this.allBids),// 发送到客户端的最大叫分
+            allBids: this.allBids,
             playerCards: this.allCards[index].map(c => c.toJSON())// 发送到客户端的我方玩家手牌
         };
     }

@@ -167,15 +167,15 @@ export class GameController {
     }
 
     // 发牌
-    private dealCards(roomId: string, gameState: GameState, allCards: Poker[]) {
+    private dealCards(roomId: string, gameState: GameState, cards: Poker[]) {
         // 给玩家发牌（每人17张）
         gameState.allCards = [
-            allCards.slice(0, 17),
-            allCards.slice(17, 34),
-            allCards.slice(34, 51)
+            cards.slice(0, 17),
+            cards.slice(17, 34),
+            cards.slice(34, 51)
         ];
         // 底牌（最后3张）
-        gameState.additionalCards = allCards.slice(51, 54);
+        gameState.additionalCards = cards.slice(51, 54);
 
         this.updateGameState(roomId);
     }
@@ -193,13 +193,14 @@ export class GameController {
     }
 
     private updateGameState(roomId: string) {
+        console.log("updateGameState");
         const gameState = this.gameStates.get(roomId);
         if (!gameState) return;
 
         for (let i = 0; i < 3; i++) {
             let id = this.roomController.getRoom(roomId)?.players[i].socketId;
             if (!id) return;
-            this.io.to(id).emit('gameUpdate', gameState.toJSON(i));
+            this.io.to(id).emit('gameStateUpdate', gameState.toJSON(i));
         }
     }
 

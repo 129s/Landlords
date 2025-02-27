@@ -28,8 +28,11 @@ GameState _$GameStateFromJson(Map<String, dynamic> json) => GameState(
       const [],
   myPlayerIndex: (json['myPlayerIndex'] as num?)?.toInt() ?? 0,
   currentPlayerIndex: (json['currentPlayerIndex'] as num?)?.toInt() ?? 0,
-  currentBid: (json['currentBid'] as num?)?.toInt() ?? 0,
-  highestBid: (json['highestBid'] as num?)?.toInt() ?? 0,
+  allBids:
+      (json['allBids'] as List<dynamic>?)
+          ?.map((e) => (e as num).toInt())
+          .toList() ??
+      const [],
   selectedIndices:
       (json['selectedIndices'] as List<dynamic>?)
           ?.map((e) => (e as num).toInt())
@@ -45,8 +48,7 @@ Map<String, dynamic> _$GameStateToJson(GameState instance) => <String, dynamic>{
   'additionalCards': instance.additionalCards.map((e) => e.toJson()).toList(),
   'myPlayerIndex': instance.myPlayerIndex,
   'currentPlayerIndex': instance.currentPlayerIndex,
-  'currentBid': instance.currentBid,
-  'highestBid': instance.highestBid,
+  'allBids': instance.allBids,
   'selectedIndices': instance.selectedIndices,
   'landlordIndex': instance.landlordIndex,
 };

@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:landlords_3/core/card/card_type.dart';
 import 'package:landlords_3/core/network_services/constants/constants.dart';
 import 'package:landlords_3/data/models/game_state.dart';
+import 'package:landlords_3/data/models/player.dart';
+import 'package:landlords_3/data/providers/service_providers.dart';
 import 'package:landlords_3/presentation/pages/game/additional_cards_widget.dart';
 import 'package:landlords_3/presentation/pages/game/card_counter_widget.dart';
 import 'package:landlords_3/presentation/pages/game/player_info_widget.dart';
@@ -44,7 +46,7 @@ class GamePage extends ConsumerWidget {
               // 顶部操作栏
               _buildTopBar(context, gameState, gameNotifer),
               // 中央游戏区域
-              Expanded(child: _buildGameArea(gameState)),
+              Expanded(child: _buildGameArea(gameState, ref)),
               // 功能按钮栏
               _buildActionBar(gameState, gameNotifer),
               // 玩家手牌区域
@@ -90,7 +92,7 @@ class GamePage extends ConsumerWidget {
     );
   }
 
-  Widget _buildGameArea(GameState gameState) {
+  Widget _buildGameArea(GameState gameState, WidgetRef ref) {
     return Stack(
       children: [
         // 其他玩家出牌区域
@@ -112,7 +114,7 @@ class GamePage extends ConsumerWidget {
           child: _buildCurrentPlayCards(),
         ),
         // 其他玩家信息
-        _buildOpponentsInfo(gameState),
+        // _buildOpponentsInfo(gameState, ref),
       ],
     );
   }
@@ -122,11 +124,34 @@ class GamePage extends ConsumerWidget {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 10),
       child:
-          gameState.gamePhase == GamePhase.bidding
+          gameState.gamePhase == GamePhase.preparing
+              ? _buildPreparingButtons(gameNotifer)
+              : gameState.gamePhase == GamePhase.bidding
               ? _buildBiddingButtons(gameState, gameNotifer)
               : gameState.gamePhase == GamePhase.playing
               ? _buildPlayerControls(gameNotifer)
               : const SizedBox.shrink(),
+    );
+  }
+
+  // 准备按钮
+  Widget _buildPreparingButtons(GameNotifier gameNotifer) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8.0),
+          child: ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.green,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+            ),
+            onPressed: () => gameNotifer.toggleReady(),
+            child: const Text("准备"),
+          ),
+        ),
+      ],
     );
   }
 
@@ -136,7 +161,7 @@ class GamePage extends ConsumerWidget {
       mainAxisAlignment: MainAxisAlignment.center,
       children:
           [1, 2, 3].map((score) {
-            final isDisabled = score <= (gameState.highestBid ?? 0);
+            final isDisabled = gameState.allBids.contains(score);
             return Padding(
               padding: const EdgeInsets.symmetric(horizontal: 8.0),
               child: ElevatedButton(
@@ -186,7 +211,6 @@ class GamePage extends ConsumerWidget {
     required String label,
     required VoidCallback? onPressed,
   }) {
-    const buttonHeight = 48.0;
     const iconSize = 24.0;
 
     return Padding(
@@ -236,13 +260,21 @@ class GamePage extends ConsumerWidget {
   }
 
   // 玩家信息组件
-  Widget _buildOpponentsInfo(GameState gameState) {
+  Widget _buildOpponentsInfo(GameState gameState, WidgetRef ref) {
     final myIndex = gameState.myPlayerIndex;
-    final players = gameState.room.players;
+    final players = ref.read(roomServiceProvider).currentRoom?.players;
 
     // 获取其他两个玩家的索引（根据斗地主座位逻辑）
     final leftPlayerIndex = (myIndex + 1) % 3;
     final rightPlayerIndex = (myIndex + 2) % 3;
+    final leftPlayer =
+        leftPlayerIndex > players!.length
+            ? Player(id: "", name: "等待加入", seat: 0, ready: false)
+            : players[leftPlayerIndex];
+    final rightPlayer =
+        rightPlayerIndex > players.length
+            ? Player(id: "", name: "等待加入", seat: 0, ready: false)
+            : players[rightPlayerIndex];
 
     return Stack(
       children: [
@@ -250,7 +282,7 @@ class GamePage extends ConsumerWidget {
           left: 20,
           top: 20,
           child: PlayerInfoWidget(
-            player: players[leftPlayerIndex],
+            player: leftPlayer,
             isLandlord: leftPlayerIndex == gameState.landlordIndex,
             isCurrentTurn: leftPlayerIndex == gameState.currentPlayerIndex,
             alignment: Alignment.centerLeft,
@@ -260,7 +292,7 @@ class GamePage extends ConsumerWidget {
           right: 20,
           top: 20,
           child: PlayerInfoWidget(
-            player: players[rightPlayerIndex],
+            player: rightPlayer,
             isLandlord: rightPlayerIndex == gameState.landlordIndex,
             isCurrentTurn: rightPlayerIndex == gameState.currentPlayerIndex,
             alignment: Alignment.centerRight,
