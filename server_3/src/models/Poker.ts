@@ -1,5 +1,5 @@
-import { CardValue, Suit } from "../core/card/CardType";
-import { CardUtils } from "../core/card/CardUtils";
+import { CardValue, Suit } from "../card/CardType";
+import { CardUtils } from "../card/CardUtils";
 
 
 export class Poker {

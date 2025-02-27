@@ -4,12 +4,12 @@ const logger = require('../utils/logger');
 
 class ConnectionController extends BaseController {
     initHandlers(socket) {
-        socket.on('create_room', () => this.createRoom(socket));
-        socket.on('join_room', (data) => this.joinRoom(socket, data));
-        socket.on('leave_room', () => this.leaveRoom(socket));
+        socket.on('createRoom', () => this.createRoom(socket));
+        socket.on('joinRoom', (data) => this.joinRoom(socket, data));
+        socket.on('leaveRoom', () => this.leaveRoom(socket));
         socket.on('disconnect', () => this.handleDisconnect(socket));
-        socket.on('request_rooms', () => this.sendRoomList(socket));
-        socket.on('set_player_name', (data) => this.setPlayerName(socket, data));
+        socket.on('requestRooms', () => this.sendRoomList(socket));
+        socket.on('setPlayerName', (data) => this.setPlayerName(socket, data));
         socket.on('get_room', (data) => this.roomService.getRoom(data.roomId));
     }
 
@@ -24,10 +24,10 @@ class ConnectionController extends BaseController {
             // logger.debug('%s', room.id);
             socket.join(room.id);
 
-            socket.emit('room_created', room.id);
+            socket.emit('roomCreated', room.id);
             // logger.debug('%s', room.id);
 
-            this.io.emit('room_update', this.roomService.getRooms());
+            this.io.emit('roomUpdate', this.roomService.getRooms());
         } catch (error) {
             this.handleError(socket, error);
         }
@@ -39,10 +39,10 @@ class ConnectionController extends BaseController {
             socket.join(roomId);
 
             const messages = this.messageService.getMessages(roomId);
-            socket.emit('message_history', messages);
+            socket.emit('messageHistory', messages);
 
-            this.io.to(roomId).emit('player_joined', room);
-            this.io.emit('room_update', this.roomService.getRooms());
+            this.io.to(roomId).emit('playerJoined', room);
+            this.io.emit('roomUpdate', this.roomService.getRooms());
         } catch (error) {
             this.handleError(socket, error);
         }
@@ -53,8 +53,8 @@ class ConnectionController extends BaseController {
             const room = this.getRoom(socket);
             this.roomService.leaveRoom(socket.id);
 
-            this.io.to(room.id).emit('player_left', socket.id);
-            this.io.emit('room_update', this.roomService.getRooms());
+            this.io.to(room.id).emit('playerLeft', socket.id);
+            this.io.emit('roomUpdate', this.roomService.getRooms());
         } catch (error) {
             this.handleError(socket, error);
         }
@@ -65,8 +65,8 @@ class ConnectionController extends BaseController {
             const room = this.getRoom(socket);
             this.roomService.leaveRoom(socket.id);
 
-            this.io.to(room.id).emit('player_disconnected', socket.id);
-            this.io.emit('room_update', this.roomService.getRooms());
+            this.io.to(room.id).emit('playerDisconnected', socket.id);
+            this.io.emit('roomUpdate', this.roomService.getRooms());
         } catch (error) {
             logger.error(`断开连接处理失败: ${error.message}`);
         }
@@ -74,7 +74,7 @@ class ConnectionController extends BaseController {
 
     async sendRoomList(socket) {
         try {
-            socket.emit('room_update', this.roomService.getRooms());
+            socket.emit('roomUpdate', this.roomService.getRooms());
         } catch (error) {
             this.handleError(socket, error);
         }
@@ -86,7 +86,7 @@ class ConnectionController extends BaseController {
             const player = this.getPlayer(socket);
             player.name = name;
 
-            this.io.emit('room_update', this.roomService.getRooms());
+            this.io.emit('roomUpdate', this.roomService.getRooms());
         } catch (error) {
             this.handleError(socket, error);
         }

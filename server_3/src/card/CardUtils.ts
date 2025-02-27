@@ -1,5 +1,5 @@
 
-import { Poker } from '../../models/Poker';
+import { Poker } from '../models/Poker';
 import { CardValue, CardType, CardTypeEnum } from './CardType';
 
 export class CardUtils {

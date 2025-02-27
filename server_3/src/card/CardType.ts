@@ -1,5 +1,5 @@
 // src/models/CardType.ts
-import { Poker } from '../../models/Poker';
+import { Poker } from '../models/Poker';
 import { CardUtils } from './CardUtils';
 
 export enum Suit { hearts, diamonds, clubs, spades, joker }

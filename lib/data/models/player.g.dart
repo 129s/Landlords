@@ -10,12 +10,8 @@ Player _$PlayerFromJson(Map<String, dynamic> json) => Player(
   id: json['id'] as String,
   name: json['name'] as String,
   seat: (json['seat'] as num).toInt(),
-  ready: json['ready'] as bool,
-  cards:
-      (json['cards'] as List<dynamic>?)
-          ?.map((e) => Poker.fromJson(e as Map<String, dynamic>))
-          .toList() ??
-      [],
+  ready: json['ready'] as bool? ?? false,
+  cardCount: (json['cardCount'] as num?)?.toInt() ?? 0,
   isLandlord: json['isLandlord'] as bool? ?? false,
 );
 
@@ -23,7 +19,7 @@ Map<String, dynamic> _$PlayerToJson(Player instance) => <String, dynamic>{
   'id': instance.id,
   'name': instance.name,
   'seat': instance.seat,
-  'cards': instance.cards.map((e) => e.toJson()).toList(),
+  'cardCount': instance.cardCount,
   'ready': instance.ready,
   'isLandlord': instance.isLandlord,
 };

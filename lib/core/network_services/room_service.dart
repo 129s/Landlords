@@ -122,6 +122,10 @@ class RoomService {
     _currentRoomController.add(null);
   }
 
+  void toggleReady() {
+    _socketService.emit('toggleReady');
+  }
+
   // 创建房间
   Future<String> createRoom() async {
     final completer = Completer<String>();

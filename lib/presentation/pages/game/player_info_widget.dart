@@ -79,7 +79,7 @@ class PlayerInfoWidget extends StatelessWidget {
                 overflow: TextOverflow.ellipsis,
               ),
               Text(
-                '剩余 ${player.cards.length} 张',
+                '剩余 ${player.cardCount} 张',
                 style: const TextStyle(color: Colors.grey, fontSize: 10),
               ),
             ],

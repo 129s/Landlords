@@ -31,6 +31,7 @@ GameState _$GameStateFromJson(Map<String, dynamic> json) => GameState(
           ?.map((e) => Poker.fromJson(e as Map<String, dynamic>))
           .toList() ??
       const [],
+  myPlayerIndex: (json['myPlayerIndex'] as num?)?.toInt() ?? 0,
   currentPlayerIndex: (json['currentPlayerIndex'] as num?)?.toInt() ?? 0,
   currentBid: (json['currentBid'] as num?)?.toInt() ?? 0,
   highestBid: (json['highestBid'] as num?)?.toInt() ?? 0,
@@ -52,6 +53,7 @@ Map<String, dynamic> _$GameStateToJson(GameState instance) => <String, dynamic>{
   'lastPlayedCards': instance.lastPlayedCards.map((e) => e.toJson()).toList(),
   'playerCards': instance.playerCards.map((e) => e.toJson()).toList(),
   'additionalCards': instance.additionalCards.map((e) => e.toJson()).toList(),
+  'myPlayerIndex': instance.myPlayerIndex,
   'currentPlayerIndex': instance.currentPlayerIndex,
   'currentBid': instance.currentBid,
   'highestBid': instance.highestBid,

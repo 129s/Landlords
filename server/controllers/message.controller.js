@@ -3,8 +3,8 @@ const BaseController = require('./base.controller');
 
 class MessageController extends BaseController {
     initHandlers(socket) {
-        socket.on('send_message', (data) => this.sendMessage(socket, data));
-        socket.on('request_messages', () => this.sendMessageHistory(socket));
+        socket.on('sendMessage', (data) => this.sendMessage(socket, data));
+        socket.on('requestMessages', () => this.sendMessageHistory(socket));
     }
 
     async sendMessage(socket, { content }) {
@@ -19,7 +19,7 @@ class MessageController extends BaseController {
                 content
             );
 
-            this.io.to(room.id).emit('new_message', message);
+            this.io.to(room.id).emit('newMessage', message);
         } catch (error) {
             this.handleError(socket, error);
         }
@@ -29,7 +29,7 @@ class MessageController extends BaseController {
         try {
             const room = this.getRoom(socket);
             const messages = this.messageService.getMessages(room.id);
-            socket.emit('message_history', messages);
+            socket.emit('messageHistory', messages);
         } catch (error) {
             this.handleError(socket, error);
         }

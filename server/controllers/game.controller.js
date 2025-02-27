@@ -4,9 +4,9 @@ const logger = require('../utils/logger');
 
 class GameController extends BaseController {
     initHandlers(socket) {
-        socket.on('place_bid', (data) => this.handleBid(socket, data));
-        socket.on('play_cards', (data) => this.gameService.playCards(socket, data));
-        socket.on('pass_turn', () => this.passTurn(socket));
+        socket.on('placeBid', (data) => this.handleBid(socket, data));
+        socket.on('playCards', (data) => this.gameService.playCards(socket, data));
+        socket.on('passTurn', () => this.passTurn(socket));
     }
 
     async startGame(socket) {
@@ -31,7 +31,7 @@ class GameController extends BaseController {
             const updatedState = this.gameService.bidLandlord(
                 room.id, player.id, bidValue
             );
-            this.io.to(room.id).emit('game_state_updated',
+            this.io.to(room.id).emit('gameStateUpdated',
                 this.gameService._getPublicState(updatedState));
         } catch (error) {
             this.handleError(socket, error);
@@ -44,7 +44,7 @@ class GameController extends BaseController {
             const player = this.getPlayer(socket);
 
             const state = this.gameService.playCards(room.id, player.id, cards);
-            this.io.to(room.id).emit('game_state_updated',
+            this.io.to(room.id).emit('gameStateUpdated',
                 this.gameService._getPublicState(updatedState));
         } catch (error) {
             this.handleError(socket, error);
@@ -55,7 +55,7 @@ class GameController extends BaseController {
         try {
             const room = this.getRoom(socket);
             const state = this.gameService.passTurn(room.id);
-            this.io.to(room.id).emit('game_state_updated',
+            this.io.to(room.id).emit('gameStateUpdated',
                 this.gameService._getPublicState(updatedState));
         } catch (error) {
             this.handleError(socket, error);

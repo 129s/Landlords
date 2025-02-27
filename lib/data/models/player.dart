@@ -1,5 +1,3 @@
-import 'package:landlords_3/data/models/poker.dart';
-
 import 'package:json_annotation/json_annotation.dart';
 
 part 'player.g.dart';
@@ -9,20 +7,23 @@ class Player {
   final String id;
   final String name;
   final int seat;
-  @JsonKey(defaultValue: [])
-  final List<Poker> cards;
-  @JsonKey(name: 'ready')
+  @JsonKey(defaultValue: false)
   final bool ready;
+  @JsonKey(defaultValue: 0)
+  final int cardCount;
   @JsonKey(defaultValue: false)
   final bool isLandlord;
+  @JsonKey(defaultValue: 0)
+  final int bidValue; //当前玩家叫分
 
   Player({
     required this.id,
     required this.name,
     required this.seat,
     required this.ready,
-    this.cards = const [],
+    this.cardCount = 0,
     this.isLandlord = false,
+    this.bidValue = 0,
   });
 
   factory Player.fromJson(Map<String, dynamic> json) => _$PlayerFromJson(json);

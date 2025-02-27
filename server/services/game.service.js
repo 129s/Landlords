@@ -3,10 +3,10 @@ const BaseService = require('./base.service');
 const CardUtils = require('../utils/card.utils');
 const logger = require('../utils/logger');
 GamePhase = {
-    PREPARING: 'PREPARING',
-    BIDDING: 'BIDDING',
-    PLAYING: 'PLAYING',
-    ENDED: 'ENDED'
+    PREPARING: 'preparing',
+    BIDDING: 'bidding',
+    PLAYING: 'playing',
+    END: 'end'
 };
 class GameError extends Error {
     constructor(code, message) {

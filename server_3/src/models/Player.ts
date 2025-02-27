@@ -4,8 +4,11 @@ import { Poker } from "./Poker";
 export class Player {
     id: string;
     name: string;
-    cards: Poker[] = [];
+    seat: number = 0;
+    cardCount: number = 0;
+    ready: boolean = false;
     isLandlord = false;
+    bidValue = 0;
 
     constructor(public socketId: string, name: string) {
         this.id = require('uuid').v4();

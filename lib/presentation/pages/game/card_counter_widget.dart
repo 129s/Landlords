@@ -51,17 +51,6 @@ class CardCounterWidget extends ConsumerWidget {
     };
 
     final counts = <CardValue, int>{};
-    void countCards(List<Poker> cards) {
-      for (final card in cards) {
-        counts[card.value] = (counts[card.value] ?? 0) + 1;
-      }
-    }
-
-    countCards(gameState.lastPlayedCards);
-    for (final player in gameState.players) {
-      countCards(player.cards);
-    }
-
     return totalCounts.map((key, total) {
       final remaining = total - (counts[key] ?? 0);
       return MapEntry(key, remaining > 0 ? remaining : 0);

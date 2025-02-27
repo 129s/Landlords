@@ -11,7 +11,7 @@ export class Room {
     status: RoomStatus = RoomStatus.WAITING;
     createdAt: Date = new Date();
 
-    constructor(public maxPlayers: number = 3) {
+    constructor() {
         this.id = require('uuid').v4();
     }
 }
