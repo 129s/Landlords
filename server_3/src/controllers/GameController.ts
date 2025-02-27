@@ -163,6 +163,7 @@ export class GameController {
             const j = Math.floor(Math.random() * (i + 1));
             [cards[i], cards[j]] = [cards[j], cards[i]];
         }
+        console.log(...cards);
         return cards;
     }
 

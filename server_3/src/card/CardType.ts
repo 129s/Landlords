@@ -5,8 +5,6 @@ import { CardUtils } from './CardUtils';
 export enum Suit { hearts, diamonds, clubs, spades, joker }
 
 export enum CardValue {
-    ace,
-    two,
     three,
     four,
     five,
@@ -18,6 +16,8 @@ export enum CardValue {
     jack,
     queen,
     king,
+    ace,
+    two,
     jokerSmall, // 小王
     jokerBig, // 大王
 }
