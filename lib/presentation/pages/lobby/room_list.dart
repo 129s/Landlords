@@ -39,7 +39,7 @@ class _RoomListItem extends StatelessWidget {
         title: Text('房间ID: ${room.id}'),
         subtitle: Text('状态: ${room.roomStatus}'),
         trailing: _buildJoinButton(context),
-        onTap: () => _showRoomDetail(context),
+        onTap: () {},
       ),
     );
   }
@@ -59,25 +59,6 @@ class _RoomListItem extends StatelessWidget {
         });
       },
       child: const Text('加入'),
-    );
-  }
-
-  void _showRoomDetail(BuildContext context) {
-    showDialog(
-      context: context,
-      builder:
-          (context) => AlertDialog(
-            title: Text('房间详情 - ${room.id}'),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('创建时间: ${room.createdAt.toString()}'),
-                const SizedBox(height: 8),
-                Text('玩家人数: ${room.playerCount}/3'),
-              ],
-            ),
-          ),
     );
   }
 }

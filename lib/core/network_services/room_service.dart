@@ -63,6 +63,7 @@ class RoomService {
 
   // 处理房间更新事件
   void _handleRoomUpdate(Map<String, dynamic> data) {
+    _logger.d('Received room data: $data');
     try {
       _currentRoom = Room.fromJson(data);
       _currentRoomController.add(_currentRoom);
@@ -129,7 +130,7 @@ class RoomService {
   // 创建房间
   Future<String> createRoom() async {
     final completer = Completer<String>();
-    _socketService.emitWithAck('createRoom', (data) {
+    _socketService.emitWithAck('createRoom', "", (data) {
       try {
         if (data is Map && data['roomId'] != null) {
           completer.complete(data['roomId'] as String);

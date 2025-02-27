@@ -10,8 +10,9 @@ export class Player {
     isLandlord = false;
     bidValue = 0;
 
-    constructor(public socketId: string, name: string) {
+    constructor(public socketId: string, name: string, seat: number) {
         this.id = require('uuid').v4();
         this.name = name || `玩家_${Math.random().toString(36).substr(2, 4)}`;
+        this.seat = seat;
     }
 }

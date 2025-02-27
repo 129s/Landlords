@@ -13,13 +13,15 @@ Player _$PlayerFromJson(Map<String, dynamic> json) => Player(
   ready: json['ready'] as bool? ?? false,
   cardCount: (json['cardCount'] as num?)?.toInt() ?? 0,
   isLandlord: json['isLandlord'] as bool? ?? false,
+  bidValue: (json['bidValue'] as num?)?.toInt() ?? 0,
 );
 
 Map<String, dynamic> _$PlayerToJson(Player instance) => <String, dynamic>{
   'id': instance.id,
   'name': instance.name,
   'seat': instance.seat,
-  'cardCount': instance.cardCount,
   'ready': instance.ready,
+  'cardCount': instance.cardCount,
   'isLandlord': instance.isLandlord,
+  'bidValue': instance.bidValue,
 };

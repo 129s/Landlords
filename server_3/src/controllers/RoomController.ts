@@ -16,7 +16,7 @@ export class RoomController {
 
     private setupSocketHandlers() {
         this.io.on('connection', (socket: Socket) => {
-            socket.on('createRoom', () => this.handleCreateRoom(socket));
+            socket.on('createRoom', (data, callback) => this.handleCreateRoom(socket, callback));
             socket.on('joinRoom', (roomId: string) => this.handleJoinRoom(socket, roomId));
             socket.on('leaveRoom', () => this.handleLeaveRoom(socket));
             socket.on('toggleReady', () => this.handleToggleReady(socket));
@@ -24,24 +24,19 @@ export class RoomController {
         });
     }
 
-    private handleCreateRoom(socket: Socket) {
+    private handleCreateRoom(socket: Socket, callback: Function) {
         const room = new Room();
-        const player = new Player(socket.id, `Player${socket.id.slice(-4)}`);
-
-        room.players.push(player);
         this.rooms.set(room.id, room);
-        this.playerRoomMap.set(socket.id, room.id);
+        callback({ 'roomId': room.id, })
 
-        socket.join(room.id);
-        this.updateRoomState(room);
-        socket.emit('roomCreated', room.id);
+        this.sendRoomList(); // 广播更新后的房间列表
     }
 
     private handleJoinRoom(socket: Socket, roomId: string) {
         const room = this.rooms.get(roomId);
         if (!room) return socket.emit('error', 'Room not found');
 
-        const player = new Player(socket.id, `Player${socket.id.slice(-4)}`);
+        const player = new Player(socket.id, `Player${socket.id.slice(-4)}`, room.players.length);// 用房间人数分配座位号
         room.players.push(player);
         this.playerRoomMap.set(socket.id, room.id);
 
@@ -80,7 +75,7 @@ export class RoomController {
             // 自动开始检测
             if (room.players.every(p => p.ready) &&
                 room.players.length === 3 &&
-                room.status === 'waiting') {
+                room.roomStatus === 'waiting') {
                 this.gameController.initializeGame(room.id);
             }
         }
@@ -89,10 +84,11 @@ export class RoomController {
     private updateRoomState(room: Room) {
         const response = {
             id: room.id,
-            status: room.status,
+            roomStatus: room.roomStatus,
             players: room.players.map(p => ({
                 id: p.id,
                 name: p.name,
+                seat: p.seat,
                 ready: p.ready,
                 cardCount: p.cardCount || 0
             }))
@@ -106,7 +102,7 @@ export class RoomController {
         const rooms = Array.from(this.rooms.values()).map(room => ({
             id: room.id,
             playerCount: room.players.length,
-            status: room.status
+            roomStatus: room.roomStatus
         }));
 
         if (socket) {

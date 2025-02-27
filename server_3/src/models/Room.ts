@@ -8,8 +8,7 @@ export enum RoomStatus {
 export class Room {
     id: string;
     players: Player[] = [];
-    status: RoomStatus = RoomStatus.WAITING;
-    createdAt: Date = new Date();
+    roomStatus: RoomStatus = RoomStatus.WAITING;
 
     constructor() {
         this.id = require('uuid').v4();
