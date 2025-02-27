@@ -17,7 +17,7 @@ export class RoomController {
     private setupSocketHandlers() {
         this.io.on('connection', (socket: Socket) => {
             socket.on('createRoom', (data, callback) => this.handleCreateRoom(socket, callback));
-            socket.on('joinRoom', (roomId: string) => this.handleJoinRoom(socket, roomId));
+            socket.on('joinRoom', (roomId, callback) => this.handleJoinRoom(socket, roomId, callback));
             socket.on('leaveRoom', () => this.handleLeaveRoom(socket));
             socket.on('toggleReady', () => this.handleToggleReady(socket));
             socket.on('getRoomList', () => this.sendRoomList(socket));
@@ -27,12 +27,12 @@ export class RoomController {
     private handleCreateRoom(socket: Socket, callback: Function) {
         const room = new Room();
         this.rooms.set(room.id, room);
-        callback({ 'roomId': room.id, })
-
         this.sendRoomList(); // 广播更新后的房间列表
+
+        callback({ 'roomId': room.id, 'status': 'success' })
     }
 
-    private handleJoinRoom(socket: Socket, roomId: string) {
+    private handleJoinRoom(socket: Socket, roomId: string, callback: Function) {
         const room = this.rooms.get(roomId);
         if (!room) return socket.emit('error', 'Room not found');
 
@@ -40,8 +40,9 @@ export class RoomController {
         room.players.push(player);
         this.playerRoomMap.set(socket.id, room.id);
 
-        socket.join(room.id);
         this.updateRoomState(room);
+
+        callback({ 'status': 'success' })
     }
 
     private handleLeaveRoom(socket: Socket) {
@@ -60,7 +61,6 @@ export class RoomController {
         }
 
         this.playerRoomMap.delete(socket.id);
-        socket.leave(roomId);
     }
 
     private handleToggleReady(socket: Socket) {
@@ -99,16 +99,12 @@ export class RoomController {
     }
 
     private sendRoomList(socket?: Socket) {
-        const rooms = Array.from(this.rooms.values()).map(room => ({
-            id: room.id,
-            playerCount: room.players.length,
-            roomStatus: room.roomStatus
-        }));
+        const rooms = Array.from(this.rooms.values());
 
-        if (socket) {
-            socket.emit('roomList', rooms);
+        if (socket) {//socket为空时为全体消息
+            socket.emit('roomListUpdate', rooms);
         } else {
-            this.io.emit('roomList', rooms);
+            this.io.emit('roomListUpdate', rooms);
         }
     }
 

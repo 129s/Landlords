@@ -109,24 +109,6 @@ class RoomService {
     }
   }
 
-  // 加入房间
-  void joinRoom(String roomId) {
-    _socketService.emit('joinRoom', {'room_id': roomId});
-    _logger.i('Joining room: $roomId');
-  }
-
-  // 离开房间
-  void leaveRoom() {
-    _socketService.emit('leaveRoom');
-    _logger.i('Leaving room');
-    _currentRoom = null; // Clear the current room when leaving
-    _currentRoomController.add(null);
-  }
-
-  void toggleReady() {
-    _socketService.emit('toggleReady');
-  }
-
   // 创建房间
   Future<String> createRoom() async {
     final completer = Completer<String>();
@@ -142,6 +124,36 @@ class RoomService {
       }
     });
     return completer.future;
+  }
+
+  // 加入房间
+  Future<void> joinRoom(String roomId) {
+    final completer = Completer();
+    _socketService.emitWithAck('joinRoom', roomId, (data) {
+      try {
+        if (data is Map && data['status'] == 'success') {
+          completer.complete();
+        } else {
+          completer.completeError('Invalid room join response');
+        }
+      } catch (e) {
+        completer.completeError(e);
+      }
+    });
+    _logger.i('Joining room: $roomId');
+    return completer.future;
+  }
+
+  // 离开房间
+  void leaveRoom() {
+    _socketService.emit('leaveRoom');
+    _logger.i('Leaving room');
+    _currentRoom = null; // Clear the current room when leaving
+    _currentRoomController.add(null);
+  }
+
+  void toggleReady() {
+    _socketService.emit('toggleReady');
   }
 
   // 刷新房间列表

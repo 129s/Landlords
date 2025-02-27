@@ -54,7 +54,7 @@ class LobbyNotifier extends StateNotifier<LobbyState> {
       final roomId = await _roomService.createRoom();
 
       // 自动加入自己创建的房间
-      _roomService.joinRoom(roomId);
+      await _roomService.joinRoom(roomId);
 
       return roomId;
     } catch (e) {
