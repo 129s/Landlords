@@ -149,24 +149,25 @@ class GameService {
 
   void playCards(List<Poker> cards) {
     final cardData = cards.map((c) => c.toJson()).toList();
-    _socketService.emit('play_cards', cardData);
+    _socketService.emit('playCards', cardData);
     _logger.i('Playing ${cards.length} cards');
   }
 
   void placeBid(int value) {
-    _socketService.emit('place_bid', {'bid_value': value});
+    _socketService.emit('placeBid', {'bid_value': value});
     _logger.i('Bidding with value: $value');
   }
 
   void passTurn() {
-    _socketService.emit('pass_turn');
+    _socketService.emit('passTurn');
     _logger.i('passTurn');
   }
 
   void dispose() {
     _gameStateController.close();
-    _socketService.off('game_state_update');
-    _socketService.off('play_card_result');
-    _socketService.off('bidding_result');
+    _socketService.off('gamePhaseUpdate');
+    _socketService.off('playCardUpdate');
+    _socketService.off('biddingUpdate');
+    _socketService.off('landlordUpdate');
   }
 }
