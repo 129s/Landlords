@@ -52,11 +52,6 @@ class RoomService {
   // 初始化事件监听器
   void _setupEventListeners() {
     _socketService.on<Map<String, dynamic>>('roomUpdate', _handleRoomUpdate);
-    _socketService.on<Map<String, dynamic>>(
-      'playerJoined',
-      _handlePlayerJoined,
-    );
-    _socketService.on<Map<String, dynamic>>('playerLeft', _handlePlayerLeft);
     _socketService.on<List<dynamic>>('roomListUpdate', _handleRoomListUpdate);
     // 添加其他房间相关的事件监听器
   }
@@ -70,28 +65,6 @@ class RoomService {
       _logger.i('Room updated: ${_currentRoom?.toJson()}');
     } catch (e) {
       _logger.e('Error parsing room update: $e');
-    }
-  }
-
-  // 处理玩家加入事件
-  void _handlePlayerJoined(Map<String, dynamic> data) {
-    try {
-      _currentRoom = Room.fromJson(data);
-      _currentRoomController.add(_currentRoom);
-      _logger.i('Player joined room: ${_currentRoom?.toJson()}');
-    } catch (e) {
-      _logger.e('Error parsing player joined event: $e');
-    }
-  }
-
-  // 处理玩家离开事件
-  void _handlePlayerLeft(Map<String, dynamic> data) {
-    try {
-      _currentRoom = Room.fromJson(data);
-      _currentRoomController.add(_currentRoom);
-      _logger.i('Player left room: ${_currentRoom?.toJson()}');
-    } catch (e) {
-      _logger.e('Error parsing player left event: $e');
     }
   }
 
@@ -180,8 +153,6 @@ class RoomService {
     _currentRoomController.close();
     // 移除所有事件监听器，避免内存泄漏
     _socketService.off('roomUpdate');
-    _socketService.off('playerJoined');
-    _socketService.off('playerLeft');
     _socketService.off('roomList');
     // 移除其他事件监听器
   }

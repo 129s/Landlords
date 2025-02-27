@@ -39,6 +39,7 @@ export class RoomController {
 
         const player = new Player(socket.id, `Player${socket.id.slice(-4)}`, room.players.length);// 用房间人数分配座位号
         room.players.push(player);
+        socket.join(room.id); // 将客户端加入房间
         this.playerRoomMap.set(socket.id, room.id);
 
         this.updateRoomState(room);
@@ -54,12 +55,14 @@ export class RoomController {
         if (!room) return;
 
         room.players = room.players.filter(p => p.socketId !== socket.id);
+        socket.leave(room.id);
+        this.playerRoomMap.delete(socket.id);
 
         if (room.players.length === 0) {
             this.rooms.delete(roomId);
         }
         this.updateRoomState(room);
-        this.playerRoomMap.delete(socket.id);
+
         callback({ 'status': 'success' });
     }
 

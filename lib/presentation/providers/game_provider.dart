@@ -14,8 +14,7 @@ class GameNotifier extends StateNotifier<GameState> {
   final GameService _gameService;
   final RoomService _roomService;
 
-  GameNotifier(this._gameService, this._roomService)
-    : super(const GameState(players: []));
+  GameNotifier(this._gameService, this._roomService) : super(const GameState());
 
   // 初始化游戏（从服务端获取数据）
   Future<void> initializeGame() async {
@@ -134,7 +133,7 @@ class GameNotifier extends StateNotifier<GameState> {
 
   // 退出房间
   Future<void> leaveGame() async {
-    state = const GameState(players: []);
+    state = const GameState();
     return _roomService.leaveRoom();
   }
 

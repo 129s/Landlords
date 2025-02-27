@@ -238,7 +238,7 @@ class GamePage extends ConsumerWidget {
   // 玩家信息组件
   Widget _buildOpponentsInfo(GameState gameState) {
     final myIndex = gameState.myPlayerIndex;
-    final players = gameState.players;
+    final players = gameState.room.players;
 
     // 获取其他两个玩家的索引（根据斗地主座位逻辑）
     final leftPlayerIndex = (myIndex + 1) % 3;

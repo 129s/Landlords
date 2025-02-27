@@ -10,7 +10,6 @@ part 'game_state.g.dart';
 class GameState {
   @JsonKey(fromJson: _phaseFromJson, toJson: _phaseToJson)
   final GamePhase gamePhase;
-  final List<Player> players;
   final List<Poker> lastPlayedCards; // 最后一次出的牌（全局），因为每回合只显示一组牌
   final List<Poker> playerCards; // 我方玩家手牌
   final List<Poker> additionalCards; // 底牌
@@ -26,7 +25,6 @@ class GameState {
   const GameState({
     this.gamePhase = GamePhase.preparing,
 
-    this.players = const [],
     this.playerCards = const [],
     this.lastPlayedCards = const [],
     this.additionalCards = const [], //底牌和playercards分开算，即playerCards中不含有底牌
@@ -53,7 +51,6 @@ class GameState {
 
   GameState copyWith({
     GamePhase? gamePhase,
-    List<Player>? players,
     List<Poker>? lastPlayedCards,
     List<Poker>? playerCards,
     List<Poker>? additionalCards,
@@ -67,7 +64,6 @@ class GameState {
   }) {
     return GameState(
       gamePhase: gamePhase ?? this.gamePhase,
-      players: players ?? this.players,
       lastPlayedCards: lastPlayedCards ?? this.lastPlayedCards,
       playerCards: playerCards ?? this.playerCards,
       additionalCards: additionalCards ?? this.additionalCards,

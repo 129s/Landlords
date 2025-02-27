@@ -37,7 +37,7 @@ class _RoomListItem extends StatelessWidget {
       child: ListTile(
         leading: const Icon(Icons.people_alt),
         title: Text('房间ID: ${room.id}'),
-        subtitle: Text('状态: ${room.roomStatus}'),
+        subtitle: Text('状态: ${room.roomStatus},人数：${room.playerCount}/3'),
         trailing: _buildJoinButton(context),
         onTap: () {},
       ),
