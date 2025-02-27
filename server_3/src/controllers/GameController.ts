@@ -12,8 +12,8 @@ export class GameController {
     private gameStates = new Map<string, GameState>();
     private roomController: RoomController;
 
-    constructor(private io: Server) {
-        this.roomController = new RoomController(io);
+    constructor(private io: Server, roomController: RoomController) {
+        this.roomController = roomController;
         this.setupSocketHandlers();
     }
 

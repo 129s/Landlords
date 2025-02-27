@@ -10,7 +10,7 @@ export class RoomController {
     private gameController: GameController;
 
     constructor(private io: Server) {
-        this.gameController = new GameController(io);
+        this.gameController = new GameController(io, this);
         this.setupSocketHandlers();
     }
 
