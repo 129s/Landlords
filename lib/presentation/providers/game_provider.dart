@@ -134,8 +134,8 @@ class GameNotifier extends StateNotifier<GameState> {
 
   // 退出房间
   Future<void> leaveGame() async {
-    _roomService.leaveRoom();
     state = const GameState(players: []);
+    return _roomService.leaveRoom();
   }
 
   @override

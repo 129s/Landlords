@@ -80,8 +80,8 @@ class LobbyNotifier extends StateNotifier<LobbyState> {
     _roomService.refreshRoomList();
   }
 
-  void toggleLoading() {
-    state = state.copyWith(isLoading: !state.isLoading);
+  void toggleLoading({bool isLoading = true}) {
+    state = state.copyWith(isLoading: isLoading);
   }
 
   void leaveRoom() {

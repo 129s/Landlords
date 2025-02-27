@@ -134,7 +134,7 @@ class RoomService {
         if (data is Map && data['status'] == 'success') {
           completer.complete();
         } else {
-          completer.completeError('Invalid room join response');
+          completer.completeError('Invalid room joining response');
         }
       } catch (e) {
         completer.completeError(e);
@@ -145,11 +145,23 @@ class RoomService {
   }
 
   // 离开房间
-  void leaveRoom() {
-    _socketService.emit('leaveRoom');
+  Future<void> leaveRoom() {
+    final completer = Completer();
+    _socketService.emitWithAck('leaveRoom', "", (data) {
+      try {
+        if (data is Map && data['status'] == 'success') {
+          completer.complete();
+        } else {
+          completer.completeError('Invalid room leaving response');
+        }
+      } catch (e) {
+        completer.completeError(e);
+      }
+    });
     _logger.i('Leaving room');
-    _currentRoom = null; // Clear the current room when leaving
+    _currentRoom = null;
     _currentRoomController.add(null);
+    return completer.future;
   }
 
   void toggleReady() {

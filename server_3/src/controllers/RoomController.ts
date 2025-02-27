@@ -18,7 +18,7 @@ export class RoomController {
         this.io.on('connection', (socket: Socket) => {
             socket.on('createRoom', (data, callback) => this.handleCreateRoom(socket, callback));
             socket.on('joinRoom', (roomId, callback) => this.handleJoinRoom(socket, roomId, callback));
-            socket.on('leaveRoom', () => this.handleLeaveRoom(socket));
+            socket.on('leaveRoom', (data, callback) => this.handleLeaveRoom(socket, callback));
             socket.on('toggleReady', () => this.handleToggleReady(socket));
             socket.on('getRoomList', () => this.sendRoomList(socket));
         });
@@ -45,7 +45,7 @@ export class RoomController {
         callback({ 'status': 'success' })
     }
 
-    private handleLeaveRoom(socket: Socket) {
+    private handleLeaveRoom(socket: Socket, callback: Function) {
         const roomId = this.playerRoomMap.get(socket.id);
         if (!roomId) return;
 
@@ -61,6 +61,8 @@ export class RoomController {
         }
 
         this.playerRoomMap.delete(socket.id);
+        this.sendRoomList();
+        callback({ 'status': 'success' });
     }
 
     private handleToggleReady(socket: Socket) {

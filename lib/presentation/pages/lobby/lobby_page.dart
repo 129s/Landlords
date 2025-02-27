@@ -7,12 +7,17 @@ import 'package:landlords_3/presentation/pages/game/game_page.dart';
 import 'package:landlords_3/presentation/pages/lobby/room_list.dart';
 import 'package:landlords_3/presentation/providers/lobby_provider.dart';
 import 'package:landlords_3/presentation/widgets/connection_status_indicator.dart';
+import 'package:logger/logger.dart';
 
-class LobbyPage extends ConsumerWidget {
+class LobbyPage extends ConsumerStatefulWidget {
   const LobbyPage({super.key});
-
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<LobbyPage> createState() => _LobbyPageState();
+}
+
+class _LobbyPageState extends ConsumerState<LobbyPage> {
+  @override
+  Widget build(BuildContext context) {
     final lobbyState = ref.watch(lobbyProvider);
     final playerName = lobbyState.playerName ?? '未命名玩家';
     return Scaffold(
@@ -21,7 +26,7 @@ class LobbyPage extends ConsumerWidget {
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
-            onPressed: () => _refreshRooms(context, ref),
+            onPressed: () => _refreshRooms(),
           ),
           _buildPlayerInfo(playerName),
           _buildConnectionStatus(),
@@ -98,17 +103,9 @@ class LobbyPage extends ConsumerWidget {
     );
   }
 
-  void _refreshRooms(BuildContext context, WidgetRef ref) async {
-    ref.read(lobbyProvider.notifier).toggleLoading();
-    try {
-      ref.read(roomServiceProvider).refreshRoomList();
-    } catch (e) {
-      // 获取房间列表失败
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('获取房间列表失败，请稍后重试')));
-    } finally {
-      ref.read(lobbyProvider.notifier).toggleLoading();
-    }
+  void _refreshRooms() async {
+    ref.read(lobbyProvider.notifier).toggleLoading(isLoading: true);
+    ref.read(roomServiceProvider).refreshRoomList();
+    ref.read(lobbyProvider.notifier).toggleLoading(isLoading: false);
   }
 }

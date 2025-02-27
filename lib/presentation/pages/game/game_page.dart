@@ -6,8 +6,10 @@ import 'package:landlords_3/data/models/game_state.dart';
 import 'package:landlords_3/presentation/pages/game/additional_cards_widget.dart';
 import 'package:landlords_3/presentation/pages/game/card_counter_widget.dart';
 import 'package:landlords_3/presentation/pages/game/player_info_widget.dart';
+import 'package:landlords_3/presentation/pages/lobby/lobby_page.dart';
 import 'package:landlords_3/presentation/providers/game_provider.dart';
 import 'package:landlords_3/presentation/widgets/poker_list_widget.dart';
+import 'package:logger/logger.dart';
 
 class GamePage extends ConsumerWidget {
   final String roomId;
@@ -73,7 +75,10 @@ class GamePage extends ConsumerWidget {
     return AppBar(
       leading: IconButton(
         icon: const Icon(Icons.exit_to_app, color: Colors.white),
-        onPressed: () => gameNotifer.leaveGame(), // 退出按钮
+        onPressed:
+            () => gameNotifer.leaveGame().then((_) {
+              Navigator.pop(context);
+            }), // 退出并返回大厅
       ),
       title: CardCounterWidget(gameState: gameState), // 记牌器区域
       actions: [
