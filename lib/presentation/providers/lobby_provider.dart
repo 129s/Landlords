@@ -42,7 +42,6 @@ class LobbyNotifier extends StateNotifier<LobbyState> {
   void _init() {
     // 实时监听房间更新
     _roomSubscription = _roomService.roomListStream.listen((rooms) {
-      print('Received rooms from stream: $rooms');
       state = state.copyWith(rooms: rooms);
     });
   }

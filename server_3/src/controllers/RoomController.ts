@@ -16,6 +16,7 @@ export class RoomController {
 
     private setupSocketHandlers() {
         this.io.on('connection', (socket: Socket) => {
+            this.sendRoomList();
             socket.on('createRoom', (data, callback) => this.handleCreateRoom(socket, callback));
             socket.on('joinRoom', (roomId, callback) => this.handleJoinRoom(socket, roomId, callback));
             socket.on('leaveRoom', (data, callback) => this.handleLeaveRoom(socket, callback));
@@ -27,7 +28,7 @@ export class RoomController {
     private handleCreateRoom(socket: Socket, callback: Function) {
         const room = new Room();
         this.rooms.set(room.id, room);
-        this.sendRoomList(); // 广播更新后的房间列表
+        this.updateRoomState(room);
 
         callback({ 'roomId': room.id, 'status': 'success' })
     }
@@ -56,12 +57,9 @@ export class RoomController {
 
         if (room.players.length === 0) {
             this.rooms.delete(roomId);
-        } else {
-            this.updateRoomState(room);
         }
-
+        this.updateRoomState(room);
         this.playerRoomMap.delete(socket.id);
-        this.sendRoomList();
         callback({ 'status': 'success' });
     }
 
