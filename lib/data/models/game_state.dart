@@ -18,7 +18,6 @@ class GameState {
   final int currentBid;
   final int? highestBid;
   final List<int> selectedIndices;
-  final Room? room;
   final int landlordIndex;
   bool get isLandlord => myPlayerIndex == landlordIndex;
 
@@ -33,7 +32,6 @@ class GameState {
     this.currentBid = 0,
     this.highestBid = 0,
     this.selectedIndices = const [],
-    this.room,
     this.landlordIndex = -1, // 初始值-1表示未设置
   });
 
@@ -59,7 +57,6 @@ class GameState {
     int? currentBid,
     int? highestBid,
     List<int>? selectedIndices,
-    Room? room,
     int? landlordIndex,
   }) {
     return GameState(
@@ -72,7 +69,6 @@ class GameState {
       currentBid: currentBid ?? this.currentBid,
       highestBid: highestBid ?? this.highestBid,
       selectedIndices: selectedIndices ?? this.selectedIndices,
-      room: room ?? this.room,
       landlordIndex: landlordIndex ?? this.landlordIndex,
     );
   }

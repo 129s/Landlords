@@ -119,4 +119,14 @@ export class RoomController {
         const roomId = this.playerRoomMap.get(socketId);
         return roomId ? this.rooms.get(roomId) : undefined;
     }
+
+    public getPlayerIndexFromSocket(socketId: string): number {
+        const room = this.getPlayerRoom(socketId);
+        if (!room) return -1;
+
+        const player = room.players.find(p => p.socketId === socketId);
+        if (!player) return -1;
+
+        return room.players.indexOf(player);
+    }
 }

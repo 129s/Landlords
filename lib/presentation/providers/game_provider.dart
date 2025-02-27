@@ -19,8 +19,7 @@ class GameNotifier extends StateNotifier<GameState> {
   // 初始化游戏（从服务端获取数据）
   Future<void> initializeGame() async {
     try {
-      final room = _roomService.currentRoom;
-      state = state.copyWith(room: room);
+      state = state.copyWith(gamePhase: GamePhase.preparing);
     } catch (e) {
       state = state.copyWith(gamePhase: GamePhase.error);
     }
@@ -135,11 +134,6 @@ class GameNotifier extends StateNotifier<GameState> {
   Future<void> leaveGame() async {
     state = const GameState();
     return _roomService.leaveRoom();
-  }
-
-  @override
-  void dispose() {
-    super.dispose();
   }
 }
 

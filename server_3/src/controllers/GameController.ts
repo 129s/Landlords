@@ -1,4 +1,4 @@
-// src/controllers/GameController.ts
+
 import { Server, Socket } from "socket.io";
 import { CardUtils } from "../card/CardUtils";
 import { CardTypeEnum, CardValue, Suit } from "../card/CardType";
@@ -35,16 +35,9 @@ export class GameController {
 
         if (!room || room.players.length !== 3) return;
 
-        // 初始化玩家数据
-        gameState.players = room.players.map(p => ({
-            ...p,
-            cardCount: 17,
-            isLandlord: false
-        }));
-
         // 生成并分发扑克牌
         const allCards = this.generateAndShuffleCards();
-        this.dealCards(gameState, allCards);
+        this.dealCards(roomId, gameState, allCards);
 
         gameState.gamePhase = GamePhase.bidding;
         gameState.currentPlayerIndex = 0; // 从第一个玩家开始叫分
@@ -56,9 +49,15 @@ export class GameController {
     private handlePlayCards(socket: Socket, cards: any[], callback: Function) {
         const roomId = this.getPlayerRoomId(socket.id);
         const gameState = this.gameStates.get(roomId);
+        const playerIndex = this.roomController.getPlayerIndexFromSocket(socket.id);
 
-        if (!gameState?.canPlayCards(socket.id)) {
-            callback({ success: false, error: "Invalid operation" });
+        if (!gameState) {
+            console.log("null gameState");
+            return;
+        }
+
+        if (playerIndex != gameState.currentPlayerIndex) {
+            console.log("not your turn");
             return;
         }
 
@@ -73,13 +72,14 @@ export class GameController {
         }
 
         // 更新游戏状态
-        gameState.playerCards = gameState.playerCards.filter(p =>
+        gameState.allCards[playerIndex] = gameState.allCards[playerIndex].filter(p =>
             !playedCards.some(c => c.value === p.value && c.suit === p.suit));
         gameState.lastPlayedCards = playedCards;
+
         gameState.currentPlayerIndex = (gameState.currentPlayerIndex + 1) % 3;
 
         // 检查游戏是否结束
-        if (gameState.playerCards.length === 0) {
+        if (gameState.allCards[playerIndex].length === 0) {
             this.handleGameEnd(roomId);
             return;
         }
@@ -91,18 +91,33 @@ export class GameController {
     private handlePlaceBid(socket: Socket, value: number) {
         const roomId = this.getPlayerRoomId(socket.id);
         const gameState = this.gameStates.get(roomId);
+        const playerIndex = this.roomController.getPlayerIndexFromSocket(socket.id);
 
-        if (!gameState?.canPlaceBid(socket.id) || value <= gameState.highestBid) {
+        if (!gameState) {
+            console.log("null gameState");
+            return;
+        }
+
+        if (playerIndex != gameState.currentPlayerIndex) {
+            console.log("not your turn");
             return;
         }
 
         // 更新叫分状态
-        gameState.highestBid = value;
+        gameState.allBids[playerIndex] = value;
+
         gameState.currentPlayerIndex = (gameState.currentPlayerIndex + 1) % 3;
 
         // 叫分结束处理
-        if (this.shouldEndBidding(gameState)) {
-            this.assignLandlord(roomId);
+        if (value == 3) {
+            gameState.landlordIndex = playerIndex;
+            gameState.gamePhase = GamePhase.playing;
+        }
+        if (gameState.allBids.length >= 3) {
+            gameState.landlordIndex = gameState.allBids.reduce((maxIndex, currentValue, currentIndex, array) => {
+                return currentValue > array[maxIndex] ? currentIndex : maxIndex;
+            }, 0);
+            gameState.gamePhase = GamePhase.playing;
         }
 
         this.updateGameState(roomId);
@@ -111,8 +126,17 @@ export class GameController {
     private handlePassTurn(socket: Socket) {
         const roomId = this.getPlayerRoomId(socket.id);
         const gameState = this.gameStates.get(roomId);
+        const playerIndex = this.roomController.getPlayerIndexFromSocket(socket.id);
 
-        if (!gameState) return;
+        if (!gameState) {
+            console.log("null gameState");
+            return;
+        }
+
+        if (playerIndex != gameState.currentPlayerIndex) {
+            console.log("not your turn");
+            return;
+        }
 
         // 在出牌阶段pass
         if (gameState.gamePhase === GamePhase.playing) {
@@ -121,7 +145,7 @@ export class GameController {
         }
     }
 
-    // 核心游戏逻辑方法
+    // 生成并洗牌
     private generateAndShuffleCards(): Poker[] {
         const cards: Poker[] = [];
         // 生成普通牌
@@ -142,7 +166,8 @@ export class GameController {
         return cards;
     }
 
-    private dealCards(gameState: GameState, allCards: Poker[]) {
+    // 发牌
+    private dealCards(roomId: string, gameState: GameState, allCards: Poker[]) {
         // 给玩家发牌（每人17张）
         gameState.allCards = [
             allCards.slice(0, 17),
@@ -152,29 +177,7 @@ export class GameController {
         // 底牌（最后3张）
         gameState.additionalCards = allCards.slice(51, 54);
 
-        // 初始化玩家手牌
-        gameState.playerCards = gameState.allCards[0];
-    }
-
-    private assignLandlord(roomId: string) {
-        const gameState = this.gameStates.get(roomId);
-        if (!gameState) return;
-
-        // 分配地主
-        const landlordIndex = gameState.players
-            .findIndex(p => p.id === gameState.players[gameState.currentPlayerIndex].id);
-        gameState.players[landlordIndex].isLandlord = true;
-        gameState.landlordIndex = landlordIndex;
-
-        // 分配底牌
-        gameState.playerCards = [
-            ...gameState.playerCards,
-            ...gameState.additionalCards
-        ];
-
-        // 进入出牌阶段
-        gameState.gamePhase = GamePhase.playing;
-        gameState.currentPlayerIndex = landlordIndex;
+        this.updateGameState(roomId);
     }
 
     private validatePlay(gameState: GameState, playedCards: Poker[]): boolean {
@@ -193,26 +196,10 @@ export class GameController {
         const gameState = this.gameStates.get(roomId);
         if (!gameState) return;
 
-        // 向房间广播完整游戏状态
-        this.io.to(roomId).emit('gamePhaseUpdate', {
-            gamePhase: gameState.gamePhase,
-            currentPlayerIndex: gameState.currentPlayerIndex
-        });
-
-        // 发送玩家特定数据
-        gameState.players.forEach((player, index) => {
-            this.io.to(player.socketId).emit('playCardUpdate', {
-                playerCards: gameState.allCards[index].map(c => c.toJSON()),
-                lastPlayedCards: gameState.lastPlayedCards.map(c => c.toJSON())
-            });
-        });
-
-        // 发送地主信息
-        if (gameState.landlordIndex !== -1) {
-            this.io.to(roomId).emit('landlordUpdate', {
-                landlordIndex: gameState.landlordIndex,
-                additionalCards: gameState.additionalCards.map(c => c.toJSON())
-            });
+        for (let i = 0; i < 3; i++) {
+            let id = this.roomController.getRoom(roomId)?.players[i].socketId;
+            if (!id) return;
+            this.io.to(id).emit('gameUpdate', gameState.toJSON(i));
         }
     }
 
@@ -221,27 +208,11 @@ export class GameController {
         if (!gameState) return;
 
         // 确定获胜队伍
-        const winnerIsLandlord = gameState.playerCards.length === 0 &&
-            gameState.players[gameState.currentPlayerIndex].isLandlord;
 
         // 发送游戏结束事件
-        this.io.to(roomId).emit('gameEnd', {
-            winnerIsLandlord,
-            players: gameState.players.map(p => ({
-                id: p.id,
-                cardCount: p.cardCount
-            }))
-        });
 
         // 清理游戏状态
         this.gameStates.delete(roomId);
-    }
-
-    private shouldEndBidding(gameState: GameState): boolean {
-        // 叫分结束条件：三轮叫分或有人叫3分
-        return gameState.highestBid === 3 ||
-            (gameState.currentPlayerIndex === 0 &&
-                gameState.players.some(p => p.bidValue !== 0));
     }
 
     private getPlayerRoomId(socketId: string): string {
