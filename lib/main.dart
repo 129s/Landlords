@@ -19,7 +19,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: '斗地主',
       theme: ThemeData(primarySwatch: Colors.blue),
-      home: const GamePage(roomId: "test"),
+      home: const LobbyPage(),
       debugShowCheckedModeBanner: false,
     );
   }
