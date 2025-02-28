@@ -1,5 +1,6 @@
 import 'package:json_annotation/json_annotation.dart';
 import 'package:landlords_3/core/network_services/constants/constants.dart';
+import 'package:landlords_3/data/models/player.dart';
 import 'package:landlords_3/data/models/poker.dart';
 
 part 'game_state.g.dart';
@@ -13,9 +14,10 @@ class GameState {
   final List<Poker> additionalCards; // 底牌
   final int myPlayerIndex; // 我方玩家索引(索引充当座位号)
   final int currentPlayerIndex; // 当前行动玩家索引
-  final List<int> allBids; // 叫分列表
+  final List<Player> players; // 所有玩家信息
   final List<int> selectedIndices;
   final int landlordIndex;
+
   bool get isLandlord => myPlayerIndex == landlordIndex;
 
   const GameState({
@@ -26,7 +28,7 @@ class GameState {
     this.additionalCards = const [], //底牌和playercards分开算，即playerCards中不含有底牌
     this.myPlayerIndex = 0,
     this.currentPlayerIndex = 0,
-    this.allBids = const [],
+    this.players = const [],
     this.selectedIndices = const [],
     this.landlordIndex = -1, // 初始值-1表示未设置
   });
@@ -50,7 +52,7 @@ class GameState {
     List<Poker>? additionalCards,
     int? myPlayerIndex,
     int? currentPlayerIndex,
-    List<int>? allBids,
+    List<Player>? players,
     List<int>? selectedIndices,
     int? landlordIndex,
   }) {
@@ -61,7 +63,7 @@ class GameState {
       additionalCards: additionalCards ?? this.additionalCards,
       myPlayerIndex: myPlayerIndex ?? this.myPlayerIndex,
       currentPlayerIndex: currentPlayerIndex ?? this.currentPlayerIndex,
-      allBids: allBids ?? this.allBids,
+      players: players ?? this.players,
       selectedIndices: selectedIndices ?? this.selectedIndices,
       landlordIndex: landlordIndex ?? this.landlordIndex,
     );

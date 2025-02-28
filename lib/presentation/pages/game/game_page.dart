@@ -125,7 +125,7 @@ class GamePage extends ConsumerWidget {
       padding: const EdgeInsets.symmetric(vertical: 10),
       child:
           gameState.gamePhase == GamePhase.preparing
-              ? _buildPreparingButtons(gameNotifer)
+              ? _buildPreparingButtons(gameState, gameNotifer)
               : gameState.gamePhase == GamePhase.bidding
               ? _buildBiddingButtons(gameState, gameNotifer)
               : gameState.gamePhase == GamePhase.playing
@@ -135,7 +135,8 @@ class GamePage extends ConsumerWidget {
   }
 
   // 准备按钮
-  Widget _buildPreparingButtons(GameNotifier gameNotifer) {
+  Widget _buildPreparingButtons(GameState gameState, GameNotifier gameNotifer) {
+    final isPrepared = gameState.players[gameState.myPlayerIndex].ready;
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
@@ -143,12 +144,12 @@ class GamePage extends ConsumerWidget {
           padding: const EdgeInsets.symmetric(horizontal: 8.0),
           child: ElevatedButton(
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.green,
+              backgroundColor: isPrepared ? Colors.green : Colors.blue,
               foregroundColor: Colors.white,
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
             ),
             onPressed: () => gameNotifer.toggleReady(),
-            child: const Text("准备"),
+            child: isPrepared ? const Text("解除") : const Text("准备"),
           ),
         ),
       ],
@@ -161,7 +162,9 @@ class GamePage extends ConsumerWidget {
       mainAxisAlignment: MainAxisAlignment.center,
       children:
           [1, 2, 3].map((score) {
-            final isDisabled = gameState.allBids.contains(score);
+            final isDisabled = gameState.players
+                .map((e) => e.bidValue)
+                .contains(score);
             return Padding(
               padding: const EdgeInsets.symmetric(horizontal: 8.0),
               child: ElevatedButton(

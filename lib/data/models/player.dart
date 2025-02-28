@@ -14,7 +14,7 @@ class Player {
   @JsonKey(defaultValue: false)
   final bool isLandlord;
   @JsonKey(defaultValue: 0)
-  final int bidValue; //当前玩家叫分
+  final int bidValue; // 玩家叫分
 
   Player({
     required this.id,
