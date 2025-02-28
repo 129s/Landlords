@@ -59,7 +59,11 @@ export class RoomController {
 
     private handleJoinRoom(socket: Socket, roomId: string, callback: Function) {
         const room = this.rooms.get(roomId);
-        if (!room) return socket.emit('error', 'Room not found');
+        if (!room) {
+            callback({ 'status': 'fail' })
+            return;
+        }
+
         const seatIndex = room.getAvailableSeat();
         if (seatIndex === -1) return callback({ 'status': 'room_full' });
 
@@ -84,6 +88,7 @@ export class RoomController {
 
         const room = this.rooms.get(roomId);
         if (!room) return;
+
         const leavingSeatIndex = room.players[this.getPlayerIndexFromSocket(socket.id)].seat;
 
         // 离开相关逻辑
@@ -96,16 +101,16 @@ export class RoomController {
             if (p.seat > leavingSeatIndex) p.seat--;
         });
 
-        // 更新房间状态
-        this.updateRoomState(room);
-
-        // 更新游戏状态中的玩家列表
-        room.gameController.updatePlayers(room.players)
-
         // 删除空房间
         if (room.players.length === 0) {
             this.rooms.delete(roomId);
+        } else {
+            // 更新游戏状态中的玩家列表
+            room.gameController.updatePlayers(room.players)
         }
+
+        // 更新房间状态
+        this.updateRoomState(room);
 
         callback({ 'status': 'success' });
     }

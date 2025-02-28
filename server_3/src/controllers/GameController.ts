@@ -57,6 +57,7 @@ export class GameController {
     // Room更新时相应调用该方法，保持room和gamestate的players列表一致
     public updatePlayers(players: Player[]) {
         this.gameState.players = players;
+        this.updateGameState();
     }
 
     // Room满员且都准备时调用该方法，初始化游戏

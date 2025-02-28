@@ -6,6 +6,7 @@ import 'package:landlords_3/core/network_services/room_service.dart';
 import 'package:landlords_3/data/providers/service_providers.dart';
 import 'package:landlords_3/data/models/room.dart';
 import 'package:landlords_3/presentation/pages/chat/chat_page.dart';
+import 'package:logger/logger.dart';
 
 class LobbyState {
   final List<Room> rooms;
@@ -66,13 +67,16 @@ class LobbyNotifier extends StateNotifier<LobbyState> {
   Future<void> joinExistingRoom(String roomId) async {
     state = state.copyWith(isLoading: true);
     try {
-      _roomService.joinRoom(roomId);
-      MaterialPageRoute(builder: (_) => ChatPage(roomId: roomId));
+      return _roomService.joinRoom(roomId);
     } catch (e) {
-      print(e);
+      Logger().e(e);
     } finally {
       state = state.copyWith(isLoading: false);
     }
+  }
+
+  Future<void> leaveRoom() {
+    return _roomService.leaveRoom();
   }
 
   void refreshRooms() {
@@ -81,10 +85,6 @@ class LobbyNotifier extends StateNotifier<LobbyState> {
 
   void toggleLoading({bool isLoading = true}) {
     state = state.copyWith(isLoading: isLoading);
-  }
-
-  void leaveRoom() {
-    _roomService.leaveRoom();
   }
 }
 

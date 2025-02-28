@@ -37,12 +37,7 @@ class PlayerInfoWidget extends StatelessWidget {
           ),
           child: Stack(
             children: [
-              ClipOval(
-                child: Image.asset(
-                  'assets/avatars/default_avatar.png',
-                  fit: BoxFit.cover,
-                ),
-              ),
+              Text("玩"),
               if (isLandlord)
                 Positioned(
                   bottom: 0,
