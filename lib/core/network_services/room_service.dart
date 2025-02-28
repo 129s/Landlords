@@ -137,10 +137,6 @@ class RoomService {
     return completer.future;
   }
 
-  void toggleReady() {
-    _socketService.emit('toggleReady');
-  }
-
   // 刷新房间列表
   void refreshRoomList() {
     _socketService.emit('getRoomList');

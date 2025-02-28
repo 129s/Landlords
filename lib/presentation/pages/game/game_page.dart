@@ -74,20 +74,28 @@ class GamePage extends ConsumerWidget {
     GameState gameState,
     GameNotifier gameNotifer,
   ) {
-    return AppBar(
-      leading: IconButton(
-        icon: const Icon(Icons.exit_to_app, color: Colors.white),
-        onPressed:
-            () => gameNotifer.leaveGame().then((_) {
-              Navigator.pop(context);
-            }), // 退出并返回大厅
-      ),
-      title: CardCounterWidget(gameState: gameState), // 记牌器区域
-      actions: [
-        IconButton(
-          icon: const Icon(Icons.settings, color: Colors.white),
-          onPressed: () {}, // 设置按钮 TODO: 显示设置面板
+    return Stack(
+      children: [
+        Positioned(
+          left: 24,
+          top: 24,
+          child: IconButton(
+            icon: const Icon(Icons.exit_to_app, color: Colors.white),
+            onPressed:
+                () => gameNotifer.leaveGame().then((_) {
+                  Navigator.pop(context);
+                }), // 退出并返回大厅
+          ),
         ),
+        Positioned(
+          right: 24,
+          top: 24,
+          child: IconButton(
+            icon: const Icon(Icons.settings, color: Colors.white),
+            onPressed: () {}, // 设置按钮 TODO: 显示设置面板
+          ),
+        ),
+        Center(child: CardCounterWidget(gameState: gameState)),
       ],
     );
   }
@@ -126,6 +134,8 @@ class GamePage extends ConsumerWidget {
       child:
           gameState.gamePhase == GamePhase.preparing
               ? _buildPreparingButtons(gameState, gameNotifer)
+              : gameState.currentPlayerIndex != gameState.myPlayerIndex
+              ? SizedBox.shrink() // 非玩家行动回合不显示行动栏
               : gameState.gamePhase == GamePhase.bidding
               ? _buildBiddingButtons(gameState, gameNotifer)
               : gameState.gamePhase == GamePhase.playing
@@ -161,15 +171,20 @@ class GamePage extends ConsumerWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children:
-          [1, 2, 3].map((score) {
-            final isDisabled = gameState.players
+          [0, 1, 2, 3].map((score) {
+            final maxBidValue = gameState.players
                 .map((e) => e.bidValue)
-                .contains(score);
+                .reduce((current, next) => current < next ? current : next);
+            final isDisabled =
+                score == 0
+                    ? false
+                    : gameState.players[gameState.myPlayerIndex].bidValue <
+                        maxBidValue;
             return Padding(
               padding: const EdgeInsets.symmetric(horizontal: 8.0),
               child: ElevatedButton(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: isDisabled ? Colors.grey : Colors.blue,
+                  backgroundColor: isDisabled ? Colors.blueGrey : Colors.blue,
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(
                     horizontal: 20,
@@ -178,7 +193,7 @@ class GamePage extends ConsumerWidget {
                 ),
                 onPressed:
                     isDisabled ? null : () => gameNotifer.placeBid(score),
-                child: Text("$score 分"),
+                child: score > 0 ? Text("$score 分") : const Text("不叫"),
               ),
             );
           }).toList(),
@@ -265,13 +280,13 @@ class GamePage extends ConsumerWidget {
   // 玩家信息组件
   Widget _buildOpponentsInfo(GameState gameState, WidgetRef ref) {
     final myIndex = gameState.myPlayerIndex;
-    final players = ref.read(roomServiceProvider).currentRoom?.players;
+    final players = gameState.players;
 
     // 获取其他两个玩家的索引（根据斗地主座位逻辑）
     final leftPlayerIndex = (myIndex + 1) % 3;
     final rightPlayerIndex = (myIndex + 2) % 3;
     final leftPlayer =
-        leftPlayerIndex > players!.length
+        leftPlayerIndex > players.length
             ? Player(id: "", name: "等待加入", seat: 0, ready: false)
             : players[leftPlayerIndex];
     final rightPlayer =

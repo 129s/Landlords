@@ -25,15 +25,17 @@ export class GameController {
 
     // 初始化游戏（由RoomController在房间满人时调用）
     public initializeGame(roomId: string) {
-        const gameState = new GameState();
         const room = this.roomController.getRoom(roomId);
 
         if (!room || room.players.length !== 3) return;
+        const gameState = new GameState();
+        gameState.players = [...room.players]; // 浅拷贝
 
         // 生成并分发扑克牌
         const allCards = this.generateAndShuffleCards();
         this.dealCards(roomId, gameState, allCards);
 
+        // 进入叫分阶段
         gameState.gamePhase = GamePhase.bidding;
         gameState.currentPlayerIndex = 0; // 从第一个玩家开始叫分
 
@@ -132,24 +134,51 @@ export class GameController {
         }
 
         // 更新叫分状态
-        gameState.allBids[playerIndex] = value;
+        gameState.players[playerIndex].bidValue = value;
 
         gameState.currentPlayerIndex = (gameState.currentPlayerIndex + 1) % 3;
 
         // 叫分结束处理
-        if (value == 3) {
-            gameState.landlordIndex = playerIndex;
+        if (this.checkBidCompletion(gameState)) {
+            // 确定最高叫分者
+            let maxBid = 0;
+            let landlordIndex = -1;
+            gameState.players.forEach((player, index) => {
+                if (player.bidValue > maxBid) {
+                    maxBid = player.bidValue;
+                    landlordIndex = index;
+                }
+            });
+
+            // 分配地主身份
+            gameState.landlordIndex = landlordIndex;
+            gameState.players[landlordIndex].isLandlord = true;
+
+            // 分配底牌
+            gameState.allCards[landlordIndex].push(...gameState.additionalCards);
+
+            // 进入出牌阶段
             gameState.gamePhase = GamePhase.playing;
-        }
-        if (gameState.allBids.length >= 3) {
-            gameState.landlordIndex = gameState.allBids.reduce((maxIndex, currentValue, currentIndex, array) => {
-                return currentValue > array[maxIndex] ? currentIndex : maxIndex;
-            }, 0);
-            gameState.gamePhase = GamePhase.playing;
+            gameState.currentPlayerIndex = landlordIndex;
         }
 
         this.updateGameState(roomId);
         callback({ 'status': 'success' })
+    }
+
+    private checkBidCompletion(gameState: GameState): boolean {
+        // 条件1：有玩家叫3分
+        if (gameState.players.some(p => p.bidValue === 3)) return true;
+
+        // 条件2：连续两位pass
+        const lastTwoPlayers = [
+            gameState.players[(gameState.currentPlayerIndex + 1) % 3],
+            gameState.players[(gameState.currentPlayerIndex + 2) % 3]
+        ];
+        if (lastTwoPlayers.every(p => p.bidValue === -1)) return true;
+
+        // 条件3：所有玩家完成叫分
+        return gameState.players.every(p => p.bidValue !== undefined);
     }
 
     private handlePassTurn(roomId: string, playerIndex: number, callback: Function) {
@@ -171,6 +200,7 @@ export class GameController {
             callback({ 'status': 'fail' })
             return;
         }
+
         gameState.currentPlayerIndex = (gameState.currentPlayerIndex + 1) % 3;
         this.updateGameState(roomId);
         callback({ 'status': 'success' });

@@ -10,7 +10,7 @@ export class GameState {
         public landlordIndex: number = -1,
         public additionalCards: Poker[] = [],
         public allCards: Poker[][] = [[], [], []],// 所有玩家的牌组
-        public allBids: number[] = [],// 所有玩家的叫分
+        public players: Player[] = [],// 玩家列表
     ) { }
 
     toJSON(index: number) {
@@ -20,7 +20,7 @@ export class GameState {
             lastPlayedCards: this.lastPlayedCards.map(c => c.toJSON()),
             landlordIndex: this.landlordIndex,
             additionalCards: this.additionalCards.map(c => c.toJSON()),
-            allBids: this.allBids,
+            players: this.players,
             playerCards: this.allCards[index].map(c => c.toJSON())// 发送到客户端的我方玩家手牌
         };
     }
@@ -40,7 +40,6 @@ export class GameState {
             landlordIndex ?? this.landlordIndex,
             additionalCards ?? this.additionalCards,
             allCards ?? this.allCards,
-            this.allBids ?? this.allBids,
         );
     }
 }
