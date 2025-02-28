@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:landlords_3/domain/entities/room_model.dart';
+import 'package:landlords_3/data/models/player.dart';
+import 'package:landlords_3/data/models/room.dart';
 import 'package:landlords_3/presentation/pages/chat/chat_page.dart';
 import 'package:landlords_3/presentation/pages/game/game_page.dart';
 import 'package:landlords_3/presentation/providers/lobby_provider.dart';
@@ -26,7 +27,7 @@ class RoomList extends ConsumerWidget {
 }
 
 class _RoomListItem extends StatelessWidget {
-  final RoomModel room;
+  final Room room;
 
   const _RoomListItem({required this.room});
 
@@ -36,9 +37,9 @@ class _RoomListItem extends StatelessWidget {
       child: ListTile(
         leading: const Icon(Icons.people_alt),
         title: Text('房间ID: ${room.id}'),
-        subtitle: Text('状态: ${room.displayStatus}'),
+        subtitle: Text('状态: ${room.roomStatus},人数：${room.playerCount}/3'),
         trailing: _buildJoinButton(context),
-        onTap: () => _showRoomDetail(context),
+        onTap: () {},
       ),
     );
   }
@@ -46,7 +47,7 @@ class _RoomListItem extends StatelessWidget {
   Widget _buildJoinButton(BuildContext context) {
     return ElevatedButton(
       style: ElevatedButton.styleFrom(
-        backgroundColor: room.players.length == 3 ? Colors.grey : Colors.blue,
+        backgroundColor: room.playerCount == 3 ? Colors.grey : Colors.blue,
       ),
       onPressed: () {
         ProviderScope.containerOf(
@@ -58,25 +59,6 @@ class _RoomListItem extends StatelessWidget {
         });
       },
       child: const Text('加入'),
-    );
-  }
-
-  void _showRoomDetail(BuildContext context) {
-    showDialog(
-      context: context,
-      builder:
-          (context) => AlertDialog(
-            title: Text('房间详情 - ${room.id}'),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('创建时间: ${room.createdAt.toString()}'),
-                const SizedBox(height: 8),
-                Text('玩家人数: ${room.players.length}/3'),
-              ],
-            ),
-          ),
     );
   }
 }

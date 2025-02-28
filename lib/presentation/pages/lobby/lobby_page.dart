@@ -2,18 +2,22 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:landlords_3/data/providers/repo_providers.dart';
-import 'package:landlords_3/presentation/pages/chat/chat_page.dart';
+import 'package:landlords_3/data/providers/service_providers.dart';
 import 'package:landlords_3/presentation/pages/game/game_page.dart';
 import 'package:landlords_3/presentation/pages/lobby/room_list.dart';
 import 'package:landlords_3/presentation/providers/lobby_provider.dart';
 import 'package:landlords_3/presentation/widgets/connection_status_indicator.dart';
+import 'package:logger/logger.dart';
 
-class LobbyPage extends ConsumerWidget {
+class LobbyPage extends ConsumerStatefulWidget {
   const LobbyPage({super.key});
-
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<LobbyPage> createState() => _LobbyPageState();
+}
+
+class _LobbyPageState extends ConsumerState<LobbyPage> {
+  @override
+  Widget build(BuildContext context) {
     final lobbyState = ref.watch(lobbyProvider);
     final playerName = lobbyState.playerName ?? '未命名玩家';
     return Scaffold(
@@ -22,7 +26,7 @@ class LobbyPage extends ConsumerWidget {
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
-            onPressed: () => _refreshRooms(context, ref),
+            onPressed: () => _refreshRooms(),
           ),
           _buildPlayerInfo(playerName),
           _buildConnectionStatus(),
@@ -50,9 +54,8 @@ class LobbyPage extends ConsumerWidget {
             () => ref.read(lobbyProvider.notifier).createAndJoinRoom().then((
               roomId,
             ) {
-              if (roomId == null) print("房间不存在");
               Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => GamePage(roomId: roomId!)),
+                MaterialPageRoute(builder: (_) => GamePage(roomId: roomId)),
               );
             }),
         child: const Icon(Icons.add),
@@ -88,21 +91,11 @@ class LobbyPage extends ConsumerWidget {
           Expanded(
             child: TextField(
               decoration: const InputDecoration(
-                hintText: '输入房间ID加入游戏',
+                hintText: '输入ID查找房间',
                 prefixIcon: Icon(Icons.search),
                 border: OutlineInputBorder(),
               ),
-              onSubmitted:
-                  (roomId) => ref
-                      .read(lobbyProvider.notifier)
-                      .joinExistingRoom(roomId)
-                      .then((_) {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (_) => GamePage(roomId: roomId),
-                          ),
-                        );
-                      }),
+              onSubmitted: (_) {}, //TODO: 实现列表筛选
             ),
           ),
         ],
@@ -110,17 +103,9 @@ class LobbyPage extends ConsumerWidget {
     );
   }
 
-  void _refreshRooms(BuildContext context, WidgetRef ref) async {
-    ref.read(lobbyProvider.notifier).toggleLoading();
-    try {
-      ref.read(roomRepoProvider).requestRooms();
-    } catch (e) {
-      // 获取房间列表失败
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('获取房间列表失败，请稍后重试')));
-    } finally {
-      ref.read(lobbyProvider.notifier).toggleLoading();
-    }
+  void _refreshRooms() async {
+    ref.read(lobbyProvider.notifier).toggleLoading(isLoading: true);
+    ref.read(roomServiceProvider).refreshRoomList();
+    ref.read(lobbyProvider.notifier).toggleLoading(isLoading: false);
   }
 }

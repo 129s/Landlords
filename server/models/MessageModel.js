@@ -8,7 +8,6 @@ class MessageModel {
         this.senderName = senderName;
         this.content = content;
         this.timestamp = new Date();
-        this.type = 'text';
     }
 }
 

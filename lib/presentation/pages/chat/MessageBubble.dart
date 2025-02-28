@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:landlords_3/domain/entities/message_model.dart';
+import 'package:landlords_3/data/models/message.dart';
 
 class MessageBubble extends StatelessWidget {
-  final MessageModel message;
+  final Message message;
   final bool isMe;
 
   const MessageBubble({super.key, required this.message, required this.isMe});

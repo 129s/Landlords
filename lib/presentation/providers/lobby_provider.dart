@@ -2,14 +2,13 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:landlords_3/data/providers/repo_providers.dart';
-import 'package:landlords_3/domain/entities/room_model.dart';
-import 'package:landlords_3/domain/repositories/room_repo.dart';
+import 'package:landlords_3/core/network_services/room_service.dart';
+import 'package:landlords_3/data/providers/service_providers.dart';
+import 'package:landlords_3/data/models/room.dart';
 import 'package:landlords_3/presentation/pages/chat/chat_page.dart';
-import 'package:landlords_3/presentation/widgets/player_name_dialog.dart';
 
 class LobbyState {
-  final List<RoomModel> rooms;
+  final List<Room> rooms;
   final String? playerName;
   final bool isLoading;
 
@@ -20,7 +19,7 @@ class LobbyState {
   });
 
   LobbyState copyWith({
-    List<RoomModel>? rooms,
+    List<Room>? rooms,
     String? playerName,
     bool? isLoading,
   }) {
@@ -33,29 +32,32 @@ class LobbyState {
 }
 
 class LobbyNotifier extends StateNotifier<LobbyState> {
-  final RoomRepository _repository;
+  final RoomService _roomService;
   StreamSubscription? _roomSubscription;
 
-  LobbyNotifier(this._repository) : super(const LobbyState()) {
+  LobbyNotifier(this._roomService) : super(const LobbyState()) {
     _init();
   }
 
   void _init() {
     // 实时监听房间更新
-    _roomSubscription = _repository.watchRooms().listen((rooms) {
-      print('Received rooms from stream: $rooms');
+    _roomSubscription = _roomService.roomListStream.listen((rooms) {
       state = state.copyWith(rooms: rooms);
     });
   }
 
-  //如果成功则返回roomId,否则为null
-  Future<String?> createAndJoinRoom() async {
+  Future<String> createAndJoinRoom() async {
     state = state.copyWith(isLoading: true);
     try {
-      final roomId = await _repository.createRoom();
+      // 发送创建请求并等待房间创建成功返回id
+      final roomId = await _roomService.createRoom();
+
+      // 自动加入自己创建的房间
+      await _roomService.joinRoom(roomId);
+
       return roomId;
     } catch (e) {
-      print(e);
+      throw Exception('房间创建失败: $e');
     } finally {
       state = state.copyWith(isLoading: false);
     }
@@ -64,7 +66,7 @@ class LobbyNotifier extends StateNotifier<LobbyState> {
   Future<void> joinExistingRoom(String roomId) async {
     state = state.copyWith(isLoading: true);
     try {
-      await _repository.joinRoom(roomId);
+      _roomService.joinRoom(roomId);
       MaterialPageRoute(builder: (_) => ChatPage(roomId: roomId));
     } catch (e) {
       print(e);
@@ -73,29 +75,20 @@ class LobbyNotifier extends StateNotifier<LobbyState> {
     }
   }
 
-  void toggleLoading() {
-    state = state.copyWith(isLoading: !state.isLoading);
+  void refreshRooms() {
+    _roomService.refreshRoomList();
   }
 
-  void updateRooms(List<RoomModel> rooms) {
-    state = state.copyWith(rooms: rooms);
+  void toggleLoading({bool isLoading = true}) {
+    state = state.copyWith(isLoading: isLoading);
   }
 
   void leaveRoom() {
-    _repository.leaveRoom();
-    _roomSubscription = _repository.watchRooms().listen((rooms) {
-      state = state.copyWith(rooms: rooms);
-    });
-  }
-
-  @override
-  void dispose() {
-    _roomSubscription?.cancel();
-    super.dispose();
+    _roomService.leaveRoom();
   }
 }
 
 final lobbyProvider = StateNotifierProvider<LobbyNotifier, LobbyState>((ref) {
-  final repository = ref.watch(roomRepoProvider);
+  final repository = ref.watch(roomServiceProvider);
   return LobbyNotifier(repository);
 });
