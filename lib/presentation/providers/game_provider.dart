@@ -49,6 +49,11 @@ class GameNotifier extends StateNotifier<GameState> {
     return _roomService.leaveRoom();
   }
 
+  // 切换准备状态
+  Future<void> toggleReady() async {
+    return _roomService.toggleReady();
+  }
+
   // 选择卡牌
   void toggleCardSelection(int index) {
     final newIndices = List<int>.from(state.selectedIndices);
