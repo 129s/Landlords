@@ -8,6 +8,7 @@ import { GamePhase } from "../constants/constants";
 import { RoomController } from "./RoomController";
 import { v4 as uuidv4 } from 'uuid';
 import { Room, RoomStatus } from "../models/Room";
+import { Player } from "../models/Player";
 
 interface PlayerAction {
     type: string;
@@ -23,13 +24,25 @@ export class GameController {
         this.setupSocketHandlers();
     }
 
+    // Room更新时相应调用该方法，保持room和gamestate的players列表一致
+    // 考虑重构这部分实现
+    public updatePlayers(roomId: string, players: Player[]) {
+        const gameState = this.gameStates.get(roomId);
+
+        if (!gameState) {
+            console.log("null gameState");
+            return;
+        }
+
+        gameState.players = players;
+    }
+
     // 初始化游戏
     private initializeGame(roomId: string) {
         const room = this.roomController.getRoom(roomId);
 
         if (!room || room.players.length !== 3) return;
         const gameState = new GameState();
-        gameState.players = [...room.players]; // 浅拷贝
 
         // 生成并分发扑克牌
         const allCards = this.generateAndShuffleCards();
