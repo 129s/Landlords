@@ -55,7 +55,7 @@ class SocketService {
     _socket.onConnect((_) {
       _connectionState = GameConnectionState.connected;
       _connectionController.add(_connectionState);
-      _logger.i('Socket connected');
+      _logger.i('Socket connected.\nID:${_socket.id}');
     });
 
     _socket.onDisconnect((_) {

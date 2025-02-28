@@ -1,12 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:landlords_3/data/models/player.dart';
 import 'package:landlords_3/data/models/room.dart';
-import 'package:landlords_3/presentation/pages/chat/chat_page.dart';
 import 'package:landlords_3/presentation/pages/game/game_page.dart';
 import 'package:landlords_3/presentation/providers/lobby_provider.dart';
-import 'package:landlords_3/presentation/widgets/player_name_dialog.dart';
-import 'package:logger/web.dart';
 
 class RoomList extends ConsumerWidget {
   const RoomList({super.key});

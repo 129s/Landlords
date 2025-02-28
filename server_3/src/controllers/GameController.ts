@@ -22,20 +22,21 @@ export class GameController {
         private io: Server,
         private room: Room
     ) {
-        this.setupSocketHandlers();
+        // this.setupSocketHandlers();
     }
 
     // 监听玩家操作事件
-    private setupSocketHandlers() {
-        this.io.on('connection', (socket: Socket) => {
-            socket.on('playerAction', (action, callback) => {
-                this.handlePlayerAction(socket, action, callback);
-            });
-        });
-    }
+    // private setupSocketHandlers() {
+    //     this.io.on('connection', (socket: Socket) => {
+    //         console.log("GameController");
+    //         socket.on('playerAction', (action, callback) => {
+    //             this.handlePlayerAction(socket, action, callback);
+    //         });
+    //     });
+    // }
 
-    private handlePlayerAction(socket: Socket, action: PlayerAction, callback: Function) {
-        const playerIndex = this.room.players.findIndex(p => p.socketId === socket.id);
+    public handlePlayerAction(socket: Socket, action: PlayerAction, callback: Function) {
+        const playerIndex = this.room.players.findIndex(p => p.id === socket.id);
 
         console.log("PlayerAction: " + action.type);
 
@@ -241,9 +242,10 @@ export class GameController {
 
     // 更新房间内所有玩家游戏状态
     private updateGameState() {
-        console.log("updateGameState");
         this.room.players.forEach((player, index) => {
-            this.io.to(player.socketId).emit('gameStateUpdate',
+            console.log(`updateGameState: ${index}, ${player.id}`);
+            console.log(this.gameState.toJSON(index));
+            this.io.to(player.id).emit('gameStateUpdate',
                 this.gameState.toJSON(index));
         });
     }

@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:landlords_3/core/card/card_type.dart';
 import 'package:landlords_3/core/card/card_utils.dart';
 import 'package:landlords_3/data/models/game_state.dart';
-import 'package:landlords_3/data/models/poker.dart';
 
 class CardCounterWidget extends ConsumerWidget {
   final GameState gameState;

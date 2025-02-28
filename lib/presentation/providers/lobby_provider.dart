@@ -1,11 +1,9 @@
 import 'dart:async';
 
-import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:landlords_3/core/network_services/room_service.dart';
 import 'package:landlords_3/data/providers/service_providers.dart';
 import 'package:landlords_3/data/models/room.dart';
-import 'package:landlords_3/presentation/pages/chat/chat_page.dart';
 import 'package:logger/logger.dart';
 
 class LobbyState {

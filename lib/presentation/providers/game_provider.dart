@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:landlords_3/core/network_services/constants/constants.dart';
 import 'package:landlords_3/core/network_services/game_service.dart';
 import 'package:landlords_3/core/network_services/room_service.dart';
 import 'package:landlords_3/data/providers/service_providers.dart';
@@ -21,15 +20,6 @@ class GameNotifier extends StateNotifier<GameState> {
     _gameSubscription = _gameService.gameStateStream.listen((gameState) {
       if (gameState != null) state = gameState;
     });
-  }
-
-  // 初始化游戏（从服务端获取数据）
-  Future<void> initializeGame() async {
-    try {
-      state = state.copyWith(gamePhase: GamePhase.preparing);
-    } catch (e) {
-      state = state.copyWith(gamePhase: GamePhase.error);
-    }
   }
 
   // 提交出牌

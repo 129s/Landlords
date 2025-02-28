@@ -7,7 +7,12 @@ class PlayerNameDialog extends ConsumerWidget {
   final ValueChanged<String>? onConfirm;
   final VoidCallback? onCancel;
 
-  const PlayerNameDialog({required this.title, this.onConfirm, this.onCancel});
+  const PlayerNameDialog({
+    super.key,
+    required this.title,
+    this.onConfirm,
+    this.onCancel,
+  });
 
   @override
   Widget build(BuildContext context, ref) {

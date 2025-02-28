@@ -158,38 +158,44 @@ class CardType {
     for (int i = 0; i < cards.length - 1; i++) {
       if (cards[i].value == CardValue.two ||
           cards[i].value == CardValue.jokerBig ||
-          cards[i].value == CardValue.jokerSmall)
+          cards[i].value == CardValue.jokerSmall) {
         return false; // 顺子不能包含 2 和大小王
+      }
       if (CardUtils.getCardWeight(cards[i]) -
               CardUtils.getCardWeight(cards[i + 1]) !=
-          1)
+          1) {
         return false; // 必须是连续的
+      }
     }
     return true;
   }
 
   // 判断是否是连对
   static bool _isStraightPair(List<Poker> cards) {
-    if (cards.length < 6 || cards.length % 2 != 0)
+    if (cards.length < 6 || cards.length % 2 != 0) {
       return false; // 连对长度必须大于等于 6 且是偶数
+    }
     for (int i = 0; i < cards.length - 2; i += 2) {
       if (cards[i].value != cards[i + 1].value) return false; // 必须是对子
       if (cards[i].value == CardValue.two ||
           cards[i].value == CardValue.jokerBig ||
-          cards[i].value == CardValue.jokerSmall)
+          cards[i].value == CardValue.jokerSmall) {
         return false; // 连对不能包含 2 和大小王
+      }
       if (CardUtils.getCardWeight(cards[i]) -
               CardUtils.getCardWeight(cards[i + 2]) !=
-          1)
+          1) {
         return false; // 必须是连续的
+      }
     }
     return true;
   }
 
   // 判断是否是飞机
   static bool _isPlane(List<Poker> cards) {
-    if (cards.length < 6 || cards.length % 3 != 0)
+    if (cards.length < 6 || cards.length % 3 != 0) {
       return false; // 飞机长度必须大于等于 6 且是 3 的倍数
+    }
     final counts = <CardValue, int>{};
     for (final card in cards) {
       counts[card.value] = (counts[card.value] ?? 0) + 1;
@@ -204,8 +210,9 @@ class CardType {
     for (int i = 0; i < cardValues.length - 1; i++) {
       if (CardUtils.getCardWeightByValue(cardValues[i]) -
               CardUtils.getCardWeightByValue(cardValues[i + 1]) !=
-          1)
+          1) {
         return false; // 必须是连续的
+      }
     }
     return true;
   }

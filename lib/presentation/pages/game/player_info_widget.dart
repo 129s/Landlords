@@ -37,7 +37,6 @@ class PlayerInfoWidget extends StatelessWidget {
           ),
           child: Stack(
             children: [
-              Text("玩"),
               if (isLandlord)
                 Positioned(
                   bottom: 0,

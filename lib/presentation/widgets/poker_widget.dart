@@ -14,7 +14,7 @@ class PokerWidget extends StatefulWidget {
   final bool disableHoverEffect;
 
   const PokerWidget({
-    Key? key,
+    super.key,
     required this.card,
     required this.width,
     required this.height,
@@ -23,7 +23,7 @@ class PokerWidget extends StatefulWidget {
     this.isSelectable = true,
     required this.isTempSelected,
     this.disableHoverEffect = false,
-  }) : super(key: key);
+  });
 
   @override
   State<PokerWidget> createState() => _PokerWidgetState();

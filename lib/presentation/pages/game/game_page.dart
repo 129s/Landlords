@@ -4,14 +4,11 @@ import 'package:landlords_3/core/card/card_type.dart';
 import 'package:landlords_3/core/network_services/constants/constants.dart';
 import 'package:landlords_3/data/models/game_state.dart';
 import 'package:landlords_3/data/models/player.dart';
-import 'package:landlords_3/data/providers/service_providers.dart';
 import 'package:landlords_3/presentation/pages/game/additional_cards_widget.dart';
 import 'package:landlords_3/presentation/pages/game/card_counter_widget.dart';
 import 'package:landlords_3/presentation/pages/game/player_info_widget.dart';
-import 'package:landlords_3/presentation/pages/lobby/lobby_page.dart';
 import 'package:landlords_3/presentation/providers/game_provider.dart';
 import 'package:landlords_3/presentation/widgets/poker_list_widget.dart';
-import 'package:logger/logger.dart';
 
 class GamePage extends ConsumerWidget {
   final String roomId;
@@ -45,26 +42,27 @@ class GamePage extends ConsumerWidget {
             children: [
               // 顶部操作栏
               _buildTopBar(context, gameState, gameNotifer),
-              // // 中央游戏区域
+              // 中央游戏区域
               Expanded(child: _buildGameArea(gameState, ref)),
-              // // 功能按钮栏
-              // _buildActionBar(gameState, gameNotifer),
-              // // 玩家手牌区域
-              Container(
-                margin: EdgeInsets.all(24),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 8,
-                ),
-                decoration: BoxDecoration(
-                  color: Colors.black54,
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Text(
-                  "${gameState.toJson()}",
-                  style: TextStyle(color: Colors.amber),
-                ),
-              ),
+              // 功能按钮栏
+              _buildActionBar(gameState, gameNotifer),
+              // 调试GameState相关信息
+              // Container(
+              //   margin: EdgeInsets.all(24),
+              //   padding: const EdgeInsets.symmetric(
+              //     horizontal: 12,
+              //     vertical: 8,
+              //   ),
+              //   decoration: BoxDecoration(
+              //     color: Colors.black54,
+              //     borderRadius: BorderRadius.circular(16),
+              //   ),
+              //   child: Text(
+              //     "${gameState.toJson()}",
+              //     style: TextStyle(color: Colors.amber),
+              //   ),
+              // ),
+              // 玩家手牌区域
               _buildMyHandCards(gameState, gameNotifer),
             ],
           ),
@@ -298,15 +296,15 @@ class GamePage extends ConsumerWidget {
     final players = gameState.players;
 
     // 获取其他两个玩家的索引（根据斗地主座位逻辑）
-    final leftPlayerIndex = (myIndex + 1) % 3;
-    final rightPlayerIndex = (myIndex + 2) % 3;
+    final leftPlayerIndex = (myIndex - 1) % 3;
+    final rightPlayerIndex = (myIndex + 1) % 3;
     final leftPlayer =
-        leftPlayerIndex > players.length
-            ? Player(id: "", name: "等待加入", seat: 0, ready: false)
+        leftPlayerIndex >= players.length
+            ? _buildWaitingPlayer(leftPlayerIndex)
             : players[leftPlayerIndex];
     final rightPlayer =
-        rightPlayerIndex > players.length
-            ? Player(id: "", name: "等待加入", seat: 0, ready: false)
+        rightPlayerIndex >= players.length
+            ? _buildWaitingPlayer(leftPlayerIndex)
             : players[rightPlayerIndex];
 
     return Stack(
@@ -376,6 +374,18 @@ class GamePage extends ConsumerWidget {
                   : const SizedBox.shrink(),
         );
       },
+    );
+  }
+
+  Player _buildWaitingPlayer(int seat) {
+    return Player(
+      id: "waiting_$seat",
+      name: "等待加入",
+      seat: seat,
+      ready: false,
+      cardCount: 0,
+      isLandlord: false,
+      bidValue: 0,
     );
   }
 

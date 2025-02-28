@@ -14,12 +14,19 @@ export class RoomController {
 
     private setupSocketHandlers() {
         this.io.on('connection', (socket: Socket) => {
+            console.log("RoomController");
             this.sendRoomList();
+            // 监听房间相关事件
             socket.on('createRoom', (data, callback) => this.handleCreateRoom(socket, callback));
             socket.on('joinRoom', (roomId, callback) => this.handleJoinRoom(socket, roomId, callback));
             socket.on('leaveRoom', (data, callback) => this.handleLeaveRoom(socket, callback));
             socket.on('getRoomList', () => this.sendRoomList(socket));
-            socket.on('toggleReady', (data, callback) => this.handleToggleReady(socket, callback))
+            socket.on('toggleReady', (data, callback) => this.handleToggleReady(socket, callback));
+            // 监听玩家操作事件
+            socket.on('playerAction', (action, callback) => {
+                const room = this.getPlayerRoom(socket.id);
+                room?.gameController.handlePlayerAction(socket, action, callback);
+            });
         });
     }
 
@@ -30,7 +37,7 @@ export class RoomController {
             return;
         }
 
-        const player = room.players.find(p => p.socketId === socket.id);
+        const player = room.players.find(p => p.id === socket.id);
         if (!player) {
             callback({ 'status': 'fail' });
             return;
@@ -60,12 +67,17 @@ export class RoomController {
     private handleJoinRoom(socket: Socket, roomId: string, callback: Function) {
         const room = this.rooms.get(roomId);
         if (!room) {
+            // console.log("handleJoinRoom fail")
             callback({ 'status': 'fail' })
             return;
         }
 
         const seatIndex = room.getAvailableSeat();
-        if (seatIndex === -1) return callback({ 'status': 'room_full' });
+        if (seatIndex === -1) {
+            // console.log("room_full");
+            callback({ 'status': 'room_full' });
+            return;
+        }
 
         // 加入相关逻辑
         const player = new Player(socket.id, `Player${socket.id.slice(-4)}`, seatIndex);
@@ -76,8 +88,11 @@ export class RoomController {
         // 更新房间状态
         this.updateRoomState(room);
 
-        // 更新游戏状态中的玩家列表
-        room.gameController.updatePlayers(room.players)
+        // 增加延迟确保socket已加入房间
+        setTimeout(() => {
+            // 更新游戏状态中的玩家列表
+            room.gameController.updatePlayers(room.players);
+        }, 200); // 等待WebSocket连接完全建立
 
         callback({ 'status': 'success' })
     }
@@ -92,7 +107,7 @@ export class RoomController {
         const leavingSeatIndex = room.players[this.getPlayerIndexFromSocket(socket.id)].seat;
 
         // 离开相关逻辑
-        room.players = room.players.filter(p => p.socketId !== socket.id);
+        room.players = room.players.filter(p => p.id !== socket.id);
         socket.leave(room.id);
         this.playerRoomMap.delete(socket.id);
 
@@ -157,7 +172,7 @@ export class RoomController {
         const room = this.getPlayerRoom(socketId);
         if (!room) return -1;
 
-        const player = room.players.find(p => p.socketId === socketId);
+        const player = room.players.find(p => p.id === socketId);
         if (!player) return -1;
 
         return room.players.indexOf(player);

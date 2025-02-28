@@ -17,7 +17,7 @@ class PokerListWidget extends StatefulWidget {
   final bool disableHoverEffect; // 新增属性
 
   const PokerListWidget({
-    Key? key,
+    super.key,
     required this.cards,
     this.isLoading = false,
     required this.onCardTapped,
@@ -28,7 +28,7 @@ class PokerListWidget extends StatefulWidget {
     this.maxSpacingFactor = 0.5,
     this.isSelectable = true,
     this.disableHoverEffect = false, // 默认不禁用悬停效果
-  }) : super(key: key);
+  });
 
   @override
   State<PokerListWidget> createState() => _PokerListWidgetState();

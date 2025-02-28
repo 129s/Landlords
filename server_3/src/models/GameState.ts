@@ -16,7 +16,7 @@ export class GameState {
     toJSON(index: number) {
         return {
             gamePhase: this.gamePhase,
-            currentPlayerIndex: this.currentPlayerIndex,
+            currentPlayerIndex: index,
             lastPlayedCards: this.lastPlayedCards.map(c => c.toJSON()),
             landlordIndex: this.landlordIndex,
             additionalCards: this.additionalCards.map(c => c.toJSON()),
