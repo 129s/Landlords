@@ -13,4 +13,12 @@ export class Room {
     constructor() {
         this.id = require('uuid').v4();
     }
+
+    getAvailableSeat(): number {
+        for (let i = 0; i < 3; i++) {
+            if (!this.players.some(p => p.seat === i)) return i;
+        }
+        return -1;
+    }
+
 }

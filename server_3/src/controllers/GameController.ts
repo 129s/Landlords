@@ -7,7 +7,7 @@ import { Poker } from "../models/Poker";
 import { GamePhase } from "../constants/constants";
 import { RoomController } from "./RoomController";
 import { v4 as uuidv4 } from 'uuid';
-import { RoomStatus } from "../models/Room";
+import { Room, RoomStatus } from "../models/Room";
 
 interface PlayerAction {
     type: string;
@@ -23,8 +23,8 @@ export class GameController {
         this.setupSocketHandlers();
     }
 
-    // 初始化游戏（由RoomController在房间满人时调用）
-    public initializeGame(roomId: string) {
+    // 初始化游戏
+    private initializeGame(roomId: string) {
         const room = this.roomController.getRoom(roomId);
 
         if (!room || room.players.length !== 3) return;

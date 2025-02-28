@@ -33,12 +33,16 @@ export class RoomController {
     private handleJoinRoom(socket: Socket, roomId: string, callback: Function) {
         const room = this.rooms.get(roomId);
         if (!room) return socket.emit('error', 'Room not found');
+        const seatIndex = room.getAvailableSeat();
+        if (seatIndex === -1) return callback({ 'status': 'room_full' });
 
-        const player = new Player(socket.id, `Player${socket.id.slice(-4)}`, room.players.length);// 用房间人数分配座位号
+        // 加入相关逻辑
+        const player = new Player(socket.id, `Player${socket.id.slice(-4)}`, seatIndex);
         room.players.push(player);
         socket.join(room.id); // 将客户端加入房间
         this.playerRoomMap.set(socket.id, room.id);
 
+        // 更新房间状态
         this.updateRoomState(room);
 
         callback({ 'status': 'success' })
@@ -50,19 +54,28 @@ export class RoomController {
 
         const room = this.rooms.get(roomId);
         if (!room) return;
+        const leavingSeatIndex = room.players[this.getPlayerIndexFromSocket(socket.id)].seat;
 
+        // 离开相关逻辑
         room.players = room.players.filter(p => p.socketId !== socket.id);
         socket.leave(room.id);
         this.playerRoomMap.delete(socket.id);
 
+        // 重新整理玩家索引
+        room.players.forEach(p => {
+            if (p.seat > leavingSeatIndex) p.seat--;
+        });
+
+        // 更新房间状态
+        this.updateRoomState(room);
+
+        // 删除空房间
         if (room.players.length === 0) {
             this.rooms.delete(roomId);
         }
-        this.updateRoomState(room);
 
         callback({ 'status': 'success' });
     }
-
     public updateRoomState(room: Room) {
         const playersInfo = room.players.map(p => ({
             id: p.id,
