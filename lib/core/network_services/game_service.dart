@@ -1,6 +1,8 @@
 import 'dart:async';
+import 'dart:developer';
 
 import 'package:landlords_3/core/network_services/constants/constants.dart';
+import 'package:landlords_3/core/network_services/player_action.dart';
 import 'package:landlords_3/core/network_services/socket_service.dart';
 import 'package:landlords_3/data/models/game_state.dart';
 import 'package:landlords_3/data/models/poker.dart';
@@ -58,26 +60,39 @@ class GameService {
     }
   }
 
-  void playCards(List<Poker> cards) {
-    final cardData = cards.map((c) => c.toJson()).toList();
-    _socketService.emit('playCards', cardData);
-    _logger.i('Playing ${cards.length} cards');
+  Future<void> playerAction(PlayerAction action) async {
+    final completer = Completer();
+    final jsonData = action.toJson();
+    _logger.d(jsonData);
+    _socketService.emitWithAck('playerAction', jsonData, (data) {
+      try {
+        if (data is Map && data['status'] == 'success') {
+          completer.complete();
+        } else {
+          completer.completeError('Invalid player action response');
+        }
+      } catch (e) {
+        completer.completeError(e);
+        _logger.e('Action failed: ${e.toString()}');
+      }
+    });
+    _logger.i(
+      'Request playerAction: ${action.actionType} with data: ${jsonData['data']}',
+    );
+    return completer.future;
   }
 
-  void placeBid(int value) {
-    _socketService.emit('placeBid', {'bid_value': value});
-    _logger.i('Bidding with value: $value');
-  }
+  Future<void> playCards(List<Poker> cards) => playerAction(
+    PlayerAction(ActionType.playCards, cards.map((c) => c.toJson()).toList()),
+  );
 
-  void passTurn() {
-    _socketService.emit('passTurn');
-    _logger.i('passTurn');
-  }
+  Future<void> placeBid(int value) =>
+      playerAction(PlayerAction(ActionType.placeBid, value));
 
-  void toggleReady() {
-    _socketService.emit('toggleReady');
-    _logger.i('toggleReady');
-  }
+  Future<void> passTurn() => playerAction(PlayerAction(ActionType.passTurn));
+
+  Future<void> toggleReady() =>
+      playerAction(PlayerAction(ActionType.toggleReady));
 
   void dispose() {
     _gameStateController.close();

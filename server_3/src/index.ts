@@ -3,6 +3,7 @@ import { createServer } from 'http';
 import { Server } from 'socket.io';
 import { RoomController } from './controllers/RoomController';
 import { GamePhase } from './constants/constants';
+import { GameController } from './controllers/GameController';
 
 const app = express();
 const server = createServer(app);
@@ -15,6 +16,7 @@ const io = new Server(server, {
 
 // 初始化房间控制器
 const roomController = new RoomController(io);
+const gameController = new GameController(io, roomController);
 
 // 启动服务器
 const PORT = process.env.PORT || 3000;

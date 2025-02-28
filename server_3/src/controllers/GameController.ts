@@ -7,6 +7,12 @@ import { Poker } from "../models/Poker";
 import { GamePhase } from "../constants/constants";
 import { RoomController } from "./RoomController";
 import { v4 as uuidv4 } from 'uuid';
+import { RoomStatus } from "../models/Room";
+
+interface PlayerAction {
+    type: string;
+    data?: any;
+}
 
 export class GameController {
     private gameStates = new Map<string, GameState>();
@@ -15,17 +21,6 @@ export class GameController {
     constructor(private io: Server, roomController: RoomController) {
         this.roomController = roomController;
         this.setupSocketHandlers();
-    }
-
-    private setupSocketHandlers() {
-        this.io.on('connection', (socket: Socket) => {
-            socket.on('playCards', (cards: any[], callback) =>
-                this.handlePlayCards(socket, cards, callback));
-            socket.on('placeBid', (value: number) =>
-                this.handlePlaceBid(socket, value));
-            socket.on('passTurn', () =>
-                this.handlePassTurn(socket));
-        });
     }
 
     // 初始化游戏（由RoomController在房间满人时调用）
@@ -46,17 +41,50 @@ export class GameController {
         this.updateGameState(roomId);
     }
 
-    private handlePlayCards(socket: Socket, cards: any[], callback: Function) {
-        const roomId = this.getPlayerRoomId(socket.id);
-        const gameState = this.gameStates.get(roomId);
+    // 监听事件
+    private setupSocketHandlers() {
+        this.io.on('connection', (socket: Socket) => {
+            // 客户端的玩家操作
+            socket.on('playerAction', (action, callback) => this.handlePlayerAction(socket, action, callback));
+        });
+    }
+
+    private handlePlayerAction(socket: Socket, action: PlayerAction, callback: Function) {
         const playerIndex = this.roomController.getPlayerIndexFromSocket(socket.id);
+        const roomId = this.getPlayerRoomId(socket.id);
+
+        console.log("PlayerAction: " + action.type);
+
+        switch (action.type) {
+            case 'playCards':
+                this.handlePlayCards(roomId, playerIndex, action.data, callback);
+                break;
+            case 'placeBid':
+                this.handlePlaceBid(roomId, playerIndex, action.data, callback);
+                break;
+            case 'passTurn':
+                this.handlePassTurn(roomId, playerIndex, callback);
+                break;
+            case 'toggleReady':
+                this.handleToggleReady(socket, callback);
+                break;
+            default:
+                throw new Error('Invalid action type');
+        }
+    }
+
+    private handlePlayCards(roomId: string, playerIndex: number, cards: Array<Poker>, callback: Function) {
+        console.log(cards);
+        const gameState = this.gameStates.get(roomId);
 
         if (!gameState) {
+            callback({ 'status': 'fail' })
             console.log("null gameState");
             return;
         }
 
         if (playerIndex != gameState.currentPlayerIndex) {
+            callback({ 'status': 'fail' })
             console.log("not your turn");
             return;
         }
@@ -67,7 +95,7 @@ export class GameController {
 
         // 验证牌型合法性
         if (!this.validatePlay(gameState, playedCards)) {
-            callback({ success: false, error: "Invalid card combination" });
+            callback({ 'status': 'fail' })
             return;
         }
 
@@ -85,20 +113,20 @@ export class GameController {
         }
 
         this.updateGameState(roomId);
-        callback({ success: true });
+        callback({ 'status': 'success' })
     }
 
-    private handlePlaceBid(socket: Socket, value: number) {
-        const roomId = this.getPlayerRoomId(socket.id);
+    private handlePlaceBid(roomId: string, playerIndex: number, value: number, callback: Function) {
         const gameState = this.gameStates.get(roomId);
-        const playerIndex = this.roomController.getPlayerIndexFromSocket(socket.id);
 
         if (!gameState) {
+            callback({ 'status': 'fail' })
             console.log("null gameState");
             return;
         }
 
         if (playerIndex != gameState.currentPlayerIndex) {
+            callback({ 'status': 'fail' })
             console.log("not your turn");
             return;
         }
@@ -121,28 +149,57 @@ export class GameController {
         }
 
         this.updateGameState(roomId);
+        callback({ 'status': 'success' })
     }
 
-    private handlePassTurn(socket: Socket) {
-        const roomId = this.getPlayerRoomId(socket.id);
+    private handlePassTurn(roomId: string, playerIndex: number, callback: Function) {
         const gameState = this.gameStates.get(roomId);
-        const playerIndex = this.roomController.getPlayerIndexFromSocket(socket.id);
 
         if (!gameState) {
+            callback({ 'status': 'fail' })
             console.log("null gameState");
             return;
         }
 
         if (playerIndex != gameState.currentPlayerIndex) {
+            callback({ 'status': 'fail' })
             console.log("not your turn");
             return;
         }
 
-        // 在出牌阶段pass
-        if (gameState.gamePhase === GamePhase.playing) {
-            gameState.currentPlayerIndex = (gameState.currentPlayerIndex + 1) % 3;
-            this.updateGameState(roomId);
+        if (gameState.gamePhase != GamePhase.playing) {
+            callback({ 'status': 'fail' })
+            return;
         }
+        gameState.currentPlayerIndex = (gameState.currentPlayerIndex + 1) % 3;
+        this.updateGameState(roomId);
+        callback({ 'status': 'success' });
+    }
+
+    private handleToggleReady(socket: Socket, callback: Function) {
+        const room = this.roomController.getPlayerRoom(socket.id);
+        if (!room) {
+            callback({ 'status': 'fail' });
+            return;
+        }
+
+        const player = room.players.find(p => p.socketId === socket.id);
+        if (!player) {
+            callback({ 'status': 'fail' });
+            return;
+        }
+
+        player.ready = !player.ready;
+
+        // 检测是否开始游戏
+        if (room.players.every(p => p.ready) &&
+            room.players.length === 3) {
+            room.roomStatus = RoomStatus.PLAYING;
+            this.initializeGame(room.id);
+        }
+
+        this.roomController.updateRoomState(room);
+        callback({ 'status': 'success' });
     }
 
     // 生成并洗牌

@@ -7,10 +7,8 @@ import { GameController } from "./GameController";
 export class RoomController {
     private rooms = new Map<string, Room>();
     private playerRoomMap = new Map<string, string>();
-    private gameController: GameController;
 
     constructor(private io: Server) {
-        this.gameController = new GameController(io, this);
         this.setupSocketHandlers();
     }
 
@@ -20,7 +18,6 @@ export class RoomController {
             socket.on('createRoom', (data, callback) => this.handleCreateRoom(socket, callback));
             socket.on('joinRoom', (roomId, callback) => this.handleJoinRoom(socket, roomId, callback));
             socket.on('leaveRoom', (data, callback) => this.handleLeaveRoom(socket, callback));
-            socket.on('toggleReady', () => this.handleToggleReady(socket));
             socket.on('getRoomList', () => this.sendRoomList(socket));
         });
     }
@@ -66,26 +63,7 @@ export class RoomController {
         callback({ 'status': 'success' });
     }
 
-    private handleToggleReady(socket: Socket) {
-        const room = this.getPlayerRoom(socket.id);
-        if (!room) return;
-
-        const player = room.players.find(p => p.socketId === socket.id);
-        if (player) {
-            player.ready = !player.ready;
-            this.updateRoomState(room);
-
-            // 自动开始检测
-            if (room.players.every(p => p.ready) &&
-                room.players.length === 3) {
-                room.roomStatus = RoomStatus.PLAYING;
-                this.gameController.initializeGame(room.id);
-                this.updateRoomState(room);
-            }
-        }
-    }
-
-    private updateRoomState(room: Room) {
+    public updateRoomState(room: Room) {
         const playersInfo = room.players.map(p => ({
             id: p.id,
             name: p.name,

@@ -13,8 +13,15 @@ import 'package:landlords_3/core/card/card_utils.dart';
 class GameNotifier extends StateNotifier<GameState> {
   final GameService _gameService;
   final RoomService _roomService;
+  StreamSubscription? _gameSubscription;
 
-  GameNotifier(this._gameService, this._roomService) : super(const GameState());
+  GameNotifier(this._gameService, this._roomService)
+    : super(const GameState()) {
+    // 实时监听游戏更新
+    _gameSubscription = _gameService.gameStateStream.listen((gameState) {
+      if (gameState != null) state = gameState;
+    });
+  }
 
   // 初始化游戏（从服务端获取数据）
   Future<void> initializeGame() async {
