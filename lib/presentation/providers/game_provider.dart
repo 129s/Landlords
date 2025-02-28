@@ -32,8 +32,21 @@ class GameNotifier extends StateNotifier<GameState> {
     }
   }
 
-  void clearSelectedCards() {
-    state = state.copyWith(selectedIndices: []);
+  // 提交出牌
+  Future<void> playSelectedCards() async {
+    final cards =
+        state.selectedIndices.map((index) => state.playerCards[index]).toList();
+    return _gameService.playCards(cards);
+  }
+
+  // 跳过
+  Future<void> passTurn() async {
+    return _gameService.passTurn();
+  }
+
+  // 退出房间
+  Future<void> leaveGame() async {
+    return _roomService.leaveRoom();
   }
 
   // 选择卡牌
@@ -45,16 +58,7 @@ class GameNotifier extends StateNotifier<GameState> {
     state = state.copyWith(selectedIndices: newIndices);
   }
 
-  void placeBid(int bidValue) {
-    if (state.currentPlayerIndex != state.currentPlayerIndex) return;
-
-    _gameService.placeBid(bidValue);
-  }
-
-  void toggleReady() {
-    _gameService.toggleReady();
-  }
-
+  // 提示
   void showHint() {
     final playableCards = _findPlayableCards();
     if (playableCards.isNotEmpty) {
@@ -62,6 +66,11 @@ class GameNotifier extends StateNotifier<GameState> {
           playableCards.map((c) => state.playerCards.indexOf(c)).toList();
       state = state.copyWith(selectedIndices: indices);
     }
+  }
+
+  // 清空选择
+  void clearSelectedCards() {
+    state = state.copyWith(selectedIndices: []);
   }
 
   List<Poker> _findPlayableCards() {
@@ -80,31 +89,12 @@ class GameNotifier extends StateNotifier<GameState> {
     return [];
   }
 
-  // 提交出牌
-  Future<void> playSelectedCards() async {
-    if (state.selectedIndices.isEmpty) return;
+  void placeBid(int bidValue) {
+    _gameService.placeBid(bidValue);
+  }
 
-    final cards =
-        state.selectedIndices.map((index) => state.playerCards[index]).toList();
-
-    if (!_validateCards(cards)) {
-      // 显示错误提示（需在UI层实现）
-      return;
-    }
-
-    try {
-      _gameService.playCards(cards);
-      // 更新本地手牌状态
-      final newCards = List<Poker>.from(state.playerCards)
-        ..removeWhere((c) => cards.contains(c));
-      state = state.copyWith(
-        playerCards: newCards,
-        selectedIndices: [],
-        lastPlayedCards: cards,
-      );
-    } catch (e) {
-      // 处理出牌失败
-    }
+  void toggleReady() {
+    _gameService.toggleReady();
   }
 
   // 出牌验证逻辑
@@ -127,23 +117,6 @@ class GameNotifier extends StateNotifier<GameState> {
 
     return CardUtils.isBigger(cards, state.lastPlayedCards) &&
         cardType == CardType.getType(state.lastPlayedCards);
-  }
-
-  // 跳过逻辑
-  void passTurn() {
-    if (state.lastPlayedCards.isEmpty) {
-      // 首出不能跳过
-      return;
-    }
-
-    _gameService.passTurn();
-    state = state.copyWith(selectedIndices: []);
-  }
-
-  // 退出房间
-  Future<void> leaveGame() async {
-    state = const GameState();
-    return _roomService.leaveRoom();
   }
 }
 

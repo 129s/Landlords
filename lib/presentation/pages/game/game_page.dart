@@ -114,7 +114,7 @@ class GamePage extends ConsumerWidget {
           child: _buildCurrentPlayCards(),
         ),
         // 其他玩家信息
-        // _buildOpponentsInfo(gameState, ref),
+        _buildOpponentsInfo(gameState, ref),
       ],
     );
   }
