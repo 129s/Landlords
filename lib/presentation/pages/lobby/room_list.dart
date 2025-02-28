@@ -45,18 +45,21 @@ class _RoomListItem extends StatelessWidget {
   }
 
   Widget _buildJoinButton(BuildContext context) {
+    final canJoin = room.playerCount < 3;
     return ElevatedButton(
       style: ElevatedButton.styleFrom(
-        backgroundColor: room.playerCount == 3 ? Colors.grey : Colors.blue,
+        backgroundColor: canJoin ? Colors.blue : Colors.grey,
       ),
       onPressed: () {
-        ProviderScope.containerOf(
-          context,
-        ).read(lobbyProvider.notifier).joinExistingRoom(room.id).then((_) {
-          Navigator.of(
-            context,
-          ).push(MaterialPageRoute(builder: (_) => GamePage(roomId: room.id)));
-        });
+        canJoin
+            ? ProviderScope.containerOf(
+              context,
+            ).read(lobbyProvider.notifier).joinExistingRoom(room.id).then((_) {
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => GamePage(roomId: room.id)),
+              );
+            })
+            : ();
       },
       child: const Text('加入'),
     );

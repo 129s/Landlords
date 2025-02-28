@@ -33,8 +33,8 @@ class CardCounterWidget extends ConsumerWidget {
 
   Map<CardValue, int> _calculateRemainingCounts() {
     const totalCounts = {
-      CardValue.jokerBig: 2,
-      CardValue.jokerSmall: 2,
+      CardValue.jokerBig: 1,
+      CardValue.jokerSmall: 1,
       CardValue.two: 4,
       CardValue.ace: 4,
       CardValue.king: 4,

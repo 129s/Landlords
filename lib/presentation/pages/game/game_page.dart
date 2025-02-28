@@ -45,11 +45,26 @@ class GamePage extends ConsumerWidget {
             children: [
               // 顶部操作栏
               _buildTopBar(context, gameState, gameNotifer),
-              // 中央游戏区域
+              // // 中央游戏区域
               Expanded(child: _buildGameArea(gameState, ref)),
-              // 功能按钮栏
-              _buildActionBar(gameState, gameNotifer),
-              // 玩家手牌区域
+              // // 功能按钮栏
+              // _buildActionBar(gameState, gameNotifer),
+              // // 玩家手牌区域
+              Container(
+                margin: EdgeInsets.all(24),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.black54,
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Text(
+                  "${gameState.toJson()}",
+                  style: TextStyle(color: Colors.amber),
+                ),
+              ),
               _buildMyHandCards(gameState, gameNotifer),
             ],
           ),
@@ -135,7 +150,7 @@ class GamePage extends ConsumerWidget {
           gameState.gamePhase == GamePhase.preparing
               ? _buildPreparingButtons(gameState, gameNotifer)
               : gameState.currentPlayerIndex != gameState.myPlayerIndex
-              ? SizedBox.shrink() // 非玩家行动回合不显示行动栏
+              ? const SizedBox.shrink() // 非玩家行动回合不显示行动栏
               : gameState.gamePhase == GamePhase.bidding
               ? _buildBiddingButtons(gameState, gameNotifer)
               : gameState.gamePhase == GamePhase.playing
