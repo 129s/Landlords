@@ -16,7 +16,6 @@ const io = new Server(server, {
 
 // 初始化房间控制器
 const roomController = new RoomController(io);
-const gameController = new GameController(io, roomController);
 
 // 启动服务器
 const PORT = process.env.PORT || 3000;
