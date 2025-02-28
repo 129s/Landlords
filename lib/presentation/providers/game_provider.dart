@@ -93,10 +93,6 @@ class GameNotifier extends StateNotifier<GameState> {
     _gameService.placeBid(bidValue);
   }
 
-  void toggleReady() {
-    _gameService.toggleReady();
-  }
-
   // 出牌验证逻辑
   bool _validateCards(List<Poker> cards) {
     if (cards.isEmpty) return false;

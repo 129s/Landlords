@@ -19,11 +19,38 @@ export class RoomController {
             socket.on('joinRoom', (roomId, callback) => this.handleJoinRoom(socket, roomId, callback));
             socket.on('leaveRoom', (data, callback) => this.handleLeaveRoom(socket, callback));
             socket.on('getRoomList', () => this.sendRoomList(socket));
+            socket.on('toggleReady', (data, callback) => this.handleToggleReady(socket, callback))
         });
     }
 
+    private handleToggleReady(socket: Socket, callback: Function) {
+        const room = this.getPlayerRoom(socket.id);
+        if (!room) {
+            callback({ 'status': 'fail' });
+            return;
+        }
+
+        const player = room.players.find(p => p.socketId === socket.id);
+        if (!player) {
+            callback({ 'status': 'fail' });
+            return;
+        }
+
+        player.ready = !player.ready;
+
+        // 检测是否开始游戏
+        if (room.players.every(p => p.ready) &&
+            room.players.length === 3) {
+            room.roomStatus = RoomStatus.PLAYING;
+            room.gameController.initializeGame();
+        }
+
+        this.updateRoomState(room);
+        callback({ 'status': 'success' });
+    }
+
     private handleCreateRoom(socket: Socket, callback: Function) {
-        const room = new Room();
+        const room = new Room(this.io);
         this.rooms.set(room.id, room);
         this.updateRoomState(room);
 

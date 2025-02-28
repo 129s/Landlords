@@ -137,6 +137,24 @@ class RoomService {
     return completer.future;
   }
 
+  // 切换准备状态
+  Future<void> toggleReady() {
+    final completer = Completer();
+    _socketService.emitWithAck('toggleReady', "", (data) {
+      try {
+        if (data is Map && data['status'] == 'success') {
+          completer.complete();
+        } else {
+          completer.completeError('Invalid toggle ready response');
+        }
+      } catch (e) {
+        completer.completeError(e);
+      }
+    });
+    _logger.i('toggle ready');
+    return completer.future;
+  }
+
   // 刷新房间列表
   void refreshRoomList() {
     _socketService.emit('getRoomList');

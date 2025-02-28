@@ -90,9 +90,6 @@ class GameService {
 
   Future<void> passTurn() => playerAction(PlayerAction(ActionType.passTurn));
 
-  Future<void> toggleReady() =>
-      playerAction(PlayerAction(ActionType.toggleReady));
-
   void dispose() {
     _gameStateController.close();
     _socketService.off('gameStateUpdate');

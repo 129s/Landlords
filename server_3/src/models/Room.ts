@@ -1,4 +1,6 @@
 import { Player } from "./Player";
+import { GameController } from "../controllers/GameController";
+import { Server } from "socket.io";
 
 export enum RoomStatus {
     WAITING = 'waiting',
@@ -9,9 +11,11 @@ export class Room {
     id: string;
     players: Player[] = [];
     roomStatus: RoomStatus = RoomStatus.WAITING;
+    gameController: GameController;
 
-    constructor() {
+    constructor(io: Server) {
         this.id = require('uuid').v4();
+        this.gameController = new GameController(io, this);
     }
 
     getAvailableSeat(): number {
@@ -20,5 +24,4 @@ export class Room {
         }
         return -1;
     }
-
 }
