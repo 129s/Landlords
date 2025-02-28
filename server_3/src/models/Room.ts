@@ -24,4 +24,12 @@ export class Room {
         }
         return -1;
     }
+    toJSON() {
+        return {
+            id: this.id,
+            players: this.players,
+            roomStatus: this.roomStatus,
+            // 排除gameController属性
+        };
+    }
 }

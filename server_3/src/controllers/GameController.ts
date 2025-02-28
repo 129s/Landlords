@@ -29,9 +29,7 @@ export class GameController {
     private setupSocketHandlers() {
         this.io.on('connection', (socket: Socket) => {
             socket.on('playerAction', (action, callback) => {
-                if (this.room.players.some(p => p.socketId === socket.id)) {
-                    this.handlePlayerAction(socket, action, callback);
-                }
+                this.handlePlayerAction(socket, action, callback);
             });
         });
     }

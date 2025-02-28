@@ -72,6 +72,9 @@ export class RoomController {
         // 更新房间状态
         this.updateRoomState(room);
 
+        // 更新游戏状态中的玩家列表
+        room.gameController.updatePlayers(room.players)
+
         callback({ 'status': 'success' })
     }
 
@@ -96,6 +99,9 @@ export class RoomController {
         // 更新房间状态
         this.updateRoomState(room);
 
+        // 更新游戏状态中的玩家列表
+        room.gameController.updatePlayers(room.players)
+
         // 删除空房间
         if (room.players.length === 0) {
             this.rooms.delete(roomId);
@@ -103,6 +109,7 @@ export class RoomController {
 
         callback({ 'status': 'success' });
     }
+
     public updateRoomState(room: Room) {
         const playersInfo = room.players.map(p => ({
             id: p.id,
