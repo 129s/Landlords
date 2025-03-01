@@ -27,8 +27,30 @@ export class RoomController {
                 const room = this.getPlayerRoom(socket.id);
                 room?.gameController.handlePlayerAction(socket, action, callback);
             });
+            socket.on("setPlayerName", (name, callback) => this.handleSetPlayerName(socket, name, callback))
             socket.on('disconnect', () => this.handleDisconnect(socket));
         });
+    }
+
+    private handleSetPlayerName(socket: Socket, name: string, callback: Function) {
+        const room = this.getPlayerRoom(socket.id);
+        if (!room) {
+            callback({ 'status': 'fail' });
+            return;
+        }
+
+        const player = room.players.find(p => p.id === socket.id);
+        if (!player) {
+            callback({ 'status': 'fail' });
+            return;
+        }
+        player.name = name;
+
+        this.updateRoomState(room);
+
+        room.gameController.updatePlayers(room.players);
+
+        callback({ 'status': 'success' });
     }
 
     // 断开连接处理（TODO:重连机制）
@@ -92,7 +114,6 @@ export class RoomController {
 
         const seatIndex = room.getAvailableSeat();
         if (seatIndex === -1) {
-            // console.log("room_full");
             callback({ 'status': 'room_full' });
             return;
         }

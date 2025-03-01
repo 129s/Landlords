@@ -48,7 +48,7 @@ class SocketService {
   // 初始化
   void _initSocket() {
     _socket = io(
-      'https://1319-120-204-117-79.ngrok-free.app',
+      'https://0624-120-204-117-79.ngrok-free.app',
       OptionBuilder().setTransports(['websocket']).enableAutoConnect().build(),
     );
 
