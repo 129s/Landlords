@@ -18,9 +18,7 @@ class AdditionalCardsWidget extends StatelessWidget {
   }
 
   Widget _buildCardsVisual(bool showFront) {
-    return SizedBox(
-      width: 96,
-      height: 64,
+    return Expanded(
       child:
           showFront
               ? _buildFrontSide(gameState.additionalCards)
@@ -30,6 +28,7 @@ class AdditionalCardsWidget extends StatelessWidget {
 
   Widget _buildFrontSide(List<Poker> cards) {
     return Row(
+      spacing: 4,
       children:
           [0, 1, 2]
               .map(
@@ -43,7 +42,10 @@ class AdditionalCardsWidget extends StatelessWidget {
   }
 
   Widget _buildBackSide() {
-    return Row(children: [0, 1, 2].map((n) => _buildSingleCard("?")).toList());
+    return Row(
+      spacing: 4,
+      children: [0, 1, 2].map((n) => _buildSingleCard("?")).toList(),
+    );
   }
 
   Widget _buildSingleCard(String text, {Color color = Colors.amberAccent}) {

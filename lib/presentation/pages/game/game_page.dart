@@ -119,11 +119,9 @@ class GamePage extends ConsumerWidget {
         ),
         Center(
           child: Row(
+            spacing: 8,
             mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              AdditionalCardsWidget(gameState),
-              CardCounterWidget(gameState: gameState),
-            ],
+            children: [CombinedCardsDisplay(gameState: gameState)],
           ),
         ),
       ],

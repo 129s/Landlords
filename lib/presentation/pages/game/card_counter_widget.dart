@@ -1,144 +1,165 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:landlords_3/core/card/card_type.dart';
-import 'package:landlords_3/core/card/card_utils.dart';
+import 'package:landlords_3/core/network_services/constants/constants.dart';
 import 'package:landlords_3/data/models/game_state.dart';
+import 'package:landlords_3/data/models/poker.dart';
 
-class CardCounterWidget extends ConsumerWidget {
+class CombinedCardsDisplay extends StatelessWidget {
   final GameState gameState;
 
-  const CardCounterWidget({super.key, required this.gameState});
+  const CombinedCardsDisplay({super.key, required this.gameState});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final remainingCounts = _calculateRemainingCounts();
-
+  Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
       decoration: BoxDecoration(
-        color: Colors.black54,
-        borderRadius: BorderRadius.circular(16),
+        color: Colors.black.withOpacity(0.8),
+        borderRadius: BorderRadius.circular(12),
       ),
-      child: Column(
+      child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          _buildCardLabels(remainingCounts),
-          const SizedBox(height: 4),
-          _buildCountValues(remainingCounts),
+          // 底牌展示
+          _buildAdditionalCards(context),
+          const SizedBox(width: 20),
+          // 记牌器
+          _buildCardCounter(context),
         ],
       ),
     );
   }
 
-  Map<CardValue, int> _calculateRemainingCounts() {
-    const totalCounts = {
-      CardValue.jokerBig: 1,
-      CardValue.jokerSmall: 1,
-      CardValue.two: 4,
-      CardValue.ace: 4,
-      CardValue.king: 4,
-      CardValue.queen: 4,
-      CardValue.jack: 4,
-      CardValue.ten: 4,
-      CardValue.nine: 4,
-      CardValue.eight: 4,
-      CardValue.seven: 4,
-      CardValue.six: 4,
-      CardValue.five: 4,
-      CardValue.four: 4,
-      CardValue.three: 4,
-    };
+  Widget _buildAdditionalCards(BuildContext context) {
+    final isLandlordPhase = gameState.landlordIndex != -1;
+    final showFront = isLandlordPhase;
 
-    final counts = <CardValue, int>{};
-    return totalCounts.map((key, total) {
-      final remaining = total - (counts[key] ?? 0);
-      return MapEntry(key, remaining > 0 ? remaining : 0);
-    });
-  }
-
-  Widget _buildCardLabels(Map<CardValue, int> counts) {
-    return _buildCardRow(
-      orderedValues: counts.keys.toList(),
-      builder:
-          (value) => Text(
-            _getDisplayLabel(value),
-            style: const TextStyle(color: Colors.white, fontSize: 12),
-          ),
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children:
+          [0, 1, 2].map((index) {
+            return Container(
+              width: 36,
+              height: 42,
+              margin: const EdgeInsets.symmetric(horizontal: 2),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(4),
+                border: Border.all(color: Colors.white24),
+              ),
+              child:
+                  showFront && gameState.additionalCards.length > index
+                      ? Center(
+                        child: Text(
+                          _getCardDisplay(gameState.additionalCards[index]),
+                          style: TextStyle(
+                            color: gameState.additionalCards[index].color,
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      )
+                      : const Center(child: Text("?")),
+            );
+          }).toList(),
     );
   }
 
-  Widget _buildCountValues(Map<CardValue, int> counts) {
-    return _buildCardRow(
-      orderedValues: counts.keys.toList(),
-      builder:
-          (value) => Text(
-            counts[value].toString(),
-            style: TextStyle(
-              color: counts[value]! > 0 ? Colors.amber : Colors.grey,
-              fontSize: 14,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-    );
-  }
-
-  Widget _buildCardRow({
-    required List<CardValue> orderedValues,
-    required Widget Function(CardValue) builder,
-  }) {
-    const displayOrder = [
-      CardValue.jokerBig,
-      CardValue.jokerSmall,
-      CardValue.two,
-      CardValue.ace,
-      CardValue.king,
-      CardValue.queen,
-      CardValue.jack,
-      CardValue.ten,
-      CardValue.nine,
-      CardValue.eight,
-      CardValue.seven,
-      CardValue.six,
-      CardValue.five,
-      CardValue.four,
-      CardValue.three,
+  Widget _buildCardCounter(BuildContext context) {
+    const cardOrder = [
+      '王',
+      '2',
+      'A',
+      'K',
+      'Q',
+      'J',
+      '10',
+      '9',
+      '8',
+      '7',
+      '6',
+      '5',
+      '4',
+      '3',
     ];
+    final counts = _calculateCounts();
 
-    return SizedBox(
-      height: 24,
+    return DefaultTextStyle(
+      style: const TextStyle(
+        fontSize: 16,
+        color: Colors.white,
+        fontWeight: FontWeight.w500,
+      ),
       child: Row(
-        mainAxisSize: MainAxisSize.min,
         children:
-            displayOrder
-                .map(
-                  (value) => Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 4),
-                    child: builder(value),
-                  ),
-                )
-                .toList(),
+            cardOrder.map((card) {
+              return Container(
+                width: 24,
+                margin: const EdgeInsets.symmetric(horizontal: 2),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(card),
+                    Text(
+                      counts[card].toString(),
+                      style: TextStyle(
+                        color: _getCountColor(counts[card]!),
+                        fontSize: 14,
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }).toList(),
       ),
     );
   }
 
-  String _getDisplayLabel(CardValue value) {
-    switch (value) {
-      case CardValue.jokerBig:
-        return '大王';
-      case CardValue.jokerSmall:
-        return '小王';
-      case CardValue.ace:
-        return 'A';
-      case CardValue.two:
-        return '2';
-      case CardValue.king:
-        return 'K';
-      case CardValue.queen:
-        return 'Q';
-      case CardValue.jack:
-        return 'J';
-      default:
-        return (CardUtils.getCardWeightByValue(value) - 2).toString();
+  String _getCardDisplay(Poker card) {
+    if ([CardValue.jokerSmall, CardValue.jokerBig].contains(card.value)) {
+      return card.value == CardValue.jokerBig ? 'JOKER' : 'joker';
     }
+    return card.displayValue;
+  }
+
+  Map<String, int> _calculateCounts() {
+    const initialCounts = {
+      '王': 2,
+      '2': 4,
+      'A': 4,
+      'K': 4,
+      'Q': 4,
+      'J': 4,
+      '10': 4,
+      '9': 4,
+      '8': 4,
+      '7': 4,
+      '6': 4,
+      '5': 4,
+      '4': 4,
+      '3': 4,
+    };
+
+    final playedCounts = gameState.lastPlayedCards.fold<Map<String, int>>({}, (
+      map,
+      card,
+    ) {
+      final key =
+          card.value == CardValue.jokerBig || card.value == CardValue.jokerSmall
+              ? '王'
+              : card.displayValue;
+      map[key] = (map[key] ?? 0) + 1;
+      return map;
+    });
+
+    return initialCounts.map(
+      (key, value) => MapEntry(key, value - (playedCounts[key] ?? 0)),
+    );
+  }
+
+  Color _getCountColor(int count) {
+    if (count <= 0) return Colors.grey;
+    if (count <= 2) return Colors.amber;
+    return Colors.greenAccent;
   }
 }
