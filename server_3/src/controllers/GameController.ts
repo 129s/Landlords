@@ -90,7 +90,8 @@ export class GameController {
 
         // 转换卡牌对象
         const playedCards = cards.map((c: any) =>
-            new Poker(c.suit, c.value as CardValue));
+            Poker.fromJSON(c));
+
 
         // 验证牌型合法性
         if (!this.validatePlay(this.gameState, playedCards)) {
@@ -100,7 +101,7 @@ export class GameController {
 
         // 更新游戏状态
         this.gameState.allCards[playerIndex] = this.gameState.allCards[playerIndex].filter(p =>
-            !playedCards.some(c => c.value === p.value && c.suit === p.suit));
+            !playedCards.some(c => c.value == p.value && c.suit == p.suit));
         this.gameState.lastPlayedCards = playedCards;
 
         this.gameState.currentPlayerIndex = (this.gameState.currentPlayerIndex + 1) % 3;
@@ -166,10 +167,10 @@ export class GameController {
             gameState.players[(gameState.currentPlayerIndex + 1) % 3],
             gameState.players[(gameState.currentPlayerIndex + 2) % 3]
         ];
-        if (lastTwoPlayers.every(p => p.bidValue === -1)) return true;
+        if (lastTwoPlayers.every(p => p.bidValue === 0)) return true;
 
         // 条件3：所有玩家完成叫分
-        return gameState.players.every(p => p.bidValue !== undefined);
+        return gameState.players.every(p => p.bidValue !== -1);
     }
 
     private handlePassTurn(playerIndex: number, callback: Function) {

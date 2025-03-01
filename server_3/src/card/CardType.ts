@@ -2,7 +2,7 @@
 import { Poker } from '../models/Poker';
 import { CardUtils } from './CardUtils';
 
-export enum Suit { hearts, diamonds, clubs, spades, joker }
+export enum Suit { hearts = "hearts", diamonds = "diamonds", clubs = "clubs", spades = "spades", joker = "joker" }
 
 export enum CardValue {
     three,

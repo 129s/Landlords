@@ -9,6 +9,7 @@ import 'package:landlords_3/presentation/pages/game/card_counter_widget.dart';
 import 'package:landlords_3/presentation/pages/game/player_info_widget.dart';
 import 'package:landlords_3/presentation/providers/game_provider.dart';
 import 'package:landlords_3/presentation/widgets/poker_list_widget.dart';
+import 'package:logger/logger.dart';
 
 class GamePage extends ConsumerWidget {
   final String roomId;
@@ -47,21 +48,21 @@ class GamePage extends ConsumerWidget {
               // 功能按钮栏
               _buildActionBar(gameState, gameNotifer),
               // 调试GameState相关信息
-              // Container(
-              //   margin: EdgeInsets.all(24),
-              //   padding: const EdgeInsets.symmetric(
-              //     horizontal: 12,
-              //     vertical: 8,
-              //   ),
-              //   decoration: BoxDecoration(
-              //     color: Colors.black54,
-              //     borderRadius: BorderRadius.circular(16),
-              //   ),
-              //   child: Text(
-              //     "${gameState.toJson()}",
-              //     style: TextStyle(color: Colors.amber),
-              //   ),
-              // ),
+              Container(
+                margin: EdgeInsets.all(24),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.black54,
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Text(
+                  "${_getMyPlayer(gameState).toJson()}\nmyPlayerIndex:${gameState.myPlayerIndex}\ncurrentPlayerIndex:${gameState.currentPlayerIndex}",
+                  style: TextStyle(color: Colors.amber),
+                ),
+              ),
               // 玩家手牌区域
               _buildMyHandCards(gameState, gameNotifer),
             ],
@@ -159,7 +160,7 @@ class GamePage extends ConsumerWidget {
 
   // 准备按钮
   Widget _buildPreparingButtons(GameState gameState, GameNotifier gameNotifer) {
-    final isPrepared = gameState.players[gameState.myPlayerIndex].ready;
+    final isPrepared = _getMyPlayer(gameState).ready;
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
@@ -187,12 +188,9 @@ class GamePage extends ConsumerWidget {
           [0, 1, 2, 3].map((score) {
             final maxBidValue = gameState.players
                 .map((e) => e.bidValue)
-                .reduce((current, next) => current < next ? current : next);
-            final isDisabled =
-                score == 0
-                    ? false
-                    : gameState.players[gameState.myPlayerIndex].bidValue <
-                        maxBidValue;
+                .reduce((current, next) => current > next ? current : next);
+            Logger().d(maxBidValue);
+            final isDisabled = score == 0 ? false : score <= maxBidValue;
             return Padding(
               padding: const EdgeInsets.symmetric(horizontal: 8.0),
               child: ElevatedButton(
@@ -298,14 +296,9 @@ class GamePage extends ConsumerWidget {
     // 获取其他两个玩家的索引（根据斗地主座位逻辑）
     final leftPlayerIndex = (myIndex - 1) % 3;
     final rightPlayerIndex = (myIndex + 1) % 3;
-    final leftPlayer =
-        leftPlayerIndex >= players.length
-            ? _buildWaitingPlayer(leftPlayerIndex)
-            : players[leftPlayerIndex];
-    final rightPlayer =
-        rightPlayerIndex >= players.length
-            ? _buildWaitingPlayer(leftPlayerIndex)
-            : players[rightPlayerIndex];
+    final leftPlayer = _getPlayerBySeat(gameState, leftPlayerIndex);
+
+    final rightPlayer = _getPlayerBySeat(gameState, rightPlayerIndex);
 
     return Stack(
       children: [
@@ -434,6 +427,19 @@ class GamePage extends ConsumerWidget {
                   : const SizedBox.shrink(),
         );
       },
+    );
+  }
+
+  Player _getMyPlayer(GameState gameState) {
+    return gameState.players.firstWhere(
+      (p) => p.seat == gameState.myPlayerIndex,
+    );
+  }
+
+  Player _getPlayerBySeat(GameState gameState, int seat) {
+    return gameState.players.firstWhere(
+      (p) => p.seat == seat,
+      orElse: () => _buildWaitingPlayer(seat),
     );
   }
 }

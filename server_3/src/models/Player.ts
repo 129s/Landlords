@@ -8,7 +8,7 @@ export class Player {
     cardCount: number = 0;
     ready: boolean = false;
     isLandlord = false;
-    bidValue = 0;
+    bidValue = -1;
 
     constructor(socketId: string, name: string, seat: number) {
         this.id = socketId;

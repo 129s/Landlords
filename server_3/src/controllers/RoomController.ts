@@ -53,6 +53,9 @@ export class RoomController {
         }
 
         this.updateRoomState(room);
+
+        room.gameController.updatePlayers(room.players);
+
         callback({ 'status': 'success' });
     }
 
