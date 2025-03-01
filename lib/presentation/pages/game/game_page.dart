@@ -1,13 +1,9 @@
-import 'dart:js_interop';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:landlords_3/core/card/card_type.dart';
 import 'package:landlords_3/core/network_services/constants/constants.dart';
 import 'package:landlords_3/data/models/game_state.dart';
 import 'package:landlords_3/data/models/player.dart';
-import 'package:landlords_3/presentation/pages/game/additional_cards_widget.dart';
-import 'package:landlords_3/presentation/pages/game/card_counter_widget.dart';
+import 'package:landlords_3/presentation/pages/game/card_info_panel.dart';
 import 'package:landlords_3/presentation/pages/game/player_info_widget.dart';
 import 'package:landlords_3/presentation/providers/game_provider.dart';
 import 'package:landlords_3/presentation/widgets/poker_list_widget.dart';
@@ -96,35 +92,39 @@ class GamePage extends ConsumerWidget {
     GameState gameState,
     GameNotifier gameNotifer,
   ) {
-    return Stack(
-      children: [
-        Positioned(
-          left: 24,
-          top: 24,
-          child: IconButton(
-            icon: const Icon(Icons.exit_to_app, color: Colors.white),
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Row(
+        children: [
+          // 退出按钮
+          _buildIconButton(
+            icon: Icons.exit_to_app,
             onPressed:
-                () => gameNotifer.leaveGame().then((_) {
-                  Navigator.pop(context);
-                }), // 退出并返回大厅
+                () =>
+                    gameNotifer.leaveGame().then((_) => Navigator.pop(context)),
           ),
-        ),
-        Positioned(
-          right: 24,
-          top: 24,
-          child: IconButton(
-            icon: const Icon(Icons.settings, color: Colors.white),
-            onPressed: () {}, // 设置按钮 TODO: 显示设置面板
-          ),
-        ),
-        Center(
-          child: Row(
-            spacing: 8,
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [CombinedCardsDisplay(gameState: gameState)],
-          ),
-        ),
-      ],
+          // 中央信息面板
+          Expanded(child: Center(child: CardInfoPanel(gameState: gameState))),
+          // 设置按钮
+          _buildIconButton(icon: Icons.settings_outlined, onPressed: () {}),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildIconButton({
+    required IconData icon,
+    required VoidCallback onPressed,
+  }) {
+    return IconButton(
+      icon: Icon(icon, size: 32),
+      style: IconButton.styleFrom(
+        backgroundColor: Colors.black.withOpacity(0.5),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        padding: const EdgeInsets.all(8),
+      ),
+      color: Colors.white,
+      onPressed: onPressed,
     );
   }
 
@@ -290,7 +290,7 @@ class GamePage extends ConsumerWidget {
       children: [
         Positioned(
           left: 24,
-          top: 96,
+          top: 128,
           child: PlayerInfoWidget(
             player: leftPlayer,
             isLandlord: leftPlayerIndex == gameState.landlordIndex,
@@ -301,7 +301,7 @@ class GamePage extends ConsumerWidget {
         ),
         Positioned(
           right: 24,
-          top: 96,
+          top: 128,
           child: PlayerInfoWidget(
             player: rightPlayer,
             isLandlord: rightPlayerIndex == gameState.landlordIndex,

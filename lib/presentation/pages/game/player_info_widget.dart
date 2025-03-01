@@ -30,13 +30,25 @@ class PlayerInfoWidget extends StatelessWidget {
           height: 60,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
+            color: _getAvatarColor(player.name), // 根据名称生成背景色
             border: Border.all(
-              color: isCurrentTurn ? Colors.amber : Colors.grey,
-              width: 2,
+              color: isCurrentTurn ? Colors.amber : Colors.white,
+              width: 1,
             ),
           ),
           child: Stack(
             children: [
+              // 显示名称首字符
+              Center(
+                child: Text(
+                  _getAvatarText(player.name),
+                  style: TextStyle(
+                    fontSize: 24,
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
               if (isLandlord)
                 Positioned(
                   bottom: 0,
@@ -86,6 +98,27 @@ class PlayerInfoWidget extends StatelessWidget {
         ),
       ],
     );
+  }
+
+  Color _getAvatarColor(String name) {
+    // 通过名称哈希生成稳定颜色
+    final hash = name.hashCode;
+    return HSLColor.fromAHSL(1, (hash % 360).toDouble(), 0.2, 0.5).toColor();
+  }
+
+  String _getAvatarText(String name) {
+    if (name.isEmpty) return "?";
+    final trimmed = name.trim();
+
+    // 获取有效字符（过滤表情符号等）
+    final validChars = trimmed.characters
+        .where((c) => c.codeUnitAt(0) > 127)
+        .take(1);
+
+    if (validChars.isEmpty) return trimmed.substring(0, 1).toUpperCase();
+
+    // 取前两个有效字符
+    return validChars.take(2).join().toUpperCase();
   }
 
   Color _getCountColor(int count) {
