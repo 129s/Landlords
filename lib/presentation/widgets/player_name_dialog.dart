@@ -46,7 +46,6 @@ class PlayerNameDialog extends ConsumerWidget {
               // 自动生成默认名称
               controller.text = NameGenerator().generate();
             } else {
-              Navigator.pop(context);
               onConfirm?.call(controller.text);
             }
           },

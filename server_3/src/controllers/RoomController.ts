@@ -47,6 +47,7 @@ export class RoomController {
         player.name = name;
 
         this.updateRoomState(room);
+        console.log(room.toJSON());
 
         room.gameController.updatePlayers(room.players);
 
@@ -119,7 +120,7 @@ export class RoomController {
         }
 
         // 加入相关逻辑
-        const player = new Player(socket.id, `Player${socket.id.slice(-4)}`, seatIndex);
+        const player = new Player(socket.id, `未命名`, seatIndex);
         room.players.push(player);
         socket.join(room.id); // 将客户端加入房间
         this.playerRoomMap.set(socket.id, room.id);

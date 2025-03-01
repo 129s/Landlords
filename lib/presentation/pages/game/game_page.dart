@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:landlords_3/core/network_services/constants/constants.dart';
@@ -6,6 +8,7 @@ import 'package:landlords_3/data/models/player.dart';
 import 'package:landlords_3/presentation/pages/game/card_info_panel.dart';
 import 'package:landlords_3/presentation/pages/game/player_info_widget.dart';
 import 'package:landlords_3/presentation/providers/game_provider.dart';
+import 'package:landlords_3/presentation/widgets/player_name_dialog.dart';
 import 'package:landlords_3/presentation/widgets/poker_list_widget.dart';
 import 'package:logger/logger.dart';
 
@@ -24,6 +27,22 @@ class GamePage extends ConsumerWidget {
         children: [
           // 背景图片
           _buildBackground(),
+          //设置玩家名称
+          _getMyPlayer(gameState).name == '未命名'
+              ? Center(
+                child: PlayerNameDialog(
+                  title: '设置名称',
+                  onConfirm: (name) {
+                    gameNotifer.setPlayerName(name);
+                  },
+                  onCancel: () {
+                    gameNotifer.setPlayerName(
+                      "玩家" + Random().nextInt(32767).toString(),
+                    );
+                  },
+                ),
+              )
+              : SizedBox.shrink(),
           // 玩家信息
           _buildOpponentsInfo(gameState, ref),
           // 主内容区域

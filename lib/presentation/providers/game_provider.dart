@@ -44,6 +44,11 @@ class GameNotifier extends StateNotifier<GameState> {
     return _roomService.toggleReady();
   }
 
+  // 设置玩家名称
+  Future<void> setPlayerName(String name) async {
+    return _roomService.setPlayerName(name);
+  }
+
   // 选择卡牌
   void toggleCardSelection(int index) {
     final newIndices = List<int>.from(state.selectedIndices);

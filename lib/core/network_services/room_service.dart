@@ -154,6 +154,24 @@ class RoomService {
     return completer.future;
   }
 
+  // 设置玩家名称
+  Future<void> setPlayerName(String name) {
+    final completer = Completer();
+    _socketService.emitWithAck('setPlayerName', name, (data) {
+      try {
+        if (data is Map && data['status'] == 'success') {
+          completer.complete();
+        } else {
+          completer.completeError('Invalid set playername response');
+        }
+      } catch (e) {
+        completer.completeError(e);
+      }
+    });
+    _logger.i('set playername');
+    return completer.future;
+  }
+
   // 刷新房间列表
   void refreshRoomList() {
     _socketService.emit('getRoomList');
