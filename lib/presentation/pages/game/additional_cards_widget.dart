@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:landlords_3/core/network_services/constants/constants.dart';
 import 'package:landlords_3/data/models/game_state.dart';
+import 'package:landlords_3/data/models/poker.dart';
 import 'package:landlords_3/presentation/widgets/poker_list_widget.dart';
 
 class AdditionalCardsWidget extends StatelessWidget {
@@ -22,46 +23,44 @@ class AdditionalCardsWidget extends StatelessWidget {
       height: 64,
       child:
           showFront
-              ? PokerListWidget(
-                cards: gameState.additionalCards,
-                onCardTapped: (_) {},
-                disableHoverEffect: true,
-                isSelectable: false,
-                alignment: PokerListAlignment.center,
-              )
+              ? _buildFrontSide(gameState.additionalCards)
               : _buildBackSide(),
     );
   }
 
-  Widget _buildBackSide() {
-    return Stack(
-      alignment: Alignment.center,
-      children: [
-        Positioned(left: 0, child: _buildSingleBackCard()),
-        Positioned(child: _buildSingleBackCard()),
-        Positioned(right: 0, child: _buildSingleBackCard()),
-      ],
+  Widget _buildFrontSide(List<Poker> cards) {
+    return Row(
+      children:
+          [0, 1, 2]
+              .map(
+                (n) => _buildSingleCard(
+                  cards[n].suitSymbol + cards[n].displayValue,
+                  color: cards[n].color,
+                ),
+              )
+              .toList(),
     );
   }
 
-  Widget _buildSingleBackCard() {
-    return Container(
-      width: 40,
-      height: 60,
-      decoration: BoxDecoration(
-        color: Colors.deepOrangeAccent,
-        borderRadius: BorderRadius.circular(6),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.3),
-            blurRadius: 4,
-            offset: const Offset(2, 2),
-          ),
-        ],
-        image: const DecorationImage(
-          image: AssetImage("assets/card_back_pattern.png"),
-          fit: BoxFit.cover,
+  Widget _buildBackSide() {
+    return Row(children: [0, 1, 2].map((n) => _buildSingleCard("?")).toList());
+  }
+
+  Widget _buildSingleCard(String text, {Color color = Colors.amberAccent}) {
+    return Expanded(
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(4),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.3),
+              blurRadius: 4,
+              offset: const Offset(2, 2),
+            ),
+          ],
         ),
+        child: Center(child: Text(text, style: TextStyle(color: color))),
       ),
     );
   }
