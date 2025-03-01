@@ -48,7 +48,7 @@ export class GameController {
         this.updateGameState();
     }
 
-    // Room满员且都准备时调用该方法，初始化游戏
+    // Room满员且都准备时或重新发牌时调用该方法，初始化游戏
     public initializeGame() {
         if (this.room.players.length !== 3) return;
 
@@ -59,6 +59,7 @@ export class GameController {
         // 进入叫分阶段
         this.gameState.gamePhase = GamePhase.bidding;
         this.gameState.currentPlayerIndex = 0; // 从第一个玩家开始叫分
+        this.gameState.lastActivePlayerIndex = 0; // 从第一个玩家开始叫分
 
         //更新游戏状态
         this.updateGameState();
@@ -104,61 +105,84 @@ export class GameController {
         callback({ 'status': 'success' })
     }
 
-    private handlePlaceBid(playerIndex: number, value: number, callback: Function) {
-
-        if (playerIndex != this.gameState.currentPlayerIndex) {
-            callback({ 'status': 'fail' })
-            console.log("not your turn");
+    private handlePlaceBid(playerIndex: number, bidValue: number, callback: Function) {
+        // 阶段验证
+        if (this.gameState.gamePhase !== GamePhase.bidding) {
+            callback({ 'status': 'fail', 'reason': 'Not in bidding phase' });
             return;
         }
 
-        // 更新叫分状态
-        this.gameState.players[playerIndex].bidValue = value;
-
-        // 更新行动回合
-        this.gameState.currentPlayerIndex = (this.gameState.currentPlayerIndex + 1) % 3;
-
-        // 叫分结束处理
-        if (this.checkBidCompletion(this.gameState)) {
-            // 确定最高叫分者
-            let maxBid = 0;
-            let landlordIndex = -1;
-            this.gameState.players.forEach((player, index) => {
-                if (player.bidValue > maxBid) {
-                    maxBid = player.bidValue;
-                    landlordIndex = index;
-                }
-            });
-
-            // 分配地主身份
-            this.gameState.landlordIndex = landlordIndex;
-            this.gameState.players[landlordIndex].isLandlord = true;
-
-            // 分配底牌
-            this.gameState.allCards[landlordIndex].push(...this.gameState.additionalCards);
-
-            // 进入出牌阶段
-            this.gameState.gamePhase = GamePhase.playing;
-            this.gameState.currentPlayerIndex = landlordIndex;
+        // 轮到验证
+        if (playerIndex !== this.gameState.currentPlayerIndex) {
+            callback({ 'status': 'fail', 'reason': 'Not your turn to bid' });
+            return;
         }
 
-        this.updateGameState();
-        callback({ 'status': 'success' })
+        // 参数有效性
+        if (![0, 1, 2, 3].includes(bidValue)) { // 0表示不叫分
+            callback({ 'status': 'fail', 'reason': 'Invalid bid value' });
+            return;
+        }
+
+        const currentPlayer = this.gameState.players[playerIndex];
+        const currentMaxBid = Math.max(...this.gameState.players.map(p => p.bidValue));
+
+
+        if (bidValue !== 0) {
+            // 非零叫分必须高于当前最高分
+            if (bidValue <= currentMaxBid) {
+                callback({ 'status': 'fail', 'reason': 'Bid must higher than current' });
+                return;
+            }
+            this.gameState.lastActivePlayerIndex = playerIndex;// 非零叫分者成为当前最后一个活动玩家
+        }
+        currentPlayer.bidValue = bidValue;
+
+        // 处理叫3分立即结束
+        if (bidValue === 3) {
+            return this.finalizeBidding(callback);
+        }
+
+        // 轮转
+        this.gameState.currentPlayerIndex = (this.gameState.currentPlayerIndex + 1) % 3;
+
+        // 检查是否轮转完成
+        if (this.gameState.currentPlayerIndex === this.gameState.lastActivePlayerIndex) {
+            this.finalizeBidding(callback);
+        } else {
+            this.updateGameState();
+            callback({ 'status': 'success' });
+        }
     }
 
-    private checkBidCompletion(gameState: GameState): boolean {
-        // 条件1：有玩家叫3分
-        if (gameState.players.some(p => p.bidValue === 3)) return true;
+    private finalizeBidding(callback: Function) {
+        // 计算最高叫分
+        const maxBid = Math.max(...this.gameState.players.map(p => p.bidValue));
 
-        // 条件2：连续两位pass
-        const lastTwoPlayers = [
-            gameState.players[(gameState.currentPlayerIndex + 1) % 3],
-            gameState.players[(gameState.currentPlayerIndex + 2) % 3]
-        ];
-        if (lastTwoPlayers.every(p => p.bidValue === 0)) return true;
+        // 处理都不叫分的情况
+        if (maxBid <= 0) {
+            this.initializeGame(); // 重新发牌
+            callback({ 'status': 'retry', 'reason': 'Redistributing cards' });
+            return;
+        }
 
-        // 条件3：所有玩家完成叫分
-        return gameState.players.every(p => p.bidValue !== -1);
+        // 确定地主（取最后一个最高分玩家）
+        const landlordIndex = this.gameState.players.reduce((acc, p, i) =>
+            p.bidValue >= this.gameState.players[acc].bidValue ? i : acc, 0);
+
+        // 分配地主身份
+        this.gameState.players[landlordIndex].isLandlord = true;
+
+        // 分发底牌
+        this.gameState.allCards[landlordIndex].push(...this.gameState.additionalCards);
+
+        // 进入出牌阶段
+        this.gameState.gamePhase = GamePhase.playing;
+        this.gameState.currentPlayerIndex = landlordIndex;
+        this.gameState.lastActivePlayerIndex = landlordIndex;
+
+        callback({ 'status': 'success' });
+        this.updateGameState();
     }
 
     private handlePassTurn(playerIndex: number, callback: Function) {
@@ -170,6 +194,12 @@ export class GameController {
         }
 
         if (this.gameState.gamePhase != GamePhase.playing) {
+            callback({ 'status': 'fail' })
+            return;
+        }
+
+        // 首轮不能跳过
+        if (playerIndex == this.gameState.lastActivePlayerIndex) {
             callback({ 'status': 'fail' })
             return;
         }
@@ -212,9 +242,9 @@ export class GameController {
     private dealCards(cards: Poker[]) {
         // 给玩家发牌（每人17张）
         this.gameState.allCards = [
-            cards.slice(0, 17),
-            cards.slice(17, 34),
-            cards.slice(34, 51)
+            cards.slice(0, 17).sort((a, b) => b.compareTo(a)),
+            cards.slice(17, 34).sort((a, b) => b.compareTo(a)),
+            cards.slice(34, 51).sort((a, b) => b.compareTo(a))
         ];
         // 底牌（最后3张）
         this.gameState.additionalCards = cards.slice(51, 54);
