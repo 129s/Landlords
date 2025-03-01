@@ -92,6 +92,7 @@ export class GameController {
             !playedCards.some(c => c.value == p.value && c.suit == p.suit));
         this.gameState.lastPlayedCards = playedCards;
         this.gameState.lastActivePlayerIndex = playerIndex;
+        this.gameState.players[playerIndex].cardCount = this.gameState.allCards[playerIndex].length;
 
         this.gameState.currentPlayerIndex = (this.gameState.currentPlayerIndex + 1) % 3;
 
@@ -176,6 +177,9 @@ export class GameController {
         // 分发底牌
         this.gameState.allCards[landlordIndex].push(...this.gameState.additionalCards);
 
+        // 更新地主剩余牌数
+        this.gameState.players[landlordIndex].cardCount = 20;
+
         // 进入出牌阶段
         this.gameState.gamePhase = GamePhase.playing;
         this.gameState.currentPlayerIndex = landlordIndex;
@@ -248,6 +252,11 @@ export class GameController {
         ];
         // 底牌（最后3张）
         this.gameState.additionalCards = cards.slice(51, 54);
+
+        // 更新剩余牌数
+        this.gameState.players.forEach((player) => {
+            player.cardCount = 17
+        });
 
         this.updateGameState();
     }

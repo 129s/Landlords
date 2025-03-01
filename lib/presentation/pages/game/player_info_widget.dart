@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:landlords_3/core/network_services/constants/constants.dart';
 import 'package:landlords_3/data/models/player.dart';
 
 class PlayerInfoWidget extends StatelessWidget {
@@ -6,6 +7,7 @@ class PlayerInfoWidget extends StatelessWidget {
   final bool isLandlord;
   final bool isCurrentTurn;
   final Alignment alignment;
+  final GamePhase gamePhase;
 
   const PlayerInfoWidget({
     super.key,
@@ -13,16 +15,14 @@ class PlayerInfoWidget extends StatelessWidget {
     required this.isLandlord,
     required this.isCurrentTurn,
     required this.alignment,
+    required this.gamePhase,
   });
 
   @override
   Widget build(BuildContext context) {
     return Column(
       mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment:
-          alignment == Alignment.centerLeft
-              ? CrossAxisAlignment.start
-              : CrossAxisAlignment.end,
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         // 头像区域
         Container(
@@ -72,14 +72,25 @@ class PlayerInfoWidget extends StatelessWidget {
                 style: const TextStyle(color: Colors.white, fontSize: 12),
                 overflow: TextOverflow.ellipsis,
               ),
-              Text(
-                '剩余 ${player.cardCount} 张',
-                style: const TextStyle(color: Colors.grey, fontSize: 10),
-              ),
+              gamePhase == GamePhase.playing
+                  ? Text(
+                    '${player.cardCount}',
+                    style: TextStyle(
+                      color: _getCountColor(player.cardCount),
+                      fontSize: 12,
+                    ),
+                  )
+                  : Text(""),
             ],
           ),
         ),
       ],
     );
+  }
+
+  Color _getCountColor(int count) {
+    if (count > 12) return Colors.green;
+    if (count > 5) return Colors.orange;
+    return Colors.red;
   }
 }

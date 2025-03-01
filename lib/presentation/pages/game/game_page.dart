@@ -298,6 +298,7 @@ class GamePage extends ConsumerWidget {
             isLandlord: leftPlayerIndex == gameState.landlordIndex,
             isCurrentTurn: leftPlayerIndex == gameState.currentPlayerIndex,
             alignment: Alignment.centerLeft,
+            gamePhase: gameState.gamePhase,
           ),
         ),
         Positioned(
@@ -308,6 +309,7 @@ class GamePage extends ConsumerWidget {
             isLandlord: rightPlayerIndex == gameState.landlordIndex,
             isCurrentTurn: rightPlayerIndex == gameState.currentPlayerIndex,
             alignment: Alignment.centerRight,
+            gamePhase: gameState.gamePhase,
           ),
         ),
       ],
