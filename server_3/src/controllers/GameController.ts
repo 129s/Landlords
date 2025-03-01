@@ -198,6 +198,7 @@ export class GameController {
 
         // 分发底牌
         this.gameState.allCards[landlordIndex].push(...this.gameState.additionalCards);
+        this.gameState.allCards[landlordIndex].sort();
 
         // 更新地主剩余牌数
         this.gameState.players[landlordIndex].cardCount = 20;
