@@ -1,61 +1,68 @@
-// 新建文件：presentation/pages/game/additional_cards_widget.dart
 import 'package:flutter/material.dart';
-import 'package:landlords_3/data/models/poker.dart';
+import 'package:landlords_3/core/network_services/constants/constants.dart';
+import 'package:landlords_3/data/models/game_state.dart';
 import 'package:landlords_3/presentation/widgets/poker_list_widget.dart';
 
 class AdditionalCardsWidget extends StatelessWidget {
-  final List<Poker> cards;
-  final bool isRevealed;
+  final GameState gameState;
 
-  const AdditionalCardsWidget({
-    super.key,
-    required this.cards,
-    this.isRevealed = false,
-  });
+  const AdditionalCardsWidget(this.gameState, {super.key});
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedSwitcher(
-      duration: const Duration(milliseconds: 300),
+    final isLandlordPhase = gameState.landlordIndex != -1;
+    final showFront = isLandlordPhase;
+
+    return _buildCardsVisual(showFront);
+  }
+
+  Widget _buildCardsVisual(bool showFront) {
+    return SizedBox(
+      width: 96,
+      height: 64,
       child:
-          cards.isNotEmpty
-              ? Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: Colors.black54,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: Colors.amber, width: 1.5),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.amber.withOpacity(0.2),
-                      spreadRadius: 3,
-                      blurRadius: 10,
-                    ),
-                  ],
-                ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      '底牌',
-                      style: TextStyle(
-                        color: Colors.amber.shade200,
-                        fontSize: 12,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    PokerListWidget(
-                      cards: cards,
-                      onCardTapped: (_) {},
-                      isSelectable: false,
-                      disableHoverEffect: true,
-                      alignment: PokerListAlignment.center,
-                      minVisibleWidth: 30,
-                    ),
-                  ],
-                ),
+          showFront
+              ? PokerListWidget(
+                cards: gameState.additionalCards,
+                onCardTapped: (_) {},
+                disableHoverEffect: true,
+                isSelectable: false,
+                alignment: PokerListAlignment.center,
               )
-              : const SizedBox.shrink(),
+              : _buildBackSide(),
+    );
+  }
+
+  Widget _buildBackSide() {
+    return Stack(
+      alignment: Alignment.center,
+      children: [
+        Positioned(left: 0, child: _buildSingleBackCard()),
+        Positioned(child: _buildSingleBackCard()),
+        Positioned(right: 0, child: _buildSingleBackCard()),
+      ],
+    );
+  }
+
+  Widget _buildSingleBackCard() {
+    return Container(
+      width: 40,
+      height: 60,
+      decoration: BoxDecoration(
+        color: Colors.blue.shade900,
+        borderRadius: BorderRadius.circular(6),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.3),
+            blurRadius: 4,
+            offset: const Offset(2, 2),
+          ),
+        ],
+        image: const DecorationImage(
+          image: AssetImage("assets/card_back_pattern.png"),
+          fit: BoxFit.cover,
+        ),
+      ),
     );
   }
 }

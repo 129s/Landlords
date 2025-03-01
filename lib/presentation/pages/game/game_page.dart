@@ -1,3 +1,5 @@
+import 'dart:js_interop';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:landlords_3/core/card/card_type.dart';
@@ -26,43 +28,49 @@ class GamePage extends ConsumerWidget {
         children: [
           // 背景图片
           _buildBackground(),
-          // 底牌展示
-          Positioned(
-            top: MediaQuery.of(context).size.height * 0.3,
-            left: 0,
-            right: 0,
-            child: Center(
-              child: AdditionalCardsWidget(
-                cards: gameState.additionalCards,
-                isRevealed: gameState.landlordIndex != -1,
-              ),
-            ),
-          ),
+          // 玩家信息
+          _buildOpponentsInfo(gameState, ref),
           // 主内容区域
           Column(
             children: [
               // 顶部操作栏
               _buildTopBar(context, gameState, gameNotifer),
-              // 中央游戏区域
-              Expanded(child: _buildGameArea(gameState, ref)),
+              Expanded(
+                child: Stack(
+                  children: [
+                    // 最后一个玩家出牌
+                    Center(
+                      child: SizedBox(
+                        height: 128,
+                        child: PokerListWidget(
+                          cards: gameState.lastPlayedCards,
+                          onCardTapped: (_) {},
+                          disableHoverEffect: true,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
               // 功能按钮栏
               _buildActionBar(gameState, gameNotifer),
               // 调试GameState相关信息
-              Container(
-                margin: EdgeInsets.all(24),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 8,
-                ),
-                decoration: BoxDecoration(
-                  color: Colors.black54,
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Text(
-                  "${_getMyPlayer(gameState).toJson()}\nmyPlayerIndex:${gameState.myPlayerIndex}\ncurrentPlayerIndex:${gameState.currentPlayerIndex}",
-                  style: TextStyle(color: Colors.amber),
-                ),
-              ),
+              // Container(
+              //   margin: EdgeInsets.all(24),
+              //   padding: const EdgeInsets.symmetric(
+              //     horizontal: 12,
+              //     vertical: 8,
+              //   ),
+              //   decoration: BoxDecoration(
+              //     color: Colors.black54,
+              //     borderRadius: BorderRadius.circular(16),
+              //   ),
+              //   child: Text(
+              //     "${gameState.toJson()}",
+              //     style: TextStyle(color: Colors.amber),
+              //   ),
+              // ),
               // 玩家手牌区域
               _buildMyHandCards(gameState, gameNotifer),
             ],
@@ -109,34 +117,15 @@ class GamePage extends ConsumerWidget {
             onPressed: () {}, // 设置按钮 TODO: 显示设置面板
           ),
         ),
-        Center(child: CardCounterWidget(gameState: gameState)),
-      ],
-    );
-  }
-
-  Widget _buildGameArea(GameState gameState, WidgetRef ref) {
-    return Stack(
-      children: [
-        // 其他玩家出牌区域
-        Positioned(
-          top: 20,
-          left: 20,
-          child: _buildOpponentPlayedCards(isLeftPlayer: true),
+        Center(
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              AdditionalCardsWidget(gameState),
+              CardCounterWidget(gameState: gameState),
+            ],
+          ),
         ),
-        Positioned(
-          top: 20,
-          right: 20,
-          child: _buildOpponentPlayedCards(isLeftPlayer: false),
-        ),
-        // 当前出牌区域
-        Positioned(
-          bottom: 100,
-          left: 0,
-          right: 0,
-          child: _buildCurrentPlayCards(),
-        ),
-        // 其他玩家信息
-        _buildOpponentsInfo(gameState, ref),
       ],
     );
   }
@@ -195,7 +184,7 @@ class GamePage extends ConsumerWidget {
               padding: const EdgeInsets.symmetric(horizontal: 8.0),
               child: ElevatedButton(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: isDisabled ? Colors.blueGrey : Colors.blue,
+                  backgroundColor: isDisabled ? Colors.grey : Colors.blue,
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(
                     horizontal: 20,
@@ -291,7 +280,6 @@ class GamePage extends ConsumerWidget {
   // 玩家信息组件
   Widget _buildOpponentsInfo(GameState gameState, WidgetRef ref) {
     final myIndex = gameState.myPlayerIndex;
-    final players = gameState.players;
 
     // 获取其他两个玩家的索引（根据斗地主座位逻辑）
     final leftPlayerIndex = (myIndex - 1) % 3;
@@ -303,8 +291,8 @@ class GamePage extends ConsumerWidget {
     return Stack(
       children: [
         Positioned(
-          left: 20,
-          top: 20,
+          left: 24,
+          top: 96,
           child: PlayerInfoWidget(
             player: leftPlayer,
             isLandlord: leftPlayerIndex == gameState.landlordIndex,
@@ -313,8 +301,8 @@ class GamePage extends ConsumerWidget {
           ),
         ),
         Positioned(
-          right: 20,
-          top: 20,
+          right: 24,
+          top: 96,
           child: PlayerInfoWidget(
             player: rightPlayer,
             isLandlord: rightPlayerIndex == gameState.landlordIndex,
@@ -323,50 +311,6 @@ class GamePage extends ConsumerWidget {
           ),
         ),
       ],
-    );
-  }
-
-  Widget _buildOpponentPlayedCards({required bool isLeftPlayer}) {
-    return Consumer(
-      builder: (context, ref, _) {
-        final gameState = ref.watch(gameProvider);
-        final myIndex = gameState.myPlayerIndex;
-        final currentPlayerIndex = gameState.currentPlayerIndex;
-
-        // 判断是否是当前玩家的对手
-        final isOpponent = currentPlayerIndex != myIndex;
-        final isLeftOpponent = (myIndex + 1) % 3 == currentPlayerIndex;
-
-        return AnimatedSwitcher(
-          duration: const Duration(milliseconds: 300),
-          child:
-              (isOpponent && gameState.lastPlayedCards.isNotEmpty)
-                  ? Column(
-                    key: ValueKey(gameState.lastPlayedCards.hashCode),
-                    children: [
-                      // 出牌方向指示器（根据座位关系显示左右箭头）
-                      Icon(
-                        isLeftOpponent ? Icons.arrow_back : Icons.arrow_forward,
-                        color: Colors.white.withOpacity(0.5),
-                        size: 24,
-                      ),
-                      // 对手出牌展示
-                      PokerListWidget(
-                        cards: gameState.lastPlayedCards,
-                        onCardTapped: (_) {},
-                        isSelectable: false,
-                        disableHoverEffect: true,
-                        alignment:
-                            isLeftOpponent
-                                ? PokerListAlignment.start
-                                : PokerListAlignment.end,
-                        minVisibleWidth: 10,
-                      ),
-                    ],
-                  )
-                  : const SizedBox.shrink(),
-        );
-      },
     );
   }
 
@@ -379,54 +323,6 @@ class GamePage extends ConsumerWidget {
       cardCount: 0,
       isLandlord: false,
       bidValue: 0,
-    );
-  }
-
-  Widget _buildCurrentPlayCards() {
-    return Consumer(
-      builder: (context, ref, _) {
-        final gameState = ref.watch(gameProvider);
-        final lastPlayed = gameState.lastPlayedCards;
-
-        return AnimatedSwitcher(
-          duration: const Duration(milliseconds: 300),
-          child:
-              lastPlayed.isNotEmpty
-                  ? Column(
-                    key: ValueKey(lastPlayed.hashCode),
-                    children: [
-                      // 当前牌局展示
-                      PokerListWidget(
-                        cards: lastPlayed,
-                        onCardTapped: (_) {},
-                        isSelectable: false,
-                        disableHoverEffect: true,
-                        alignment: PokerListAlignment.center,
-                      ),
-                      // 出牌类型提示
-                      if (CardType.getType(lastPlayed) != CardTypeEnum.invalid)
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 4,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.black54,
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          child: Text(
-                            CardType.getTypeName(CardType.getType(lastPlayed)),
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 12,
-                            ),
-                          ),
-                        ),
-                    ],
-                  )
-                  : const SizedBox.shrink(),
-        );
-      },
     );
   }
 
