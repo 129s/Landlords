@@ -48,6 +48,28 @@ export class GameController {
         this.updateGameState();
     }
 
+    // Room有人员离开时调用该方法
+    public stopGame(reason: string = '游戏异常终止') {
+        // 清除进行中的游戏数据
+        this.gameState = new GameState();
+
+        // 重置玩家状态
+        this.gameState.players.forEach(player => {
+            player.ready = false;
+            player.isLandlord = false;
+            player.bidValue = -1;
+            player.cardCount = 0;
+        });
+
+        // 发送中断通知
+        this.io.to(this.room.id).emit('gameInterrupted', {
+            reason
+        });
+
+        // 更新游戏状态
+        this.updateGameState();
+    }
+
     // Room满员且都准备时或重新发牌时调用该方法，初始化游戏
     public initializeGame() {
         if (this.room.players.length !== 3) return;
@@ -282,5 +304,37 @@ export class GameController {
     }
 
     private handleGameEnd() {
+        // 确定获胜方
+        const winnerIndex = this.gameState.players.findIndex(p => p.cardCount === 0);
+        const isLandlordWin = this.gameState.players[winnerIndex].isLandlord;
+
+        // 构建结果数据
+        const result = {
+            winnerIndex,
+            isLandlordWin,
+            players: this.gameState.players.map(p => ({
+                id: p.id,
+                isLandlord: p.isLandlord,
+                finalCards: this.gameState.allCards
+            }))
+        };
+
+        // 广播游戏结果
+        this.io.to(this.room.id).emit('gameEnd', result);
+
+        // 重置游戏状态
+        this.gameState = new GameState();
+
+        // 重置玩家状态
+        this.room.players.forEach(player => {
+            player.ready = false;
+            player.isLandlord = false;
+            player.bidValue = -1;
+            player.cardCount = 0;
+        });
+
+        // 房间状态恢复等待
+        this.room.roomStatus = RoomStatus.WAITING;
+        this.updateGameState();
     }
 }

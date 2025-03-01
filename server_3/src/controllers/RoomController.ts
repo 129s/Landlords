@@ -27,7 +27,22 @@ export class RoomController {
                 const room = this.getPlayerRoom(socket.id);
                 room?.gameController.handlePlayerAction(socket, action, callback);
             });
+            socket.on('disconnect', () => this.handleDisconnect(socket));
         });
+    }
+
+    // 断开连接处理（TODO:重连机制）
+    private handleDisconnect(socket: Socket) {
+        const room = this.getPlayerRoom(socket.id);
+        if (!room) return;
+
+        // 执行离开房间逻辑
+        this.handleLeaveRoom(socket, () => {
+            console.log(`Player ${socket.id} disconnected`);
+        });
+
+        // 删除玩家关联（防止内存泄漏）
+        this.playerRoomMap.delete(socket.id);
     }
 
     private handleToggleReady(socket: Socket, callback: Function) {
@@ -119,12 +134,19 @@ export class RoomController {
             if (p.seat > leavingSeatIndex) p.seat--;
         });
 
+        // TODO:停止游戏
+
         // 删除空房间
         if (room.players.length === 0) {
             this.rooms.delete(roomId);
         } else {
             // 更新游戏状态中的玩家列表
             room.gameController.updatePlayers(room.players)
+            // 停止游戏
+            if (room.roomStatus === RoomStatus.PLAYING) {
+                room.gameController.stopGame(`玩家${socket.id.slice(-4)}离开房间`);
+                room.roomStatus = RoomStatus.WAITING;
+            }
         }
 
         // 更新房间状态
