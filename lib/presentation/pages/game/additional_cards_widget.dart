@@ -49,7 +49,7 @@ class AdditionalCardsWidget extends StatelessWidget {
       width: 40,
       height: 60,
       decoration: BoxDecoration(
-        color: Colors.blue.shade900,
+        color: Colors.deepOrangeAccent,
         borderRadius: BorderRadius.circular(6),
         boxShadow: [
           BoxShadow(

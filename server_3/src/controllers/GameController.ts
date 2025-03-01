@@ -21,20 +21,7 @@ export class GameController {
     constructor(
         private io: Server,
         private room: Room
-    ) {
-        // this.setupSocketHandlers();
-    }
-
-    // 监听玩家操作事件
-    // private setupSocketHandlers() {
-    //     this.io.on('connection', (socket: Socket) => {
-    //         console.log("GameController");
-    //         socket.on('playerAction', (action, callback) => {
-    //             this.handlePlayerAction(socket, action, callback);
-    //         });
-    //     });
-    // }
-
+    ) { }
     public handlePlayerAction(socket: Socket, action: PlayerAction, callback: Function) {
         const playerIndex = this.room.players.findIndex(p => p.id === socket.id);
 
@@ -103,6 +90,7 @@ export class GameController {
         this.gameState.allCards[playerIndex] = this.gameState.allCards[playerIndex].filter(p =>
             !playedCards.some(c => c.value == p.value && c.suit == p.suit));
         this.gameState.lastPlayedCards = playedCards;
+        this.gameState.lastActivePlayerIndex = playerIndex;
 
         this.gameState.currentPlayerIndex = (this.gameState.currentPlayerIndex + 1) % 3;
 
@@ -189,6 +177,11 @@ export class GameController {
         // 更新行动回合
         this.gameState.currentPlayerIndex = (this.gameState.currentPlayerIndex + 1) % 3;
 
+        // 跳过轮次检测
+        if (this.gameState.currentPlayerIndex === this.gameState.lastActivePlayerIndex) {
+            this.gameState.lastPlayedCards = [];
+        }
+
         this.updateGameState();
         callback({ 'status': 'success' });
     }
@@ -230,12 +223,10 @@ export class GameController {
     }
 
     private validatePlay(gameState: GameState, playedCards: Poker[]): boolean {
-        // 使用CardUtils验证牌型
-        const { isValid, type } = CardUtils.validateCards(playedCards);
 
-        // 首轮出牌或需要压过前一轮
+        // 当lastPlayedCards为空时（新回合开始），只需验证牌型有效
         if (gameState.lastPlayedCards.length === 0) {
-            return type !== CardTypeEnum.Invalid;
+            return CardUtils.validateCards(playedCards).isValid;
         }
 
         return CardUtils.isBigger(playedCards, gameState.lastPlayedCards);

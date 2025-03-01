@@ -11,6 +11,7 @@ export class GameState {
         public additionalCards: Poker[] = [],
         public allCards: Poker[][] = [[], [], []],// 所有玩家的牌组
         public players: Player[] = [],// 玩家列表
+        public lastActivePlayerIndex: number = -1,// 最后一个出牌的玩家，用于全都跳过时回归本轮出牌者
     ) { }
 
     toJSON(index: number) {
