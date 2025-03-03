@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:landlords_3/core/network_services/constants/constants.dart';
 import 'package:landlords_3/core/network_services/socket_service.dart';
 import 'package:landlords_3/data/models/room.dart';
 import 'package:logger/logger.dart';
@@ -137,8 +136,40 @@ class RoomService {
     return completer.future;
   }
 
-  void toggleReady() {
-    _socketService.emit('toggleReady');
+  // 切换准备状态
+  Future<void> toggleReady() {
+    final completer = Completer();
+    _socketService.emitWithAck('toggleReady', "", (data) {
+      try {
+        if (data is Map && data['status'] == 'success') {
+          completer.complete();
+        } else {
+          completer.completeError('Invalid toggle ready response');
+        }
+      } catch (e) {
+        completer.completeError(e);
+      }
+    });
+    _logger.i('toggle ready');
+    return completer.future;
+  }
+
+  // 设置玩家名称
+  Future<void> setPlayerName(String name) {
+    final completer = Completer();
+    _socketService.emitWithAck('setPlayerName', name, (data) {
+      try {
+        if (data is Map && data['status'] == 'success') {
+          completer.complete();
+        } else {
+          completer.completeError('Invalid set playername response');
+        }
+      } catch (e) {
+        completer.completeError(e);
+      }
+    });
+    _logger.i('set playername');
+    return completer.future;
   }
 
   // 刷新房间列表

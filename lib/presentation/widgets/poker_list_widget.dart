@@ -17,7 +17,7 @@ class PokerListWidget extends StatefulWidget {
   final bool disableHoverEffect; // 新增属性
 
   const PokerListWidget({
-    Key? key,
+    super.key,
     required this.cards,
     this.isLoading = false,
     required this.onCardTapped,
@@ -28,7 +28,7 @@ class PokerListWidget extends StatefulWidget {
     this.maxSpacingFactor = 0.5,
     this.isSelectable = true,
     this.disableHoverEffect = false, // 默认不禁用悬停效果
-  }) : super(key: key);
+  });
 
   @override
   State<PokerListWidget> createState() => _PokerListWidgetState();
@@ -37,7 +37,6 @@ class PokerListWidget extends StatefulWidget {
 class _PokerListWidgetState extends State<PokerListWidget> {
   Offset? _dragStartGlobal;
   Offset? _dragCurrentGlobal;
-  List<int> _dragSelectedIndices = [];
 
   // 缓存布局参数
   late double _cachedCardWidth;
@@ -141,10 +140,8 @@ class _PokerListWidgetState extends State<PokerListWidget> {
   }
 
   void _handlePanStart(DragStartDetails details) {
-    final renderBox = context.findRenderObject() as RenderBox;
     _dragStartGlobal = details.globalPosition;
     _dragCurrentGlobal = details.globalPosition;
-    _dragSelectedIndices = _calculateSelectedIndices(renderBox);
   }
 
   void _handlePanUpdate(DragUpdateDetails details) {
@@ -165,7 +162,6 @@ class _PokerListWidgetState extends State<PokerListWidget> {
       _tempSelectedIndices = [];
       _dragStartGlobal = null;
       _dragCurrentGlobal = null;
-      _dragSelectedIndices = [];
     });
   }
 

@@ -13,8 +13,8 @@ class Player {
   final int cardCount;
   @JsonKey(defaultValue: false)
   final bool isLandlord;
-  @JsonKey(defaultValue: 0)
-  final int bidValue; //当前玩家叫分
+  @JsonKey(defaultValue: -1)
+  final int bidValue; // 玩家叫分
 
   Player({
     required this.id,
@@ -23,7 +23,7 @@ class Player {
     required this.ready,
     this.cardCount = 0,
     this.isLandlord = false,
-    this.bidValue = 0,
+    this.bidValue = -1,
   });
 
   factory Player.fromJson(Map<String, dynamic> json) => _$PlayerFromJson(json);

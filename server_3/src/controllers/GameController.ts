@@ -7,7 +7,8 @@ import { Poker } from "../models/Poker";
 import { GamePhase } from "../constants/constants";
 import { RoomController } from "./RoomController";
 import { v4 as uuidv4 } from 'uuid';
-import { RoomStatus } from "../models/Room";
+import { Room, RoomStatus } from "../models/Room";
+import { Player } from "../models/Player";
 
 interface PlayerAction {
     type: string;
@@ -15,75 +16,83 @@ interface PlayerAction {
 }
 
 export class GameController {
-    private gameStates = new Map<string, GameState>();
-    private roomController: RoomController;
+    private gameState = new GameState();
 
-    constructor(private io: Server, roomController: RoomController) {
-        this.roomController = roomController;
-        this.setupSocketHandlers();
-    }
-
-    // 初始化游戏（由RoomController在房间满人时调用）
-    public initializeGame(roomId: string) {
-        const gameState = new GameState();
-        const room = this.roomController.getRoom(roomId);
-
-        if (!room || room.players.length !== 3) return;
-
-        // 生成并分发扑克牌
-        const allCards = this.generateAndShuffleCards();
-        this.dealCards(roomId, gameState, allCards);
-
-        gameState.gamePhase = GamePhase.bidding;
-        gameState.currentPlayerIndex = 0; // 从第一个玩家开始叫分
-
-        this.gameStates.set(roomId, gameState);
-        this.updateGameState(roomId);
-    }
-
-    // 监听事件
-    private setupSocketHandlers() {
-        this.io.on('connection', (socket: Socket) => {
-            // 客户端的玩家操作
-            socket.on('playerAction', (action, callback) => this.handlePlayerAction(socket, action, callback));
-        });
-    }
-
-    private handlePlayerAction(socket: Socket, action: PlayerAction, callback: Function) {
-        const playerIndex = this.roomController.getPlayerIndexFromSocket(socket.id);
-        const roomId = this.getPlayerRoomId(socket.id);
+    constructor(
+        private io: Server,
+        private room: Room
+    ) { }
+    public handlePlayerAction(socket: Socket, action: PlayerAction, callback: Function) {
+        const playerIndex = this.room.players.findIndex(p => p.id === socket.id);
 
         console.log("PlayerAction: " + action.type);
 
         switch (action.type) {
             case 'playCards':
-                this.handlePlayCards(roomId, playerIndex, action.data, callback);
+                this.handlePlayCards(playerIndex, action.data, callback);
                 break;
             case 'placeBid':
-                this.handlePlaceBid(roomId, playerIndex, action.data, callback);
+                this.handlePlaceBid(playerIndex, action.data, callback);
                 break;
             case 'passTurn':
-                this.handlePassTurn(roomId, playerIndex, callback);
-                break;
-            case 'toggleReady':
-                this.handleToggleReady(socket, callback);
+                this.handlePassTurn(playerIndex, callback);
                 break;
             default:
                 throw new Error('Invalid action type');
         }
     }
 
-    private handlePlayCards(roomId: string, playerIndex: number, cards: Array<Poker>, callback: Function) {
+    // Room更新时相应调用该方法，保持room和gamestate的players列表一致
+    public updatePlayers(players: Player[]) {
+        this.gameState.players = players;
+        this.updateGameState();
+    }
+
+    // Room有人员离开时调用该方法
+    public stopGame(reason: string = '游戏异常终止') {
+        // 清除进行中的游戏数据
+        this.gameState = new GameState();
+
+        // 重置玩家状态
+        this.gameState.players.forEach(player => {
+            player.ready = false;
+            player.isLandlord = false;
+            player.bidValue = -1;
+            player.cardCount = 0;
+        });
+
+        // 发送中断通知
+        this.io.to(this.room.id).emit('gameInterrupted', {
+            reason
+        });
+
+        // 更新游戏状态
+        this.updateGameState();
+    }
+
+    // Room满员且都准备时或重新发牌时调用该方法，初始化游戏
+    public initializeGame() {
+        if (this.room.players.length !== 3) return;
+
+        // 生成并分发扑克牌
+        const allCards = this.generateAndShuffleCards();
+        this.dealCards(allCards);
+
+        // 进入叫分阶段
+        this.gameState.gamePhase = GamePhase.bidding;
+        this.gameState.currentPlayerIndex = 0; // 从第一个玩家开始叫分
+        this.gameState.lastActivePlayerIndex = 0; // 从第一个玩家开始叫分
+
+        //更新游戏状态
+        this.updateGameState();
+    }
+
+
+    private handlePlayCards(playerIndex: number, cards: Array<Poker>, callback: Function) {
         console.log(cards);
-        const gameState = this.gameStates.get(roomId);
 
-        if (!gameState) {
-            callback({ 'status': 'fail' })
-            console.log("null gameState");
-            return;
-        }
-
-        if (playerIndex != gameState.currentPlayerIndex) {
+        // 验证是否为当前玩家回合
+        if (playerIndex != this.gameState.currentPlayerIndex) {
             callback({ 'status': 'fail' })
             console.log("not your turn");
             return;
@@ -91,114 +100,146 @@ export class GameController {
 
         // 转换卡牌对象
         const playedCards = cards.map((c: any) =>
-            new Poker(c.suit, c.value as CardValue));
+            Poker.fromJSON(c));
+
 
         // 验证牌型合法性
-        if (!this.validatePlay(gameState, playedCards)) {
+        if (!this.validatePlay(this.gameState, playedCards)) {
             callback({ 'status': 'fail' })
             return;
         }
 
         // 更新游戏状态
-        gameState.allCards[playerIndex] = gameState.allCards[playerIndex].filter(p =>
-            !playedCards.some(c => c.value === p.value && c.suit === p.suit));
-        gameState.lastPlayedCards = playedCards;
+        this.gameState.allCards[playerIndex] = this.gameState.allCards[playerIndex].filter(p =>
+            !playedCards.some(c => c.value == p.value && c.suit == p.suit));
+        this.gameState.lastPlayedCards = playedCards;
+        this.gameState.lastActivePlayerIndex = playerIndex;
+        this.gameState.players[playerIndex].cardCount = this.gameState.allCards[playerIndex].length;
 
-        gameState.currentPlayerIndex = (gameState.currentPlayerIndex + 1) % 3;
+        this.gameState.currentPlayerIndex = (this.gameState.currentPlayerIndex + 1) % 3;
 
         // 检查游戏是否结束
-        if (gameState.allCards[playerIndex].length === 0) {
-            this.handleGameEnd(roomId);
+        if (this.gameState.allCards[playerIndex].length === 0) {
+            this.handleGameEnd();
             return;
         }
 
-        this.updateGameState(roomId);
+        this.updateGameState();
         callback({ 'status': 'success' })
     }
 
-    private handlePlaceBid(roomId: string, playerIndex: number, value: number, callback: Function) {
-        const gameState = this.gameStates.get(roomId);
-
-        if (!gameState) {
-            callback({ 'status': 'fail' })
-            console.log("null gameState");
+    private handlePlaceBid(playerIndex: number, bidValue: number, callback: Function) {
+        // 阶段验证
+        if (this.gameState.gamePhase !== GamePhase.bidding) {
+            callback({ 'status': 'fail', 'reason': 'Not in bidding phase' });
             return;
         }
 
-        if (playerIndex != gameState.currentPlayerIndex) {
-            callback({ 'status': 'fail' })
-            console.log("not your turn");
+        // 轮到验证
+        if (playerIndex !== this.gameState.currentPlayerIndex) {
+            callback({ 'status': 'fail', 'reason': 'Not your turn to bid' });
             return;
         }
 
-        // 更新叫分状态
-        gameState.allBids[playerIndex] = value;
-
-        gameState.currentPlayerIndex = (gameState.currentPlayerIndex + 1) % 3;
-
-        // 叫分结束处理
-        if (value == 3) {
-            gameState.landlordIndex = playerIndex;
-            gameState.gamePhase = GamePhase.playing;
-        }
-        if (gameState.allBids.length >= 3) {
-            gameState.landlordIndex = gameState.allBids.reduce((maxIndex, currentValue, currentIndex, array) => {
-                return currentValue > array[maxIndex] ? currentIndex : maxIndex;
-            }, 0);
-            gameState.gamePhase = GamePhase.playing;
+        // 参数有效性
+        if (![0, 1, 2, 3].includes(bidValue)) { // 0表示不叫分
+            callback({ 'status': 'fail', 'reason': 'Invalid bid value' });
+            return;
         }
 
-        this.updateGameState(roomId);
-        callback({ 'status': 'success' })
+        const currentPlayer = this.gameState.players[playerIndex];
+        const currentMaxBid = Math.max(...this.gameState.players.map(p => p.bidValue));
+
+
+        if (bidValue !== 0) {
+            // 非零叫分必须高于当前最高分
+            if (bidValue <= currentMaxBid) {
+                callback({ 'status': 'fail', 'reason': 'Bid must higher than current' });
+                return;
+            }
+            this.gameState.lastActivePlayerIndex = playerIndex;// 非零叫分者成为当前最后一个活动玩家
+        }
+        currentPlayer.bidValue = bidValue;
+
+        // 处理叫3分立即结束
+        if (bidValue === 3) {
+            return this.finalizeBidding(callback);
+        }
+
+        // 轮转
+        this.gameState.currentPlayerIndex = (this.gameState.currentPlayerIndex + 1) % 3;
+
+        // 检查是否轮转完成
+        if (this.gameState.currentPlayerIndex === this.gameState.lastActivePlayerIndex) {
+            this.finalizeBidding(callback);
+        } else {
+            this.updateGameState();
+            callback({ 'status': 'success' });
+        }
     }
 
-    private handlePassTurn(roomId: string, playerIndex: number, callback: Function) {
-        const gameState = this.gameStates.get(roomId);
+    private finalizeBidding(callback: Function) {
+        // 计算最高叫分
+        const maxBid = Math.max(...this.gameState.players.map(p => p.bidValue));
 
-        if (!gameState) {
-            callback({ 'status': 'fail' })
-            console.log("null gameState");
+        // 处理都不叫分的情况
+        if (maxBid <= 0) {
+            this.initializeGame(); // 重新发牌
+            callback({ 'status': 'retry', 'reason': 'Redistributing cards' });
             return;
         }
 
-        if (playerIndex != gameState.currentPlayerIndex) {
-            callback({ 'status': 'fail' })
-            console.log("not your turn");
-            return;
-        }
+        // 确定地主（取最后一个最高分玩家）
+        const landlordIndex = this.gameState.players.reduce((acc, p, i) =>
+            p.bidValue >= this.gameState.players[acc].bidValue ? i : acc, 0);
 
-        if (gameState.gamePhase != GamePhase.playing) {
-            callback({ 'status': 'fail' })
-            return;
-        }
-        gameState.currentPlayerIndex = (gameState.currentPlayerIndex + 1) % 3;
-        this.updateGameState(roomId);
+        // 分配地主身份
+        this.gameState.players[landlordIndex].isLandlord = true;
+
+        // 分发底牌
+        this.gameState.allCards[landlordIndex].push(...this.gameState.additionalCards);
+        this.gameState.allCards[landlordIndex].sort((a, b) => b.compareTo(a))
+
+        // 更新地主剩余牌数
+        this.gameState.players[landlordIndex].cardCount = 20;
+
+        // 进入出牌阶段
+        this.gameState.gamePhase = GamePhase.playing;
+        this.gameState.currentPlayerIndex = landlordIndex;
+        this.gameState.lastActivePlayerIndex = landlordIndex;
+
         callback({ 'status': 'success' });
+        this.updateGameState();
     }
 
-    private handleToggleReady(socket: Socket, callback: Function) {
-        const room = this.roomController.getPlayerRoom(socket.id);
-        if (!room) {
-            callback({ 'status': 'fail' });
+    private handlePassTurn(playerIndex: number, callback: Function) {
+
+        if (playerIndex != this.gameState.currentPlayerIndex) {
+            callback({ 'status': 'fail' })
+            console.log("not your turn");
             return;
         }
 
-        const player = room.players.find(p => p.socketId === socket.id);
-        if (!player) {
-            callback({ 'status': 'fail' });
+        if (this.gameState.gamePhase != GamePhase.playing) {
+            callback({ 'status': 'fail' })
             return;
         }
 
-        player.ready = !player.ready;
-
-        // 检测是否开始游戏
-        if (room.players.every(p => p.ready) &&
-            room.players.length === 3) {
-            room.roomStatus = RoomStatus.PLAYING;
-            this.initializeGame(room.id);
+        // 首轮不能跳过
+        if (playerIndex == this.gameState.lastActivePlayerIndex) {
+            callback({ 'status': 'fail' })
+            return;
         }
 
-        this.roomController.updateRoomState(room);
+        // 更新行动回合
+        this.gameState.currentPlayerIndex = (this.gameState.currentPlayerIndex + 1) % 3;
+
+        // 跳过轮次检测
+        if (this.gameState.currentPlayerIndex === this.gameState.lastActivePlayerIndex) {
+            this.gameState.lastPlayedCards = [];
+        }
+
+        this.updateGameState();
         callback({ 'status': 'success' });
     }
 
@@ -225,60 +266,76 @@ export class GameController {
     }
 
     // 发牌
-    private dealCards(roomId: string, gameState: GameState, cards: Poker[]) {
+    private dealCards(cards: Poker[]) {
         // 给玩家发牌（每人17张）
-        gameState.allCards = [
-            cards.slice(0, 17),
-            cards.slice(17, 34),
-            cards.slice(34, 51)
+        this.gameState.allCards = [
+            cards.slice(0, 17).sort((a, b) => b.compareTo(a)),
+            cards.slice(17, 34).sort((a, b) => b.compareTo(a)),
+            cards.slice(34, 51).sort((a, b) => b.compareTo(a))
         ];
         // 底牌（最后3张）
-        gameState.additionalCards = cards.slice(51, 54);
+        this.gameState.additionalCards = cards.slice(51, 54);
 
-        this.updateGameState(roomId);
+        // 更新剩余牌数
+        this.gameState.players.forEach((player) => {
+            player.cardCount = 17
+        });
+
+        this.updateGameState();
     }
 
     private validatePlay(gameState: GameState, playedCards: Poker[]): boolean {
-        // 使用CardUtils验证牌型
-        const { isValid, type } = CardUtils.validateCards(playedCards);
 
-        // 首轮出牌或需要压过前一轮
+        // 当lastPlayedCards为空时（新回合开始），只需验证牌型有效
         if (gameState.lastPlayedCards.length === 0) {
-            return type !== CardTypeEnum.Invalid;
+            return CardUtils.validateCards(playedCards).isValid;
         }
 
         return CardUtils.isBigger(playedCards, gameState.lastPlayedCards);
     }
 
-    private updateGameState(roomId: string) {
-        console.log("updateGameState");
-        const gameState = this.gameStates.get(roomId);
-        if (!gameState) return;
-
-        for (let i = 0; i < 3; i++) {
-            let id = this.roomController.getRoom(roomId)?.players[i].socketId;
-            if (!id) return;
-            this.io.to(id).emit('gameStateUpdate', gameState.toJSON(i));
-        }
+    // 更新房间内所有玩家游戏状态
+    private updateGameState() {
+        this.room.players.forEach((player, index) => {
+            console.log(`updateGameState: ${index}, ${player.id}`);
+            console.log(this.gameState.toJSON(index));
+            this.io.to(player.id).emit('gameStateUpdate',
+                this.gameState.toJSON(index));
+        });
     }
 
-    private handleGameEnd(roomId: string) {
-        const gameState = this.gameStates.get(roomId);
-        if (!gameState) return;
+    private handleGameEnd() {
+        // 确定获胜方
+        const winnerIndex = this.gameState.players.findIndex(p => p.cardCount === 0);
+        const isLandlordWin = this.gameState.players[winnerIndex].isLandlord;
 
-        // 确定获胜队伍
+        // 构建结果数据
+        const result = {
+            winnerIndex,
+            isLandlordWin,
+            players: this.gameState.players.map(p => ({
+                id: p.id,
+                isLandlord: p.isLandlord,
+                finalCards: this.gameState.allCards
+            }))
+        };
 
-        // 发送游戏结束事件
+        // 广播游戏结果
+        this.io.to(this.room.id).emit('gameEnd', result);
 
-        // 清理游戏状态
-        this.gameStates.delete(roomId);
-    }
+        // 重置游戏状态
+        this.gameState = new GameState();
 
-    private getPlayerRoomId(socketId: string): string {
-        const room = this.roomController.getPlayerRoom(socketId);
-        if (!room?.id) {
-            throw new Error(`Player ${socketId} not in any room`);
-        }
-        return room.id;
+        // 重置玩家状态
+        this.room.players.forEach(player => {
+            player.ready = false;
+            player.isLandlord = false;
+            player.bidValue = -1;
+            player.cardCount = 0;
+        });
+
+        // 房间状态恢复等待
+        this.room.roomStatus = RoomStatus.WAITING;
+        this.updateGameState();
     }
 }

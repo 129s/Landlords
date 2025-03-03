@@ -48,12 +48,12 @@ class GameService {
 
   // 游戏状态更新处理
   void _handleGameStateUpdate(Map<String, dynamic> data) {
+    _logger.d("_handleGameStateUpdate");
     try {
-      _logger.d(data);
       _currentGameState = GameState.fromJson(data);
 
       _gameStateController.add(_currentGameState);
-      _logger.i('GameState Updated:$_currentGameState');
+      _logger.i(data);
     } catch (e) {
       _logger.e('GameState update error: ${e.toString()}');
     }
@@ -89,9 +89,6 @@ class GameService {
       playerAction(PlayerAction(ActionType.placeBid, value));
 
   Future<void> passTurn() => playerAction(PlayerAction(ActionType.passTurn));
-
-  Future<void> toggleReady() =>
-      playerAction(PlayerAction(ActionType.toggleReady));
 
   void dispose() {
     _gameStateController.close();

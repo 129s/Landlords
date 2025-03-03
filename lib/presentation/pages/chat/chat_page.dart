@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:landlords_3/data/providers/socket_provider.dart';
-import 'package:landlords_3/data/models/message.dart';
 import 'package:landlords_3/presentation/pages/chat/MessageBubble.dart';
 import 'package:landlords_3/presentation/providers/chat_provider.dart';
 import 'package:landlords_3/data/providers/service_providers.dart';

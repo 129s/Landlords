@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:landlords_3/core/network_services/constants/constants.dart';
 import 'package:landlords_3/core/network_services/game_service.dart';
 import 'package:landlords_3/core/network_services/room_service.dart';
 import 'package:landlords_3/data/providers/service_providers.dart';
@@ -23,15 +22,6 @@ class GameNotifier extends StateNotifier<GameState> {
     });
   }
 
-  // 初始化游戏（从服务端获取数据）
-  Future<void> initializeGame() async {
-    try {
-      state = state.copyWith(gamePhase: GamePhase.preparing);
-    } catch (e) {
-      state = state.copyWith(gamePhase: GamePhase.error);
-    }
-  }
-
   // 提交出牌
   Future<void> playSelectedCards() async {
     final cards =
@@ -47,6 +37,16 @@ class GameNotifier extends StateNotifier<GameState> {
   // 退出房间
   Future<void> leaveGame() async {
     return _roomService.leaveRoom();
+  }
+
+  // 切换准备状态
+  Future<void> toggleReady() async {
+    return _roomService.toggleReady();
+  }
+
+  // 设置玩家名称
+  Future<void> setPlayerName(String name) async {
+    return _roomService.setPlayerName(name);
   }
 
   // 选择卡牌
@@ -91,10 +91,6 @@ class GameNotifier extends StateNotifier<GameState> {
 
   void placeBid(int bidValue) {
     _gameService.placeBid(bidValue);
-  }
-
-  void toggleReady() {
-    _gameService.toggleReady();
   }
 
   // 出牌验证逻辑

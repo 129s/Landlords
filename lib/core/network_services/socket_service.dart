@@ -48,14 +48,14 @@ class SocketService {
   // 初始化
   void _initSocket() {
     _socket = io(
-      'http://localhost:3000',
+      'https://0624-120-204-117-79.ngrok-free.app',
       OptionBuilder().setTransports(['websocket']).enableAutoConnect().build(),
     );
 
     _socket.onConnect((_) {
       _connectionState = GameConnectionState.connected;
       _connectionController.add(_connectionState);
-      _logger.i('Socket connected');
+      _logger.i('Socket connected.\nID:${_socket.id}');
     });
 
     _socket.onDisconnect((_) {

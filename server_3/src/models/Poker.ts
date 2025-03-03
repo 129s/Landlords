@@ -20,7 +20,36 @@ export class Poker {
             value: CardValue[this.value]
         };
     }
+    static fromJSON(json: { suit: string; value: string }): Poker {
+        // 转换花色字符串为枚举值
+        const suitMapping: { [key: string]: Suit } = {
+            'hearts': Suit.hearts,
+            'diamonds': Suit.diamonds,
+            'clubs': Suit.clubs,
+            'spades': Suit.spades,
+            'joker': Suit.joker
+        };
 
+        // 转换牌值字符串为枚举值
+        const valueMapping: { [key: string]: CardValue } = {
+            'three': CardValue.three,
+            'four': CardValue.four,
+            'five': CardValue.five,
+            'six': CardValue.six,
+            'seven': CardValue.seven,
+            'eight': CardValue.eight,
+            'nine': CardValue.nine,
+            'ten': CardValue.ten,
+            'jack': CardValue.jack,
+            'queen': CardValue.queen,
+            'king': CardValue.king,
+            'ace': CardValue.ace,
+            'two': CardValue.two,
+            'jokerSmall': CardValue.jokerSmall,
+            'jokerBig': CardValue.jokerBig
+        }
+        return new Poker(suitMapping[json.suit], valueMapping[json.value])
+    }
     // 比较两张牌的大小
     compareTo(other: Poker): number {
         return this.weight - other.weight;
