@@ -19,6 +19,7 @@ class GameState {
   final int landlordIndex;
 
   bool get isLandlord => myPlayerIndex == landlordIndex;
+  bool get isInitialized => myPlayerIndex != -1 && players.isNotEmpty;
 
   const GameState({
     this.gamePhase = GamePhase.preparing,
@@ -26,8 +27,8 @@ class GameState {
     this.playerCards = const [],
     this.lastPlayedCards = const [],
     this.additionalCards = const [], //底牌和playercards分开算，即playerCards中不含有底牌
-    this.myPlayerIndex = 0,
-    this.currentPlayerIndex = 0,
+    this.myPlayerIndex = -1, // 初始值-1表示未设置
+    this.currentPlayerIndex = -1, // 初始值-1表示未设置
     this.players = const [],
     this.selectedIndices = const [],
     this.landlordIndex = -1, // 初始值-1表示未设置

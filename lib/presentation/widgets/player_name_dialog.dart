@@ -33,13 +33,6 @@ class PlayerNameDialog extends ConsumerWidget {
         ),
       ),
       actions: [
-        TextButton(
-          onPressed: () {
-            Navigator.pop(context);
-            onCancel?.call();
-          },
-          child: const Text('取消'),
-        ),
         ElevatedButton(
           onPressed: () {
             if (controller.text.isEmpty) {

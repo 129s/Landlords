@@ -32,7 +32,6 @@ class LobbyState {
 
 class LobbyNotifier extends StateNotifier<LobbyState> {
   final RoomService _roomService;
-  StreamSubscription? _roomSubscription;
 
   LobbyNotifier(this._roomService) : super(const LobbyState()) {
     _init();
@@ -40,7 +39,7 @@ class LobbyNotifier extends StateNotifier<LobbyState> {
 
   void _init() {
     // 实时监听房间更新
-    _roomSubscription = _roomService.roomListStream.listen((rooms) {
+    _roomService.roomListStream.listen((rooms) {
       state = state.copyWith(rooms: rooms);
     });
   }

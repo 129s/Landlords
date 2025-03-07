@@ -8,6 +8,7 @@ import 'package:landlords_3/data/models/player.dart';
 import 'package:landlords_3/presentation/pages/game/card_info_panel.dart';
 import 'package:landlords_3/presentation/pages/game/player_info_widget.dart';
 import 'package:landlords_3/presentation/providers/game_provider.dart';
+import 'package:landlords_3/presentation/widgets/loading_indicator.dart';
 import 'package:landlords_3/presentation/widgets/player_name_dialog.dart';
 import 'package:landlords_3/presentation/widgets/poker_list_widget.dart';
 import 'package:logger/logger.dart';
@@ -27,69 +28,75 @@ class GamePage extends ConsumerWidget {
         children: [
           // 背景图片
           _buildBackground(),
-          //设置玩家名称
-          _getMyPlayer(gameState).name == '未命名'
-              ? Center(
-                child: PlayerNameDialog(
-                  title: '设置名称',
-                  onConfirm: (name) {
-                    gameNotifer.setPlayerName(name);
-                  },
-                  onCancel: () {
-                    gameNotifer.setPlayerName(
-                      "玩家" + Random().nextInt(32767).toString(),
-                    );
-                  },
-                ),
-              )
-              : SizedBox.shrink(),
-          // 玩家信息
-          _buildOpponentsInfo(gameState, ref),
-          // 主内容区域
-          Column(
-            children: [
-              // 顶部操作栏
-              _buildTopBar(context, gameState, gameNotifer),
-              Expanded(
-                child: Stack(
-                  children: [
-                    // 最后一个玩家出牌
-                    Center(
-                      child: SizedBox(
-                        height: 128,
-                        child: PokerListWidget(
-                          cards: gameState.lastPlayedCards,
-                          onCardTapped: (_) {},
-                          disableHoverEffect: true,
+          !gameState.isInitialized
+              ? const LoadingIndicator()
+              : Stack(
+                children: [
+                  //设置玩家名称
+                  _getMyPlayer(gameState).name == '未命名'
+                      ? Center(
+                        child: PlayerNameDialog(
+                          title: '设置名称',
+                          onConfirm: (name) {
+                            gameNotifer.setPlayerName(name);
+                          },
+                          onCancel: () {
+                            gameNotifer.setPlayerName(
+                              "玩家" + Random().nextInt(32767).toString(),
+                            );
+                          },
+                        ),
+                      )
+                      : SizedBox.shrink(),
+                  // 玩家信息
+                  _buildOpponentsInfo(gameState, ref),
+                  // 主内容区域
+                  Column(
+                    children: [
+                      // 顶部操作栏
+                      _buildTopBar(context, gameState, gameNotifer),
+                      Expanded(
+                        child: Stack(
+                          children: [
+                            // 最后一个玩家出牌
+                            Center(
+                              child: SizedBox(
+                                height: 128,
+                                child: PokerListWidget(
+                                  cards: gameState.lastPlayedCards,
+                                  onCardTapped: (_) {},
+                                  disableHoverEffect: true,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                    ),
-                  ],
-                ),
-              ),
 
-              // 功能按钮栏
-              _buildActionBar(gameState, gameNotifer),
-              // 调试GameState相关信息
-              // Container(
-              //   margin: EdgeInsets.all(24),
-              //   padding: const EdgeInsets.symmetric(
-              //     horizontal: 12,
-              //     vertical: 8,
-              //   ),
-              //   decoration: BoxDecoration(
-              //     color: Colors.black54,
-              //     borderRadius: BorderRadius.circular(16),
-              //   ),
-              //   child: Text(
-              //     "${gameState.toJson()}",
-              //     style: TextStyle(color: Colors.amber),
-              //   ),
-              // ),
-              // 玩家手牌区域
-              _buildMyHandCards(gameState, gameNotifer),
-            ],
-          ),
+                      // 功能按钮栏
+                      _buildActionBar(gameState, gameNotifer),
+                      // 调试GameState相关信息
+                      // Container(
+                      //   margin: EdgeInsets.all(24),
+                      //   padding: const EdgeInsets.symmetric(
+                      //     horizontal: 12,
+                      //     vertical: 8,
+                      //   ),
+                      //   decoration: BoxDecoration(
+                      //     color: Colors.black54,
+                      //     borderRadius: BorderRadius.circular(16),
+                      //   ),
+                      //   child: Text(
+                      //     "${gameState.toJson()}",
+                      //     style: TextStyle(color: Colors.amber),
+                      //   ),
+                      // ),
+                      // 玩家手牌区域
+                      _buildMyHandCards(gameState, gameNotifer),
+                    ],
+                  ),
+                ],
+              ),
         ],
       ),
     );
@@ -195,7 +202,7 @@ class GamePage extends ConsumerWidget {
             final maxBidValue = gameState.players
                 .map((e) => e.bidValue)
                 .reduce((current, next) => current > next ? current : next);
-            Logger().d(maxBidValue);
+            // Logger().d(maxBidValue);
             final isDisabled = score == 0 ? false : score <= maxBidValue;
             return Padding(
               padding: const EdgeInsets.symmetric(horizontal: 8.0),

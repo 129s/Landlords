@@ -48,7 +48,7 @@ class GameService {
 
   // 游戏状态更新处理
   void _handleGameStateUpdate(Map<String, dynamic> data) {
-    _logger.d("_handleGameStateUpdate");
+    // _logger.d("_handleGameStateUpdate");
     try {
       _currentGameState = GameState.fromJson(data);
 
@@ -62,7 +62,7 @@ class GameService {
   Future<void> playerAction(PlayerAction action) async {
     final completer = Completer();
     final jsonData = action.toJson();
-    _logger.d(jsonData);
+    // _logger.d(jsonData);
     _socketService.emitWithAck('playerAction', jsonData, (data) {
       try {
         if (data is Map && data['status'] == 'success') {

@@ -57,11 +57,11 @@ class RoomService {
 
   // 处理房间更新事件
   void _handleRoomUpdate(Map<String, dynamic> data) {
-    _logger.d('Received room data: $data');
+    // _logger.d('Received room data: $data');
     try {
       _currentRoom = Room.fromJson(data);
       _currentRoomController.add(_currentRoom);
-      _logger.i('Room updated: ${_currentRoom?.toJson()}');
+      // _logger.i('Room updated: ${_currentRoom?.toJson()}');
     } catch (e) {
       _logger.e('Error parsing room update: $e');
     }
@@ -75,7 +75,7 @@ class RoomService {
               .map((item) => Room.fromJson(item as Map<String, dynamic>))
               .toList();
       _roomListController.add(_roomList);
-      _logger.i('Room list updated: ${_roomList.length} rooms');
+      // _logger.i('Room list updated: ${_roomList.length} rooms');
     } catch (e) {
       _logger.e('Error parsing room list: $e');
     }
@@ -130,7 +130,7 @@ class RoomService {
         completer.completeError(e);
       }
     });
-    _logger.i('Leaving room');
+    // _logger.i('Leaving room');
     _currentRoom = null;
     _currentRoomController.add(null);
     return completer.future;
@@ -150,7 +150,7 @@ class RoomService {
         completer.completeError(e);
       }
     });
-    _logger.i('toggle ready');
+    // _logger.i('toggle ready');
     return completer.future;
   }
 
@@ -168,14 +168,14 @@ class RoomService {
         completer.completeError(e);
       }
     });
-    _logger.i('set playername');
+    // _logger.i('set playername');
     return completer.future;
   }
 
   // 刷新房间列表
   void refreshRoomList() {
     _socketService.emit('getRoomList');
-    _logger.i('Refreshing room list');
+    // _logger.i('Refreshing room list');
   }
 
   // 释放资源
